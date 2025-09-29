@@ -16,73 +16,106 @@ export type Database = {
     Tables: {
       orders: {
         Row: {
+          amount: number | null
           created_at: string
           id: number
-          user_id: string | null
-          status: string
-          amount: number | null
           order_details: Json | null
-          invoice_id: string | null
+          status: string
+          user_id: string | null
         }
         Insert: {
+          amount?: number | null
           created_at?: string
           id?: number
-          user_id?: string | null
-          status?: string
-          amount?: number | null
           order_details?: Json | null
-          invoice_id?: string | null
+          status?: string
+          user_id?: string | null
         }
         Update: {
+          amount?: number | null
           created_at?: string
           id?: number
-          user_id?: string | null
-          status?: string
-          amount?: number | null
           order_details?: Json | null
-          invoice_id?: string | null
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
       products: {
         Row: {
+          category: string | null
           created_at: string
+          description_en: string | null
+          description_ru: string | null
           id: number
+          image_urls: Json | null
+          name_en: string | null
+          name_ru: string | null
+          preview_link: string | null
+          price: number
+          stock: number
         }
         Insert: {
+          category?: string | null
           created_at?: string
+          description_en?: string | null
+          description_ru?: string | null
           id?: number
+          image_urls?: Json | null
+          name_en?: string | null
+          name_ru?: string | null
+          preview_link?: string | null
+          price?: number
+          stock?: number
         }
         Update: {
+          category?: string | null
           created_at?: string
+          description_en?: string | null
+          description_ru?: string | null
           id?: number
+          image_urls?: Json | null
+          name_en?: string | null
+          name_ru?: string | null
+          preview_link?: string | null
+          price?: number
+          stock?: number
         }
         Relationships: []
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
-          id: number
-          user_id: string
           email: string | null
+          id: number
           purchases: Json | null
+          role: string
           temp_password: string | null
+          user_id: string
+          username: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
-          id?: number
-          user_id?: string
           email?: string | null
+          id?: number
           purchases?: Json | null
+          role?: string
           temp_password?: string | null
+          user_id?: string
+          username?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
-          id?: number
-          user_id?: string
           email?: string | null
+          id?: number
           purchases?: Json | null
+          role?: string
           temp_password?: string | null
+          user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -126,14 +159,14 @@ export type Tables<
     ? R
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-      DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
     : never
-  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -153,12 +186,12 @@ export type TablesInsert<
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
     : never
-  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -178,12 +211,12 @@ export type TablesUpdate<
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
     : never
-  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -199,8 +232,8 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
@@ -216,8 +249,8 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {

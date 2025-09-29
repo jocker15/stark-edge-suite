@@ -45,8 +45,8 @@ const PaymentSuccess: React.FC = () => {
     const { data, error: fetchError } = await supabase
       .from('orders')
       .select('*')
-      .eq('invoice_id', invoiceId)
-      .single();
+      .eq('id', parseInt(invoiceId || '0', 10))
+      .maybeSingle();
 
     if (fetchError) {
       console.error(fetchError);

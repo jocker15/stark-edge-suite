@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useCart } from '@/contexts/CartContext'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/useAuth'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/types'
 import { CRYPTOCLOUD_CONFIG } from '@/lib/cryptocloudConfig'
 import { Header } from '@/components/layout/header'
@@ -42,12 +42,12 @@ export default function Checkout() {
       const createOrder = async () => {
         const { data, error } = await supabase
           .from('orders')
-          .insert({
-            user_id: user?.id || null,
+          .insert([{
+            user_id: user?.id,
             status: 'pending',
             amount: total,
-            order_details: cart
-          })
+            order_details: cart as any
+          }])
           .select('id')
           .single()
 
@@ -100,7 +100,7 @@ export default function Checkout() {
       vueWidget.setAttribute('locale', 'en')
       if (orderId) {
         vueWidget.setAttribute('order_id', orderId.toString())
-        vueWidget.setAttribute('success_url', 'http://localhost:5173/payment-success')
+        vueWidget.setAttribute('success_url', `${window.location.origin}/payment-success`)
       }
       div.appendChild(vueWidget)
     }
