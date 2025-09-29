@@ -1,17 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Digital Edge Design System - Stark Industries Inspired
-Primary Background: Dark, near-black with blue hint (#101419)
-Secondary/Card Background: Slightly lighter dark gray (#1A202C)
-Primary Accent: Stark Red (#D32F2F)
-Secondary Accent: Arc Reactor Blue (#00EFFF)
-Text Headings: Off-white (#F7F7F7)
-Text Body: Light gray (#A0AEC0)
-*/
-
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap');
+ Primary Background: Dark, near-black with blue hint (#101419)
+ Secondary/Card Background: Slightly lighter dark gray (#1A202C)
+ Primary Accent: Stark Red (#D32F2F)
+ Secondary Accent: Arc Reactor Blue (#00EFFF)
+ Text Headings: Off-white (#F7F7F7)
+ Text Body: Light gray (#A0AEC0)
+ */
 
 @layer base {
   :root {
@@ -106,5 +106,170 @@ Text Body: Light gray (#A0AEC0)
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+}
+
+@layer utilities {
+  /* CryptoCloud Widget Styling - Dark Theme Integration */
+  [ref="widgetRef"] vue-widget,
+  .cc-widget,
+  .cryptocloud-widget,
+  #app[data-v-ae763972],
+  #app[data-v-b4d511a8] {
+    @apply bg-card text-foreground;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--card)) !important;
+    border: 2px solid hsl(var(--border)) !important;
+    border-radius: 15px !important;
+    padding: 20px !important;
+  }
+
+  [ref="widgetRef"] vue-widget *,
+  .cc-widget *,
+  .cryptocloud-widget * {
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  [ref="widgetRef"] vue-widget button,
+  .cc-widget button,
+  .cryptocloud-widget button,
+  [ref="widgetRef"] vue-widget .btn-crypto,
+  .cc-widget .btn-crypto,
+  .cryptocloud-widget .btn-crypto,
+  [ref="widgetRef"] vue-widget button[type="submit"],
+  .cc-widget button[type="submit"],
+  .cryptocloud-widget button[type="submit"] {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer;
+    background: var(--gradient-primary) !important;
+    border: 2px solid hsl(var(--primary)) !important;
+    border-radius: 10px !important;
+    color: hsl(var(--primary-foreground)) !important;
+    cursor: pointer !important;
+    transition: 0.5s !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    height: 48px !important;
+    width: 88% !important;
+  }
+
+  [ref="widgetRef"] vue-widget input[type="number"],
+  .cc-widget input[type="number"],
+  .cryptocloud-widget input[type="number"],
+  [ref="widgetRef"] vue-widget input[placeholder*="сум"],
+  .cc-widget input[placeholder*="сум"],
+  .cryptocloud-widget input[placeholder*="сум"],
+  [ref="widgetRef"] vue-widget input[placeholder*="amount"],
+  .cc-widget input[placeholder*="amount"],
+  .cryptocloud-widget input[placeholder*="amount"] {
+    background-color: hsl(var(--muted)) !important;
+    color: hsl(var(--foreground)) !important;
+    border: 2px solid hsl(var(--input)) !important;
+    border-radius: 12px !important;
+    padding: 0 16px !important;
+    height: 48px !important;
+    width: 80px !important;
+    max-width: 80px !important;
+    min-width: 80px !important;
+    font-size: 16px !important;
+  }
+
+  [ref="widgetRef"] vue-widget input[type="email"],
+  .cc-widget input[type="email"],
+  .cryptocloud-widget input[type="email"],
+  [ref="widgetRef"] vue-widget .input-form-email,
+  .cc-widget .input-form-email,
+  .cryptocloud-widget .input-form-email,
+  [ref="widgetRef"] vue-widget input[placeholder*="email"],
+  .cc-widget input[placeholder*="email"],
+  .cryptocloud-widget input[placeholder*="email"],
+  [ref="widgetRef"] vue-widget input[placeholder*="почт"],
+  .cc-widget input[placeholder*="почт"],
+  .cryptocloud-widget input[placeholder*="почт"] {
+    background-color: hsl(var(--muted)) !important;
+    color: hsl(var(--foreground)) !important;
+    border: 2px solid hsl(var(--input)) !important;
+    border-radius: 12px !important;
+    padding: 0 16px !important;
+    height: 48px !important;
+    width: 100% !important;
+    min-width: 300px !important;
+    flex: 1 !important;
+    left: 0 !important;
+    top: 24px !important;
+    margin-bottom: 20px !important;
+    font-size: 16px !important;
+  }
+
+  [ref="widgetRef"] vue-widget input,
+  .cc-widget input,
+  .cryptocloud-widget input,
+  [ref="widgetRef"] vue-widget select,
+  .cc-widget select,
+  .cryptocloud-widget select {
+    background-color: hsl(var(--muted)) !important;
+    color: hsl(var(--foreground)) !important;
+    border: 2px solid hsl(var(--input)) !important;
+    border-radius: 12px !important;
+    padding: 0 16px !important;
+    height: 48px !important;
+  }
+
+  [ref="widgetRef"] vue-widget .cc-currency-list,
+  .cc-widget .cc-currency-list,
+  .cryptocloud-widget .cc-currency-list {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  [ref="widgetRef"] vue-widget .cc-button,
+  .cc-widget .cc-button,
+  .cryptocloud-widget .cc-button {
+    background: var(--gradient-accent) !important;
+    cursor: pointer !important;
+  }
+
+  [ref="widgetRef"] vue-widget .row,
+  .cc-widget .row,
+  .cryptocloud-widget .row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  [ref="widgetRef"] vue-widget .flex,
+  .cc-widget .flex,
+  .cryptocloud-widget .flex {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  [ref="widgetRef"] vue-widget .absolute-currency,
+  .cc-widget .absolute-currency,
+  .cryptocloud-widget .absolute-currency {
+    color: hsl(var(--foreground)) !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+  }
+
+  [ref="widgetRef"] vue-widget .col-md-3,
+  .cc-widget .col-md-3,
+  .cryptocloud-widget .col-md-3,
+  [ref="widgetRef"] vue-widget .col-md-4,
+  .cc-widget .col-md-4,
+  .cryptocloud-widget .col-md-4 {
+    width: 100% !important;
+    padding-right: 15px !important;
+    padding-left: 15px !important;
+  }
+
+  [ref="widgetRef"] vue-widget .logo-crypto,
+  .cc-widget .logo-crypto,
+  .cryptocloud-widget .logo-crypto {
+    width: 100% !important;
+    margin-bottom: auto !important;
   }
 }

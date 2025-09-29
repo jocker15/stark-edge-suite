@@ -1,14 +1,17 @@
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Search, ShoppingCart, User, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 
 export function Header() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getItemCount } = useCart();
 
   const handleSignOut = async () => {
     try {
@@ -59,9 +62,19 @@ export function Header() {
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent">
-            <ShoppingCart className="h-5 w-5" />
-          </Button>
+          <Link to="/cart">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent relative">
+              <ShoppingCart className="h-5 w-5" />
+              {getItemCount() > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full text-xs flex items-center justify-center"
+                >
+                  {getItemCount()}
+                </Badge>
+              )}
+            </Button>
+          </Link>
           
           {user ? (
             <>

@@ -18,17 +18,29 @@ export type Database = {
         Row: {
           created_at: string
           id: number
-          user_id: string
+          user_id: string | null
+          status: string
+          amount: number | null
+          order_details: Json | null
+          invoice_id: string | null
         }
         Insert: {
           created_at?: string
           id?: number
-          user_id?: string
+          user_id?: string | null
+          status?: string
+          amount?: number | null
+          order_details?: Json | null
+          invoice_id?: string | null
         }
         Update: {
           created_at?: string
           id?: number
-          user_id?: string
+          user_id?: string | null
+          status?: string
+          amount?: number | null
+          order_details?: Json | null
+          invoice_id?: string | null
         }
         Relationships: []
       }
@@ -52,16 +64,25 @@ export type Database = {
           created_at: string
           id: number
           user_id: string
+          email: string | null
+          purchases: Json | null
+          temp_password: string | null
         }
         Insert: {
           created_at?: string
           id?: number
           user_id?: string
+          email?: string | null
+          purchases?: Json | null
+          temp_password?: string | null
         }
         Update: {
           created_at?: string
           id?: number
           user_id?: string
+          email?: string | null
+          purchases?: Json | null
+          temp_password?: string | null
         }
         Relationships: []
       }
@@ -105,14 +126,14 @@ export type Tables<
     ? R
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+      DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
     : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -132,12 +153,12 @@ export type TablesInsert<
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -157,12 +178,12 @@ export type TablesUpdate<
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
     : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -178,8 +199,8 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
@@ -195,8 +216,8 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {
