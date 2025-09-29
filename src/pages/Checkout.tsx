@@ -75,46 +75,67 @@ export default function Checkout() {
   }
 
   useEffect(() => {
-    if (!orderReady) return
+    if (!orderReady || !orderId) return
 
     const div = widgetRef.current
     if (!div) return
 
-    // Load CSS
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://api.cryptocloud.plus/static/widget/v2/css/app.css'
-    document.head.appendChild(link)
+    // Check if already loaded
+    if (div.querySelector('vue-widget')) return
 
-    // Load script
-    const script = document.createElement('script')
-    script.src = 'https://api.cryptocloud.plus/static/widget/v2/js/app.js'
-    script.async = true
-    script.onload = () => {
+    const loadWidget = () => {
       // Create vue-widget
       const vueWidget = document.createElement('vue-widget')
       vueWidget.setAttribute('shop_id', CRYPTOCLOUD_CONFIG.shopId)
       vueWidget.setAttribute('api_key', CRYPTOCLOUD_CONFIG.apiKey)
       vueWidget.setAttribute('currency', CRYPTOCLOUD_CONFIG.currency)
-      vueWidget.setAttribute('amount', total.toString())
-      vueWidget.setAttribute('locale', 'en')
-      if (orderId) {
-        vueWidget.setAttribute('order_id', orderId.toString())
-        vueWidget.setAttribute('success_url', `${window.location.origin}/payment-success`)
-      }
+      vueWidget.setAttribute('amount', total.toFixed(2))
+      vueWidget.setAttribute('locale', lang)
+      vueWidget.setAttribute('order_id', orderId.toString())
+      vueWidget.setAttribute('success_url', `${window.location.origin}/payment-success?invoice_id=${orderId}`)
+      vueWidget.setAttribute('fail_url', `${window.location.origin}/payment-failed?invoice_id=${orderId}`)
+      
+      div.innerHTML = ''
       div.appendChild(vueWidget)
+      
+      console.log('CryptoCloud widget initialized with order:', orderId)
     }
-    document.body.appendChild(script)
+
+    // Load CSS
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://api.cryptocloud.plus/static/widget/v2/css/app.css'
+    
+    if (!document.querySelector('link[href="https://api.cryptocloud.plus/static/widget/v2/css/app.css"]')) {
+      document.head.appendChild(link)
+    }
+
+    // Load script
+    const existingScript = document.querySelector('script[src="https://api.cryptocloud.plus/static/widget/v2/js/app.js"]')
+    
+    if (existingScript) {
+      loadWidget()
+    } else {
+      const script = document.createElement('script')
+      script.src = 'https://api.cryptocloud.plus/static/widget/v2/js/app.js'
+      script.async = true
+      script.onload = loadWidget
+      script.onerror = () => {
+        console.error('Failed to load CryptoCloud widget script')
+        toast({
+          title: "Error",
+          description: "Failed to load payment widget. Please refresh the page.",
+          variant: "destructive"
+        })
+      }
+      document.body.appendChild(script)
+    }
 
     return () => {
-      // Cleanup
-      const existingLink = document.querySelector('link[href="https://api.cryptocloud.plus/static/widget/v2/css/app.css"]')
-      if (existingLink) existingLink.remove()
-      const existingScript = document.querySelector('script[src="https://api.cryptocloud.plus/static/widget/v2/js/app.js"]')
-      if (existingScript) existingScript.remove()
-      if (div.firstChild) div.innerHTML = ''
+      // Cleanup widget content but keep scripts loaded for performance
+      if (div) div.innerHTML = ''
     }
-  }, [total, orderId, orderReady])
+  }, [total, orderId, orderReady, lang, toast])
 
   if (cart.length === 0) {
     return (

@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: number
           order_details: Json | null
+          payment_details: Json | null
           status: string
           user_id: string | null
         }
@@ -28,6 +29,7 @@ export type Database = {
           created_at?: string
           id?: number
           order_details?: Json | null
+          payment_details?: Json | null
           status?: string
           user_id?: string | null
         }
@@ -36,6 +38,7 @@ export type Database = {
           created_at?: string
           id?: number
           order_details?: Json | null
+          payment_details?: Json | null
           status?: string
           user_id?: string | null
         }
