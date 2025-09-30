@@ -47,9 +47,11 @@ export type Database = {
       products: {
         Row: {
           category: string | null
+          country: string | null
           created_at: string
           description_en: string | null
           description_ru: string | null
+          document_type: string | null
           id: number
           image_urls: Json | null
           name_en: string | null
@@ -60,9 +62,11 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          country?: string | null
           created_at?: string
           description_en?: string | null
           description_ru?: string | null
+          document_type?: string | null
           id?: number
           image_urls?: Json | null
           name_en?: string | null
@@ -73,9 +77,11 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          country?: string | null
           created_at?: string
           description_en?: string | null
           description_ru?: string | null
+          document_type?: string | null
           id?: number
           image_urls?: Json | null
           name_en?: string | null
