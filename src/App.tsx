@@ -18,6 +18,7 @@ import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
+import SearchResults from "./pages/SearchResults";
 
 const queryClient = new QueryClient();
 
@@ -41,9 +42,10 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="/verifications" element={<Verifications />} />
-              <Route path="/payment-success" element={<PaymentSuccess />} />
-              <Route path="/payment-failed" element={<PaymentFailed />} />
-              <Route path="*" element={<NotFound />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-failed" element={<PaymentFailed />} />
+            <Route path="/search" element={<SearchResults />} />
+            <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
