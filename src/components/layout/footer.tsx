@@ -65,8 +65,63 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border/30 mt-12 pt-8 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="border-t border-border/30 mt-12 pt-8">
+          {/* Accepted Cryptocurrencies */}
+          <div className="mb-6">
+            <p className="text-sm text-muted-foreground text-center mb-4">We Accept</p>
+            <div className="flex flex-wrap justify-center items-center gap-6">
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#F7931A] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">₿</span>
+                </div>
+                <span className="text-xs font-medium">BTC</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#627EEA] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Ξ</span>
+                </div>
+                <span className="text-xs font-medium">ETH</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#26A17B] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">₮</span>
+                </div>
+                <span className="text-xs font-medium">USDT</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#345D9D] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Ł</span>
+                </div>
+                <span className="text-xs font-medium">LTC</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#9945FF] to-[#14F195] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">◎</span>
+                </div>
+                <span className="text-xs font-medium">SOL</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#F3BA2F] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">B</span>
+                </div>
+                <span className="text-xs font-medium">BNB</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#FF0013] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">T</span>
+                </div>
+                <span className="text-xs font-medium">TRX</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#0088CC] flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">💎</span>
+                </div>
+                <span className="text-xs font-medium">TON</span>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-sm text-muted-foreground text-center">
             © 2024 Digital Edge. All rights reserved. Powered by next-generation technology.
           </p>
         </div>
