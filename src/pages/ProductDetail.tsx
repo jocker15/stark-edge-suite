@@ -7,6 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Heart } from 'lucide-react'
+import { useWishlist } from '@/hooks/useWishlist'
+import { ReviewsList } from '@/components/products/ReviewsList'
+import { ReviewForm } from '@/components/products/ReviewForm'
+import { RecommendedProducts } from '@/components/products/RecommendedProducts'
 
 interface Product {
   id: string
@@ -32,8 +37,10 @@ export default function ProductDetail() {
   const [lang] = useState<'en' | 'ru'>('en')
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showModal, setShowModal] = useState(false)
+  const [reviewsKey, setReviewsKey] = useState(0)
   const { addToCart } = useCart()
   const { toast } = useToast()
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
   useEffect(() => {
     if (!id) return
@@ -163,8 +170,29 @@ export default function ProductDetail() {
                         setShowModal(true)
                       }}
                       className="flex-1 bg-gradient-primary hover:brightness-110"
+                      disabled={product.stock <= 0}
                     >
                       Add to Cart
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const productId = Number(product.id)
+                        if (isInWishlist(productId)) {
+                          removeFromWishlist(productId)
+                        } else {
+                          addToWishlist(productId)
+                        }
+                      }}
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${
+                          isInWishlist(Number(product.id))
+                            ? 'fill-primary text-primary'
+                            : ''
+                        }`}
+                      />
                     </Button>
                     {product.preview_link && (
                       <Button variant="outline" asChild>
@@ -178,6 +206,31 @@ export default function ProductDetail() {
               </Card>
             </div>
           </div>
+
+          {/* Reviews Section */}
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <h2 className="text-2xl font-bold mb-6">Отзывы покупателей</h2>
+              <ReviewsList key={reviewsKey} productId={Number(product.id)} />
+            </div>
+            <div>
+              <ReviewForm
+                productId={Number(product.id)}
+                onReviewSubmitted={() => setReviewsKey(prev => prev + 1)}
+              />
+            </div>
+          </div>
+
+          {/* Recommended Products */}
+          {product.category && (
+            <div className="mt-12">
+              <RecommendedProducts
+                currentProductId={Number(product.id)}
+                category={product.category}
+                lang={lang}
+              />
+            </div>
+          )}
         </div>
       </main>
       <Footer />

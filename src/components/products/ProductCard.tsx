@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { useCart } from "@/contexts/CartContext"
+import { useWishlist } from "@/hooks/useWishlist"
+import { Heart } from 'lucide-react'
 
 interface Product {
   id: string
@@ -25,6 +27,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
   const { addToCart } = useCart()
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const getName = () => {
     if (lang === 'ru' && product.name_ru) return product.name_ru
@@ -42,12 +45,33 @@ export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
     <>
       <Link to={`/products/${product.id}`} className="block no-underline">
         <Card className="w-full max-w-sm overflow-hidden transition-all hover:shadow-glow-accent border-border/50">
-          <CardHeader className="p-0">
+          <CardHeader className="p-0 relative">
             <img
               src={imageUrl}
               alt={getName()}
               className="w-full h-48 object-cover"
             />
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const productId = Number(product.id)
+                if (isInWishlist(productId)) {
+                  removeFromWishlist(productId)
+                } else {
+                  addToWishlist(productId)
+                }
+              }}
+              className="absolute top-2 right-2 p-2 rounded-full bg-background/80 hover:bg-background transition-colors"
+            >
+              <Heart
+                className={`h-5 w-5 ${
+                  isInWishlist(Number(product.id))
+                    ? 'fill-primary text-primary'
+                    : 'text-foreground'
+                }`}
+              />
+            </button>
           </CardHeader>
           <CardContent className="p-4 space-y-2">
             <div className="flex justify-between items-start">
