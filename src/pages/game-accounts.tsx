@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ProductCard } from '@/components/products/ProductCard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ProductListSEO } from '@/components/seo/ProductListSEO'
 
 interface Product {
   id: string
@@ -44,6 +45,7 @@ export default function GameAccounts() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <ProductListSEO category="Game Account" products={products} lang={lang} />
       <Header />
       <main className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">

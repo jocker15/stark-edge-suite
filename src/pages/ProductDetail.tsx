@@ -12,6 +12,7 @@ import { useWishlist } from '@/hooks/useWishlist'
 import { ReviewsList } from '@/components/products/ReviewsList'
 import { ReviewForm } from '@/components/products/ReviewForm'
 import { RecommendedProducts } from '@/components/products/RecommendedProducts'
+import { ProductSEO } from '@/components/seo/ProductSEO'
 
 interface Product {
   id: string
@@ -116,6 +117,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <ProductSEO product={product} lang={lang} />
       <Header />
       <main className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">

@@ -4,10 +4,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { DefaultSEO } from '@/components/seo/DefaultSEO'
 
 export default function Verifications() {
   return (
     <div className="min-h-screen flex flex-col">
+      <DefaultSEO 
+        title="Verification Services - Professional Document Verification | Digital Edge"
+        description="Professional verification services for documents and accounts. Fast, secure, and reliable verification process. Contact us for details."
+        url="https://yoursite.lovable.app/verifications"
+      />
       <Header />
       <main className="flex-1 container mx-auto py-8">
         <Card className="max-w-4xl mx-auto">

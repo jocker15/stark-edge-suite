@@ -6,6 +6,7 @@ import { ProductCard } from '@/components/products/ProductCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { ProductListSEO } from '@/components/seo/ProductListSEO'
 
 interface Product {
   id: string
@@ -76,6 +77,7 @@ export default function DigitalTemplates() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <ProductListSEO category="Digital Template" products={products} lang={lang} />
       <Header />
       <main className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">
