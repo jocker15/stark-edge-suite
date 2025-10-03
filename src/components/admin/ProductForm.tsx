@@ -31,6 +31,8 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     document_type: product?.document_type || "",
     country: product?.country || "",
     preview_link: product?.preview_link || "",
+    meta_title: product?.meta_title || "",
+    meta_description: product?.meta_description || "",
   });
 
   useEffect(() => {
@@ -252,6 +254,41 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                   setFormData({ ...formData, preview_link: e.target.value })
                 }
               />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">SEO оптимизация</h3>
+              
+              <div>
+                <Label>Meta Title</Label>
+                <Input
+                  value={formData.meta_title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, meta_title: e.target.value })
+                  }
+                  placeholder="Оптимизированный заголовок для поисковых систем"
+                  maxLength={60}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Рекомендуется до 60 символов
+                </p>
+              </div>
+
+              <div>
+                <Label>Meta Description</Label>
+                <Textarea
+                  value={formData.meta_description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, meta_description: e.target.value })
+                  }
+                  placeholder="Краткое описание для поисковых систем"
+                  maxLength={160}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Рекомендуется до 160 символов
+                </p>
+              </div>
             </div>
 
             <div>

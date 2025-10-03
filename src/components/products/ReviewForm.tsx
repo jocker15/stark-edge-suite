@@ -49,9 +49,10 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
         user_id: user.id,
         rating,
         comment: comment.trim() || null,
-      })
+        status: 'pending',
+      });
 
-    setSubmitting(false)
+    setSubmitting(false);
 
     if (error) {
       if (error.code === '23505') {
@@ -59,22 +60,22 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
           title: 'Ошибка',
           description: 'Вы уже оставили отзыв на этот товар',
           variant: 'destructive',
-        })
+        });
       } else {
         toast({
           title: 'Ошибка',
           description: 'Не удалось отправить отзыв',
           variant: 'destructive',
-        })
+        });
       }
     } else {
       toast({
         title: 'Успешно',
-        description: 'Ваш отзыв опубликован',
-      })
-      setRating(0)
-      setComment('')
-      onReviewSubmitted()
+        description: 'Ваш отзыв отправлен на модерацию',
+      });
+      setRating(0);
+      setComment('');
+      onReviewSubmitted();
     }
   }
 

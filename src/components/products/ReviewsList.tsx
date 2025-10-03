@@ -12,6 +12,7 @@ interface Review {
   comment: string | null
   created_at: string
   user_id: string
+  status: string
 }
 
 interface ReviewsListProps {
@@ -32,6 +33,7 @@ export function ReviewsList({ productId }: ReviewsListProps) {
       .from('reviews')
       .select('*')
       .eq('product_id', productId)
+      .eq('status', 'approved')
       .order('created_at', { ascending: false })
 
     if (!error && data) {

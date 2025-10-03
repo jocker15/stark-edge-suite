@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/footer";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminOrders } from "@/components/admin/AdminOrders";
+import { AdminReviews } from "@/components/admin/AdminReviews";
 import { Loader2 } from "lucide-react";
 
 export default function Admin() {
@@ -26,13 +27,10 @@ export default function Admin() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
+      const { data: hasAdminRole } = await supabase
+        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
 
-      if (profile?.role !== "admin") {
+      if (!hasAdminRole) {
         navigate("/");
         return;
       }
@@ -70,22 +68,27 @@ export default function Admin() {
         </Card>
 
         <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="products">Товары</TabsTrigger>
-            <TabsTrigger value="users">Пользователи</TabsTrigger>
+            <TabsTrigger value="reviews">Отзывы</TabsTrigger>
             <TabsTrigger value="orders">Заказы</TabsTrigger>
+            <TabsTrigger value="users">Пользователи</TabsTrigger>
           </TabsList>
 
           <TabsContent value="products">
             <AdminProducts />
           </TabsContent>
 
-          <TabsContent value="users">
-            <AdminUsers />
+          <TabsContent value="reviews">
+            <AdminReviews />
           </TabsContent>
 
           <TabsContent value="orders">
             <AdminOrders />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <AdminUsers />
           </TabsContent>
         </Tabs>
       </main>

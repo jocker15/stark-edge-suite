@@ -1,68 +1,130 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield, UserX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
-interface Profile {
+interface UserWithRoles {
   id: number;
   user_id: string;
   email: string | null;
   username: string | null;
-  role: string;
   created_at: string;
+  roles: string[];
 }
 
 export function AdminUsers() {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
-    loadProfiles();
+    loadUsers();
   }, []);
 
-  async function loadProfiles() {
+  async function loadUsers() {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Get all profiles
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) {
+    if (profilesError) {
       toast({
         title: "Ошибка",
         description: "Не удалось загрузить пользователей",
         variant: "destructive",
       });
-    } else {
-      setProfiles(data || []);
+      setLoading(false);
+      return;
     }
+
+    // Get all user roles
+    const { data: userRoles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("user_id, role");
+
+    if (rolesError) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить роли пользователей",
+        variant: "destructive",
+      });
+    }
+
+    // Combine profiles with roles
+    const usersWithRoles = profiles?.map(profile => ({
+      ...profile,
+      roles: userRoles?.filter(r => r.user_id === profile.user_id).map(r => r.role) || []
+    })) || [];
+
+    setUsers(usersWithRoles);
     setLoading(false);
   }
 
-  async function updateRole(userId: string, newRole: string) {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ role: newRole })
-      .eq("user_id", userId);
+  async function toggleRole(userId: string, role: 'admin' | 'moderator' | 'user', hasRole: boolean) {
+    if (hasRole) {
+      // Remove role
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", role);
 
-    if (error) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось обновить роль",
-        variant: "destructive",
-      });
+      if (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить роль",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Успешно",
+          description: "Роль удалена",
+        });
+        loadUsers();
+      }
     } else {
-      toast({
-        title: "Успешно",
-        description: "Роль пользователя обновлена",
-      });
-      loadProfiles();
+      // Add role
+      const { error } = await supabase
+        .from("user_roles")
+        .insert([{ user_id: userId, role }]);
+
+      if (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось добавить роль",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Успешно",
+          description: "Роль добавлена",
+        });
+        loadUsers();
+      }
     }
   }
+
+  const filteredUsers = users.filter(user => 
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.user_id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -78,50 +140,87 @@ export function AdminUsers() {
         <CardTitle>Управление пользователями</CardTitle>
       </CardHeader>
       <CardContent>
-        {profiles.length === 0 ? (
+        <div className="mb-4">
+          <Input
+            placeholder="Поиск по email, имени или ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {filteredUsers.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            Нет пользователей
+            Пользователей не найдено
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Роль</TableHead>
-                <TableHead>Дата регистрации</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {profiles.map((profile) => (
-                <TableRow key={profile.id}>
-                  <TableCell className="font-mono text-xs">
-                    {profile.user_id.slice(0, 8)}...
-                  </TableCell>
-                  <TableCell>{profile.email || "—"}</TableCell>
-                  <TableCell>{profile.username || "—"}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={profile.role}
-                      onValueChange={(value) => updateRole(profile.user_id, value)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(profile.created_at).toLocaleDateString("ru-RU")}
-                  </TableCell>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User ID</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Имя пользователя</TableHead>
+                  <TableHead>Роли</TableHead>
+                  <TableHead>Дата регистрации</TableHead>
+                  <TableHead>Действия</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => {
+                  const hasAdmin = user.roles.includes('admin');
+                  const hasModerator = user.roles.includes('moderator');
+                  
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-mono text-xs">
+                        {user.user_id.slice(0, 8)}...
+                      </TableCell>
+                      <TableCell>{user.email || "—"}</TableCell>
+                      <TableCell>{user.username || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {user.roles.length === 0 && (
+                            <Badge variant="secondary">user</Badge>
+                          )}
+                          {user.roles.map(role => (
+                            <Badge 
+                              key={role}
+                              variant={role === 'admin' ? 'default' : 'secondary'}
+                            >
+                              {role}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(user.created_at).toLocaleDateString("ru-RU")}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={hasAdmin ? "default" : "outline"}
+                            onClick={() => toggleRole(user.user_id, 'admin', hasAdmin)}
+                          >
+                            <Shield className="h-4 w-4 mr-1" />
+                            Admin
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={hasModerator ? "default" : "outline"}
+                            onClick={() => toggleRole(user.user_id, 'moderator', hasModerator)}
+                          >
+                            <UserX className="h-4 w-4 mr-1" />
+                            Moderator
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>
