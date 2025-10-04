@@ -18,10 +18,12 @@ interface Product {
   category: string
 }
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 export default function GameAccounts() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [lang] = useState<'en' | 'ru'>('en') // Можно сделать динамическим позже
+  const { lang } = useLanguage()
 
   useEffect(() => {
     async function fetchProducts() {

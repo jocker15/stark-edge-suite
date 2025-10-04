@@ -23,10 +23,12 @@ interface CartItem {
   image_url: string
 }
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 export default function Checkout() {
   const { cart, getTotalPrice } = useCart()
   const { user } = useAuth()
-  const [lang] = useState<'en' | 'ru'>('en')
+  const { lang } = useLanguage()
   const [orderId, setOrderId] = useState<number | null>(null)
   const navigate = useNavigate()
   const widgetRef = useRef<HTMLDivElement>(null)

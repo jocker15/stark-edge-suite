@@ -19,9 +19,11 @@ interface CartItem {
   image_url: string
 }
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart()
-  const [lang] = useState<'en' | 'ru'>('en')
+  const { lang } = useLanguage()
   const navigate = useNavigate()
   const { toast } = useToast()
 

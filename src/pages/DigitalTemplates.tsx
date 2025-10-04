@@ -22,11 +22,13 @@ interface Product {
   country: string | null
 }
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 export default function DigitalTemplates() {
   const [products, setProducts] = useState<Product[]>([])
   const [allProducts, setAllProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [lang] = useState<'en' | 'ru'>('en')
+  const { lang } = useLanguage()
   const [selectedDocType, setSelectedDocType] = useState<string>('all')
   const [selectedCountry, setSelectedCountry] = useState<string>('all')
   const [documentTypes, setDocumentTypes] = useState<string[]>([])

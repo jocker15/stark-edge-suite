@@ -30,13 +30,14 @@ interface Product {
 
 import { useCart } from '@/contexts/CartContext'
 import { useToast } from '@/hooks/use-toast'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [lang] = useState<'en' | 'ru'>('en')
+  const { lang } = useLanguage()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showModal, setShowModal] = useState(false)
   const [reviewsKey, setReviewsKey] = useState(0)

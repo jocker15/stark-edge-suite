@@ -18,12 +18,14 @@ interface Product {
   category: string;
 }
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 export default function SearchResults() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lang] = useState<'en' | 'ru'>('en');
+  const { lang } = useLanguage();
 
   useEffect(() => {
     async function searchProducts() {

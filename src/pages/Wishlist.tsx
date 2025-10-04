@@ -19,11 +19,13 @@ interface Product {
   category: string
 }
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 export default function Wishlist() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const { wishlist } = useWishlist()
-  const [lang] = useState<'en' | 'ru'>('en')
+  const { lang } = useLanguage()
 
   useEffect(() => {
     loadWishlistProducts()
