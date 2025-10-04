@@ -2,9 +2,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -27,6 +35,7 @@ interface Order {
   amount: number;
   status: string;
   order_details: any;
+  payment_details: any;
   created_at: string;
   profiles: {
     email: string | null;
@@ -39,6 +48,7 @@ export function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -165,7 +175,7 @@ export function AdminOrders() {
                   <TableHead>Сумма</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Дата</TableHead>
-                  <TableHead>Действия</TableHead>
+                  <TableHead className="w-[220px]">Действия</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -194,19 +204,29 @@ export function AdminOrders() {
                       })}
                     </TableCell>
                     <TableCell>
-                      <Select
-                        value={order.status}
-                        onValueChange={(value) => updateStatus(order.id, value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="failed">Failed</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Детали
+                        </Button>
+                        <Select
+                          value={order.status}
+                          onValueChange={(value) => updateStatus(order.id, value)}
+                        >
+                          <SelectTrigger className="w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="failed">Failed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -215,6 +235,119 @@ export function AdminOrders() {
           </div>
         )}
       </CardContent>
+
+      {/* Order Details Dialog */}
+      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Детали заказа #{selectedOrder?.id}</DialogTitle>
+            <DialogDescription>
+              Полная информация о заказе
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Order Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    Статус
+                  </h4>
+                  <div>{getStatusBadge(selectedOrder.status)}</div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    Сумма
+                  </h4>
+                  <p className="text-2xl font-bold">${selectedOrder.amount}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    Дата создания
+                  </h4>
+                  <p>
+                    {new Date(selectedOrder.created_at).toLocaleDateString("ru-RU", {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    User ID
+                  </h4>
+                  <p className="font-mono text-xs break-all">{selectedOrder.user_id}</p>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div>
+                <h4 className="font-semibold mb-2">Данные покупателя</h4>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Email:</span>
+                        <span>{selectedOrder.profiles?.email || "—"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Имя пользователя:</span>
+                        <span>{selectedOrder.profiles?.username || "—"}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Order Details */}
+              {selectedOrder.order_details && (
+                <div>
+                  <h4 className="font-semibold mb-2">Состав заказа</h4>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        {Array.isArray(selectedOrder.order_details.items) ? (
+                          selectedOrder.order_details.items.map((item: any, index: number) => (
+                            <div key={index} className="flex justify-between items-center border-b last:border-0 pb-2 last:pb-0">
+                              <div>
+                                <p className="font-medium">{item.name || "Товар"}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Количество: {item.quantity || 1}
+                                </p>
+                              </div>
+                              <p className="font-semibold">${(item.price || 0).toFixed(2)}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground">Детали заказа недоступны</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Payment Details */}
+              {selectedOrder.payment_details && (
+                <div>
+                  <h4 className="font-semibold mb-2">Данные оплаты</h4>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
+                        {JSON.stringify(selectedOrder.payment_details, null, 2)}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

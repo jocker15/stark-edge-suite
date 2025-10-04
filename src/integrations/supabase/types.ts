@@ -104,6 +104,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: number
+          is_blocked: boolean | null
           purchases: Json | null
           role: string
           temp_password: string | null
@@ -115,6 +116,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          is_blocked?: boolean | null
           purchases?: Json | null
           role?: string
           temp_password?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          is_blocked?: boolean | null
           purchases?: Json | null
           role?: string
           temp_password?: string | null
@@ -235,6 +238,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_user_blocked: {
+        Args: { _user_id: string }
         Returns: boolean
       }
     }

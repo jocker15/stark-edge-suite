@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Shield, UserX } from "lucide-react";
+import { Loader2, Shield, UserX, Ban, UnlockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,6 +21,7 @@ interface UserWithRoles {
   email: string | null;
   username: string | null;
   created_at: string;
+  is_blocked: boolean;
   roles: string[];
 }
 
@@ -120,7 +121,28 @@ export function AdminUsers() {
     }
   }
 
-  const filteredUsers = users.filter(user => 
+  async function toggleBlockUser(userId: string, isBlocked: boolean) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_blocked: !isBlocked })
+      .eq("user_id", userId);
+
+    if (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось изменить статус блокировки",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Успешно",
+        description: isBlocked ? "Пользователь разблокирован" : "Пользователь заблокирован",
+      });
+      loadUsers();
+    }
+  }
+
+  const filteredUsers = users.filter(user =>
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.user_id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -160,6 +182,7 @@ export function AdminUsers() {
                   <TableHead>User ID</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Имя пользователя</TableHead>
+                  <TableHead>Статус</TableHead>
                   <TableHead>Роли</TableHead>
                   <TableHead>Дата регистрации</TableHead>
                   <TableHead>Действия</TableHead>
@@ -177,6 +200,11 @@ export function AdminUsers() {
                       </TableCell>
                       <TableCell>{user.email || "—"}</TableCell>
                       <TableCell>{user.username || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={user.is_blocked ? "destructive" : "default"}>
+                          {user.is_blocked ? "Заблокирован" : "Активен"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
                           {user.roles.length === 0 && (
@@ -196,7 +224,7 @@ export function AdminUsers() {
                         {new Date(user.created_at).toLocaleDateString("ru-RU")}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Button
                             size="sm"
                             variant={hasAdmin ? "default" : "outline"}
@@ -211,7 +239,19 @@ export function AdminUsers() {
                             onClick={() => toggleRole(user.user_id, 'moderator', hasModerator)}
                           >
                             <UserX className="h-4 w-4 mr-1" />
-                            Moderator
+                            Mod
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={user.is_blocked ? "outline" : "destructive"}
+                            onClick={() => toggleBlockUser(user.user_id, user.is_blocked)}
+                          >
+                            {user.is_blocked ? (
+                              <UnlockKeyhole className="h-4 w-4 mr-1" />
+                            ) : (
+                              <Ban className="h-4 w-4 mr-1" />
+                            )}
+                            {user.is_blocked ? "Разблок" : "Блок"}
                           </Button>
                         </div>
                       </TableCell>
