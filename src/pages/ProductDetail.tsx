@@ -13,6 +13,7 @@ import { ReviewsList } from '@/components/products/ReviewsList'
 import { ReviewForm } from '@/components/products/ReviewForm'
 import { RecommendedProducts } from '@/components/products/RecommendedProducts'
 import { ProductSEO } from '@/components/seo/ProductSEO'
+import { TrustBar } from '@/components/products/TrustBar'
 
 interface Product {
   id: string
@@ -55,7 +56,17 @@ export default function ProductDetail() {
           .single()
 
         if (error) throw error
-        setProduct(data)
+        
+        // Ensure image_urls is a proper array
+        if (data) {
+          const processedData = {
+            ...data,
+            image_urls: Array.isArray(data.image_urls) 
+              ? data.image_urls 
+              : (data.image_urls ? [data.image_urls] : ['/placeholder.svg'])
+          }
+          setProduct(processedData)
+        }
       } catch (error) {
         console.error('Error fetching product:', error)
       } finally {
@@ -121,6 +132,9 @@ export default function ProductDetail() {
       <Header />
       <main className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">
+          {/* Trust Bar */}
+          <TrustBar />
+          
           <div className="flex flex-col md:flex-row gap-8">
             {/* Image Gallery */}
             <div className="md:w-1/2 space-y-4">
