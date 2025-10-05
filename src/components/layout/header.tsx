@@ -44,27 +44,24 @@ export function Header() {
     <header className="bg-card/50 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 bg-gradient-primary rounded glow-primary"></div>
           <span className="text-xl font-heading text-gradient-primary">
             DIGITAL EDGE
           </span>
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          <a href="/" className="text-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
-            HOME
-          </a>
-          <a href="/verifications" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
+          <Link to="/verifications" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
             VERIFICATIONS
-          </a>
-          <a href="/game-accounts" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
+          </Link>
+          <Link to="/game-accounts" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
             GAME ACCOUNTS
-          </a>
-          <a href="/digital-templates" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
+          </Link>
+          <Link to="/digital-templates" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
             TEMPLATES
-          </a>
+          </Link>
         </nav>
 
         {/* Search */}
