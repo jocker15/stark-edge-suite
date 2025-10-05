@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { ProductListSEO } from '@/components/seo/ProductListSEO'
+import { TrustBar } from '@/components/products/TrustBar'
 
 interface Product {
   id: string
@@ -86,6 +87,8 @@ export default function DigitalTemplates() {
           <h1 className="text-3xl font-bold text-foreground mb-8 text-center">
             {lang === 'ru' ? 'Цифровые шаблоны' : 'Digital Templates'}
           </h1>
+
+          <TrustBar />
 
           {/* Filters */}
           <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">

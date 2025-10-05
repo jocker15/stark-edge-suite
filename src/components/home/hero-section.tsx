@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function HeroSection() {
   return (
@@ -30,18 +31,24 @@ export function HeroSection() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button 
+            asChild
             size="lg" 
             className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-heading tracking-wide glow-primary transition-all duration-300"
           >
-            EXPLORE SERVICES
-            <ArrowRight className="ml-2 h-5 w-5" />
+            <Link to="/verifications">
+              EXPLORE SERVICES
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
           </Button>
           <Button 
+            asChild
             variant="outline" 
             size="lg"
             className="border-accent text-accent hover:bg-accent/10 font-heading tracking-wide transition-all duration-300"
           >
-            VIEW PRODUCTS
+            <Link to="/digital-templates">
+              VIEW PRODUCTS
+            </Link>
           </Button>
         </div>
       </div>
