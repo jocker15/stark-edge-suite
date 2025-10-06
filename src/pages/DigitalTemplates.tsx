@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -26,12 +27,13 @@ interface Product {
 import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function DigitalTemplates() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [allProducts, setAllProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const { lang } = useLanguage()
-  const [selectedDocType, setSelectedDocType] = useState<string>('all')
-  const [selectedCountry, setSelectedCountry] = useState<string>('all')
+  const [selectedDocType, setSelectedDocType] = useState<string>(searchParams.get('docType') || 'all')
+  const [selectedCountry, setSelectedCountry] = useState<string>(searchParams.get('country') || 'all')
   const [documentTypes, setDocumentTypes] = useState<string[]>([])
   const [countries, setCountries] = useState<string[]>([])
 
@@ -64,6 +66,12 @@ export default function DigitalTemplates() {
   }, [])
 
   useEffect(() => {
+    // Update URL params
+    const params = new URLSearchParams()
+    if (selectedDocType !== 'all') params.set('docType', selectedDocType)
+    if (selectedCountry !== 'all') params.set('country', selectedCountry)
+    setSearchParams(params, { replace: true })
+
     // Filter products based on selected filters
     let filtered = allProducts
 
@@ -76,7 +84,7 @@ export default function DigitalTemplates() {
     }
 
     setProducts(filtered)
-  }, [selectedDocType, selectedCountry, allProducts])
+  }, [selectedDocType, selectedCountry, allProducts, setSearchParams])
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

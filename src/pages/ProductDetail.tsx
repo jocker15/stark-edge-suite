@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Heart } from 'lucide-react'
+import { Heart, ArrowLeft } from 'lucide-react'
 import { useWishlist } from '@/hooks/useWishlist'
 import { ReviewsList } from '@/components/products/ReviewsList'
 import { ReviewForm } from '@/components/products/ReviewForm'
@@ -35,6 +35,8 @@ import { useLanguage } from '@/contexts/LanguageContext'
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const { lang } = useLanguage()
@@ -44,6 +46,14 @@ export default function ProductDetail() {
   const { addToCart } = useCart()
   const { toast } = useToast()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+
+  const handleBackClick = () => {
+    if (product?.category === 'Digital Template') {
+      navigate(`/digital-templates${location.search}`)
+    } else {
+      navigate(-1)
+    }
+  }
 
   useEffect(() => {
     if (!id) return
@@ -133,6 +143,16 @@ export default function ProductDetail() {
       <Header />
       <main className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={handleBackClick}
+            className="mb-6 -ml-2"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {lang === 'ru' ? 'Назад' : 'Back'}
+          </Button>
+
           {/* Trust Bar */}
           <TrustBar />
           

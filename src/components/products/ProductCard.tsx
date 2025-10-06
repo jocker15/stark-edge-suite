@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
+  const location = useLocation()
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -40,10 +41,12 @@ export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
   }
 
   const imageUrl = product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : '/placeholder.svg'
+  
+  const productLink = `/products/${product.id}${location.search}`
 
   return (
     <>
-      <Link to={`/products/${product.id}`} className="block no-underline">
+      <Link to={productLink} className="block no-underline">
         <Card className="w-full max-w-sm overflow-hidden transition-all hover:shadow-glow-accent border-border/50">
           <CardHeader className="p-0 relative">
             <img
