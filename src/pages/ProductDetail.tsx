@@ -253,7 +253,9 @@ export default function ProductDetail() {
           {/* Reviews Section */}
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold mb-6">Отзывы покупателей</h2>
+              <h2 className="text-2xl font-bold mb-6">
+                {lang === 'ru' ? 'Отзывы покупателей' : 'Customer Reviews'}
+              </h2>
               <ReviewsList key={reviewsKey} productId={Number(product.id)} />
             </div>
             <div>
