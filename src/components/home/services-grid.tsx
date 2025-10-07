@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Gamepad2, FileText, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useEffect, useRef, useState } from "react";
 
 export function ServicesGrid() {
   const { lang } = useLanguage();
+  const [visibleCards, setVisibleCards] = useState<boolean[]>([false, false, false]);
+  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   
   const services = [
     {
@@ -39,6 +42,40 @@ export function ServicesGrid() {
     }
   ];
 
+  useEffect(() => {
+    const observers = cardsRef.current.map((card, index) => {
+      if (!card) return null;
+      
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setTimeout(() => {
+                setVisibleCards((prev) => {
+                  const newVisible = [...prev];
+                  newVisible[index] = true;
+                  return newVisible;
+                });
+              }, index * 150);
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+      
+      observer.observe(card);
+      return observer;
+    });
+
+    return () => {
+      observers.forEach((observer, index) => {
+        if (observer && cardsRef.current[index]) {
+          observer.disconnect();
+        }
+      });
+    };
+  }, []);
+
   return (
     <section className="py-24 px-4">
       <div className="container mx-auto">
@@ -58,40 +95,49 @@ export function ServicesGrid() {
           {services.map((service, index) => {
             const Icon = service.icon;
             return (
-              <Card 
+              <div
                 key={index}
-                className="bg-card/50 backdrop-blur border-border/50 hover:border-accent/30 transition-all duration-500 group overflow-hidden relative"
+                ref={(el) => (cardsRef.current[index] = el)}
+                className={`transition-all duration-700 ${
+                  visibleCards[index]
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-8'
+                }`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-                
-                <CardHeader className="relative">
-                  <div className={`w-12 h-12 rounded-lg bg-card/80 flex items-center justify-center mb-4 group-hover:glow-accent transition-all duration-300`}>
-                    <Icon className={`h-6 w-6 ${service.iconColor}`} />
-                  </div>
-                  <CardTitle className="font-heading text-xl text-foreground group-hover:text-accent transition-colors">
-                    {service.title}
-                  </CardTitle>
-                </CardHeader>
+                <Card 
+                  className="bg-card/50 backdrop-blur border-border/50 hover:border-accent/30 hover:shadow-[0_0_30px_rgba(0,239,255,0.15)] transition-all duration-500 group overflow-hidden relative h-full"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                  
+                  <CardHeader className="relative">
+                    <div className={`w-12 h-12 rounded-lg bg-card/80 flex items-center justify-center mb-4 group-hover:glow-accent group-hover:scale-110 transition-all duration-300`}>
+                      <Icon className={`h-6 w-6 ${service.iconColor}`} />
+                    </div>
+                    <CardTitle className="font-heading text-xl text-foreground group-hover:text-accent transition-colors">
+                      {service.title}
+                    </CardTitle>
+                  </CardHeader>
 
-                <CardContent className="relative">
-                  <CardDescription className="text-muted-foreground leading-relaxed">
-                    {service.description}
-                  </CardDescription>
-                </CardContent>
+                  <CardContent className="relative">
+                    <CardDescription className="text-muted-foreground leading-relaxed">
+                      {service.description}
+                    </CardDescription>
+                  </CardContent>
 
-                <CardFooter className="relative">
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-between text-accent hover:text-accent-foreground hover:bg-accent/20 font-heading tracking-wide group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-300"
-                    asChild
-                  >
-                    <a href={service.href}>
-                      {lang === 'ru' ? 'УЗНАТЬ БОЛЬШЕ' : 'EXPLORE'}
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                  </Button>
-                </CardFooter>
-              </Card>
+                  <CardFooter className="relative">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-between text-accent hover:text-accent-foreground hover:bg-accent/20 font-heading tracking-wide group-hover:bg-accent group-hover:text-accent-foreground group-hover:scale-105 transition-all duration-300"
+                      asChild
+                    >
+                      <a href={service.href}>
+                        {lang === 'ru' ? 'УЗНАТЬ БОЛЬШЕ' : 'EXPLORE'}
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </a>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
             );
           })}
         </div>
