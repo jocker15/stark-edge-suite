@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useState, FormEvent } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { MobileMenu } from "@/components/layout/mobile-menu";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
 export function Header() {
   const {
     user,
@@ -46,6 +48,9 @@ export function Header() {
     }
   };
   return <>
+      {/* Scroll Progress Bar */}
+      <ScrollProgress />
+      
       {/* Telegram Banner */}
       <a href="https://t.me/+PEK5gWmsPxY4NGU6" target="_blank" rel="noopener noreferrer" className="block bg-gradient-accent hover:opacity-90 transition-opacity">
         <div className="container mx-auto px-4 py-2 text-center">
@@ -91,37 +96,41 @@ export function Header() {
         </form>
 
         {/* Actions */}
-        <div className="flex items-center space-x-4">
-          <Link to="/cart">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent relative">
+        <div className="flex items-center space-x-2 md:space-x-4">
+          <Link to="/cart" className="hidden sm:block">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent hover:scale-110 transition-transform relative">
               <ShoppingCart className="h-5 w-5" />
-              {getItemCount() > 0 && <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full text-xs flex items-center justify-center">
+              {getItemCount() > 0 && <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full text-xs flex items-center justify-center animate-scale-in">
                   {getItemCount()}
                 </Badge>}
             </Button>
           </Link>
           
           {user ? <>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent" onClick={() => navigate("/account")}>
+              <Button variant="ghost" size="icon" className="hidden md:flex text-muted-foreground hover:text-accent hover:scale-110 transition-transform" onClick={() => navigate("/account")}>
                 <User className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent" onClick={handleSignOut}>
+              <Button variant="ghost" size="icon" className="hidden md:flex text-muted-foreground hover:text-accent hover:scale-110 transition-transform" onClick={handleSignOut}>
                 <LogOut className="h-5 w-5" />
               </Button>
             </> : <>
-              <Link to="/signin">
-                <Button variant="outline" size="sm" className="text-foreground border-border/50 hover:bg-accent/50">
+              <Link to="/signin" className="hidden md:block">
+                <Button variant="outline" size="sm" className="text-foreground border-border/50 hover:bg-accent/50 hover:scale-105 transition-transform">
                   {lang === 'ru' ? 'ВОЙТИ' : 'SIGN IN'}
                 </Button>
               </Link>
-              <Link to="/signup">
-                <Button size="sm" className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
+              <Link to="/signup" className="hidden md:block">
+                <Button size="sm" className="bg-gradient-primary hover:opacity-90 hover:scale-105 transition-all text-primary-foreground">
                   {lang === 'ru' ? 'РЕГИСТРАЦИЯ' : 'SIGN UP'}
                 </Button>
               </Link>
             </>}
           
-          <LanguageSwitcher />
+          <div className="hidden md:block">
+            <LanguageSwitcher />
+          </div>
+          
+          <MobileMenu />
         </div>
       </div>
     </header>
