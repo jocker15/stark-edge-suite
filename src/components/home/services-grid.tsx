@@ -1,44 +1,56 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Gamepad2, FileText, ArrowRight } from "lucide-react";
-
-const services = [
-  {
-    icon: Shield,
-    title: "Verification Services",
-    description: "Professional verification solutions for businesses and individuals. Secure, fast, and reliable authentication processes.",
-    href: "/verifications",
-    gradient: "from-accent/20 to-accent/5",
-    iconColor: "text-accent"
-  },
-  {
-    icon: Gamepad2,
-    title: "Game Accounts",
-    description: "Premium gaming accounts with verified credentials. High-level characters, rare items, and exclusive content.",
-    href: "/game-accounts",
-    gradient: "from-primary/20 to-primary/5",
-    iconColor: "text-primary"
-  },
-  {
-    icon: FileText,
-    title: "Digital Templates",
-    description: "Professional design templates for modern businesses. Websites, presentations, and digital assets ready to use.",
-    href: "/digital-templates",
-    gradient: "from-foreground/20 to-foreground/5",
-    iconColor: "text-foreground"
-  }
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ServicesGrid() {
+  const { lang } = useLanguage();
+  
+  const services = [
+    {
+      icon: Shield,
+      title: lang === 'ru' ? "Услуги верификации" : "Verification Services",
+      description: lang === 'ru' 
+        ? "Профессиональные решения для верификации бизнеса и частных лиц. Безопасные, быстрые и надежные процессы аутентификации."
+        : "Professional verification solutions for businesses and individuals. Secure, fast, and reliable authentication processes.",
+      href: "/verifications",
+      gradient: "from-accent/20 to-accent/5",
+      iconColor: "text-accent"
+    },
+    {
+      icon: Gamepad2,
+      title: lang === 'ru' ? "Игровые аккаунты" : "Game Accounts",
+      description: lang === 'ru'
+        ? "Премиум игровые аккаунты с проверенными учетными данными. Персонажи высокого уровня, редкие предметы и эксклюзивный контент."
+        : "Premium gaming accounts with verified credentials. High-level characters, rare items, and exclusive content.",
+      href: "/game-accounts",
+      gradient: "from-primary/20 to-primary/5",
+      iconColor: "text-primary"
+    },
+    {
+      icon: FileText,
+      title: lang === 'ru' ? "Цифровые шаблоны" : "Digital Templates",
+      description: lang === 'ru'
+        ? "Профессиональные шаблоны дизайна для современного бизнеса. Веб-сайты, презентации и цифровые активы готовые к использованию."
+        : "Professional design templates for modern businesses. Websites, presentations, and digital assets ready to use.",
+      href: "/digital-templates",
+      gradient: "from-foreground/20 to-foreground/5",
+      iconColor: "text-foreground"
+    }
+  ];
+
   return (
     <section className="py-24 px-4">
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-heading mb-6 text-gradient-accent">
-            OUR SERVICES
+            {lang === 'ru' ? 'НАШИ УСЛУГИ' : 'OUR SERVICES'}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Three core business lines delivering premium digital solutions with military-grade security and cutting-edge technology.
+            {lang === 'ru' 
+              ? 'Три основных направления бизнеса, предоставляющих премиум цифровые решения с военной безопасностью и передовыми технологиями.'
+              : 'Three core business lines delivering premium digital solutions with military-grade security and cutting-edge technology.'
+            }
           </p>
         </div>
 
@@ -74,7 +86,7 @@ export function ServicesGrid() {
                     asChild
                   >
                     <a href={service.href}>
-                      EXPLORE
+                      {lang === 'ru' ? 'УЗНАТЬ БОЛЬШЕ' : 'EXPLORE'}
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </a>
                   </Button>

@@ -1,27 +1,30 @@
 import { Shield, Zap, Star, Headphones } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export function TrustBar() {
+  const { lang } = useLanguage()
+  
   const trustItems = [
     {
       icon: Shield,
-      title: 'Гарантия безопасности',
-      description: 'Все товары проверяются вручную',
+      title: lang === 'ru' ? 'Гарантия безопасности' : 'Security Guarantee',
+      description: lang === 'ru' ? 'Все товары проверяются вручную' : 'All products are manually verified',
     },
     {
       icon: Zap,
-      title: 'Мгновенная доставка',
-      description: 'Получите доступ сразу после оплаты',
+      title: lang === 'ru' ? 'Мгновенная доставка' : 'Instant Delivery',
+      description: lang === 'ru' ? 'Получите доступ сразу после оплаты' : 'Get access immediately after payment',
     },
     {
       icon: Star,
-      title: 'Эксклюзивные товары',
-      description: 'Уникальные предложения только для вас',
+      title: lang === 'ru' ? 'Эксклюзивные товары' : 'Exclusive Products',
+      description: lang === 'ru' ? 'Уникальные предложения только для вас' : 'Unique offers just for you',
     },
     {
       icon: Headphones,
-      title: 'Поддержка 24/7',
-      description: 'Мы всегда на связи',
+      title: lang === 'ru' ? 'Поддержка 24/7' : '24/7 Support',
+      description: lang === 'ru' ? 'Мы всегда на связи' : 'We are always in touch',
     },
   ]
 
