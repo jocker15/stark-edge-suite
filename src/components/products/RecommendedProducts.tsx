@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { ProductCard } from './ProductCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Product {
   id: string
@@ -21,9 +22,10 @@ interface RecommendedProductsProps {
   lang?: 'en' | 'ru'
 }
 
-export function RecommendedProducts({ currentProductId, category, lang = 'en' }: RecommendedProductsProps) {
+export function RecommendedProducts({ currentProductId, category }: Omit<RecommendedProductsProps, 'lang'>) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const { lang } = useLanguage()
 
   useEffect(() => {
     loadRecommendations()
@@ -58,7 +60,9 @@ export function RecommendedProducts({ currentProductId, category, lang = 'en' }:
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Рекомендуемые товары</CardTitle>
+        <CardTitle>
+          {lang === 'ru' ? 'Рекомендуемые товары' : 'Recommended Products'}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

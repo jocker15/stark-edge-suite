@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Star } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface ReviewFormProps {
   productId: number
@@ -17,14 +18,15 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const { toast } = useToast()
+  const { lang } = useLanguage()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
     if (rating === 0) {
       toast({
-        title: 'Ошибка',
-        description: 'Пожалуйста, поставьте оценку',
+        title: lang === 'ru' ? 'Ошибка' : 'Error',
+        description: lang === 'ru' ? 'Пожалуйста, поставьте оценку' : 'Please provide a rating',
         variant: 'destructive',
       })
       return
@@ -33,8 +35,8 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       toast({
-        title: 'Требуется авторизация',
-        description: 'Войдите, чтобы оставить отзыв',
+        title: lang === 'ru' ? 'Требуется авторизация' : 'Authorization Required',
+        description: lang === 'ru' ? 'Войдите, чтобы оставить отзыв' : 'Sign in to leave a review',
         variant: 'destructive',
       })
       return
@@ -57,21 +59,21 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
     if (error) {
       if (error.code === '23505') {
         toast({
-          title: 'Ошибка',
-          description: 'Вы уже оставили отзыв на этот товар',
+          title: lang === 'ru' ? 'Ошибка' : 'Error',
+          description: lang === 'ru' ? 'Вы уже оставили отзыв на этот товар' : 'You have already reviewed this product',
           variant: 'destructive',
         });
       } else {
         toast({
-          title: 'Ошибка',
-          description: 'Не удалось отправить отзыв',
+          title: lang === 'ru' ? 'Ошибка' : 'Error',
+          description: lang === 'ru' ? 'Не удалось отправить отзыв' : 'Failed to submit review',
           variant: 'destructive',
         });
       }
     } else {
       toast({
-        title: 'Успешно',
-        description: 'Ваш отзыв отправлен на модерацию',
+        title: lang === 'ru' ? 'Успешно' : 'Success',
+        description: lang === 'ru' ? 'Ваш отзыв отправлен на модерацию' : 'Your review has been submitted for moderation',
       });
       setRating(0);
       setComment('');
@@ -82,12 +84,14 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Оставить отзыв</CardTitle>
+        <CardTitle>{lang === 'ru' ? 'Оставить отзыв' : 'Leave a Review'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Ваша оценка</label>
+            <label className="block text-sm font-medium mb-2">
+              {lang === 'ru' ? 'Ваша оценка' : 'Your Rating'}
+            </label>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -112,19 +116,22 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Комментарий (необязательно)
+              {lang === 'ru' ? 'Комментарий (необязательно)' : 'Comment (optional)'}
             </label>
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Расскажите о вашем опыте использования товара..."
+              placeholder={lang === 'ru' ? 'Расскажите о вашем опыте использования товара...' : 'Tell us about your experience with the product...'}
               rows={4}
               maxLength={1000}
             />
           </div>
 
           <Button type="submit" disabled={submitting || rating === 0}>
-            {submitting ? 'Отправка...' : 'Отправить отзыв'}
+            {submitting 
+              ? (lang === 'ru' ? 'Отправка...' : 'Submitting...') 
+              : (lang === 'ru' ? 'Отправить отзыв' : 'Submit Review')
+            }
           </Button>
         </form>
       </CardContent>

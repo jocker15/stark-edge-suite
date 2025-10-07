@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Star } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, enUS } from 'date-fns/locale'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Review {
   id: string
@@ -23,6 +24,7 @@ export function ReviewsList({ productId }: ReviewsListProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [averageRating, setAverageRating] = useState(0)
+  const { lang } = useLanguage()
 
   useEffect(() => {
     loadReviews()
@@ -47,7 +49,9 @@ export function ReviewsList({ productId }: ReviewsListProps) {
   }
 
   if (loading) {
-    return <div className="text-muted-foreground">Загрузка отзывов...</div>
+    return <div className="text-muted-foreground">
+      {lang === 'ru' ? 'Загрузка отзывов...' : 'Loading reviews...'}
+    </div>
   }
 
   return (
@@ -67,14 +71,16 @@ export function ReviewsList({ productId }: ReviewsListProps) {
             ))}
           </div>
           <span className="text-lg font-semibold">{averageRating}</span>
-          <span className="text-muted-foreground">({reviews.length} отзывов)</span>
+          <span className="text-muted-foreground">
+            ({reviews.length} {lang === 'ru' ? 'отзывов' : 'reviews'})
+          </span>
         </div>
       )}
 
       {reviews.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Пока нет отзывов. Будьте первым!
+            {lang === 'ru' ? 'Пока нет отзывов. Будьте первым!' : 'No reviews yet. Be the first!'}
           </CardContent>
         </Card>
       ) : (
@@ -102,7 +108,7 @@ export function ReviewsList({ productId }: ReviewsListProps) {
                     <p className="text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(review.created_at), {
                         addSuffix: true,
-                        locale: ru,
+                        locale: lang === 'ru' ? ru : enUS,
                       })}
                     </p>
                   </div>

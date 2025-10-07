@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useState, FormEvent } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 export function Header() {
   const {
     user,
@@ -21,18 +22,19 @@ export function Header() {
     getItemCount
   } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
+  const { lang } = useLanguage();
   const handleSignOut = async () => {
     try {
       await signOut();
       toast({
-        title: "Signed out",
-        description: "You have been successfully signed out"
+        title: lang === 'ru' ? "Вы вышли" : "Signed out",
+        description: lang === 'ru' ? "Вы успешно вышли из системы" : "You have been successfully signed out"
       });
       navigate("/");
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to sign out",
+        title: lang === 'ru' ? "Ошибка" : "Error",
+        description: lang === 'ru' ? "Не удалось выйти" : "Failed to sign out",
         variant: "destructive"
       });
     }
@@ -48,7 +50,7 @@ export function Header() {
       <a href="https://t.me/+PEK5gWmsPxY4NGU6" target="_blank" rel="noopener noreferrer" className="block bg-gradient-accent hover:opacity-90 transition-opacity">
         <div className="container mx-auto px-4 py-2 text-center">
           <span className="text-sm font-heading tracking-wider text-black">
-            JOIN OUR TELEGRAM CHANNEL
+            {lang === 'ru' ? 'ПРИСОЕДИНЯЙТЕСЬ К НАШЕМУ TELEGRAM КАНАЛУ' : 'JOIN OUR TELEGRAM CHANNEL'}
           </span>
         </div>
       </a>
@@ -64,13 +66,13 @@ export function Header() {
         {/* Navigation */}
         <nav className="hidden md:flex items-center space-x-8 flex-shrink-0">
           <Link to="/verifications" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
-            VERIFICATIONS
+            {lang === 'ru' ? 'ВЕРИФИКАЦИЯ' : 'VERIFICATIONS'}
           </Link>
           <Link to="/game-accounts" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
-            GAME ACCOUNTS
+            {lang === 'ru' ? 'ИГРОВЫЕ АККАУНТЫ' : 'GAME ACCOUNTS'}
           </Link>
           <Link to="/digital-templates" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
-            TEMPLATES
+            {lang === 'ru' ? 'ШАБЛОНЫ' : 'TEMPLATES'}
           </Link>
         </nav>
 
@@ -78,7 +80,13 @@ export function Header() {
         <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-md">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search products..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-card/50 border-border/50 w-full" />
+            <Input 
+              type="search" 
+              placeholder={lang === 'ru' ? 'Поиск товаров...' : 'Search products...'} 
+              value={searchQuery} 
+              onChange={e => setSearchQuery(e.target.value)} 
+              className="pl-10 bg-card/50 border-border/50 w-full" 
+            />
           </div>
         </form>
 
@@ -103,12 +111,12 @@ export function Header() {
             </> : <>
               <Link to="/signin">
                 <Button variant="outline" size="sm" className="text-foreground border-border/50 hover:bg-accent/50">
-                  SIGN IN
+                  {lang === 'ru' ? 'ВОЙТИ' : 'SIGN IN'}
                 </Button>
               </Link>
               <Link to="/signup">
                 <Button size="sm" className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
-                  SIGN UP
+                  {lang === 'ru' ? 'РЕГИСТРАЦИЯ' : 'SIGN UP'}
                 </Button>
               </Link>
             </>}
