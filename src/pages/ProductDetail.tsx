@@ -270,7 +270,6 @@ export default function ProductDetail() {
               <RecommendedProducts
                 currentProductId={Number(product.id)}
                 category={product.category}
-                lang={lang}
               />
             </div>
           )}
