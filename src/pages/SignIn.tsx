@@ -142,11 +142,21 @@ export default function SignIn() {
               Sign in with Google
             </Button>
 
-            <div className="text-center">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <Link to="/signup" className="text-accent hover:text-accent/80 transition-colors">
-                Sign Up
-              </Link>
+            <div className="text-center space-y-2">
+              <div>
+                <Link 
+                  to="/forgot-password" 
+                  className="text-sm text-accent hover:text-accent/80 transition-colors"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Don't have an account? </span>
+                <Link to="/signup" className="text-accent hover:text-accent/80 transition-colors">
+                  Sign Up
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

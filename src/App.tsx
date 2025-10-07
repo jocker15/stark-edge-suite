@@ -21,6 +21,8 @@ import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import SearchResults from "./pages/SearchResults";
 import ContactUs from "./pages/ContactUs";
 import FAQ from "./pages/FAQ";
@@ -55,6 +57,8 @@ const App = () => (
               <Route path="/verifications" element={<Verifications />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-failed" element={<PaymentFailed />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/contact" element={<ContactUs />} />
               <Route path="/faq" element={<FAQ />} />

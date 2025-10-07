@@ -13,6 +13,37 @@ interface CryptoCloudCallback {
   order_id: string;
   status: string;
   token: string;
+  [key: string]: any;
+}
+
+// Audit logging helper
+async function logAuditEvent(
+  supabaseClient: any,
+  actionType: string,
+  entityType: string,
+  entityId: string,
+  details: any,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  try {
+    const { error } = await supabaseClient
+      .from('audit_logs')
+      .insert({
+        action_type: actionType,
+        entity_type: entityType,
+        entity_id: entityId,
+        details: details,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+      });
+    
+    if (error) {
+      console.error('Failed to log audit event:', error);
+    }
+  } catch (err) {
+    console.error('Error logging audit event:', err);
+  }
 }
 
 serve(async (req) => {
@@ -29,7 +60,29 @@ serve(async (req) => {
 
     const payload: CryptoCloudCallback = await req.json();
     
+    // Extract client information for audit logging
+    const ipAddress = req.headers.get('x-forwarded-for') || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+    
     console.log('Received payment callback:', payload);
+
+    // Log incoming payment callback
+    await logAuditEvent(
+      supabase,
+      'payment_callback_received',
+      'payment',
+      payload.invoice_id,
+      { 
+        order_id: payload.order_id,
+        status: payload.status,
+        amount: payload.amount_crypto,
+        currency: payload.currency
+      },
+      ipAddress,
+      userAgent
+    );
 
     // Verify the token from CryptoCloud
     const encoder = new TextEncoder();
@@ -40,6 +93,21 @@ serve(async (req) => {
 
     if (hashHex !== payload.token) {
       console.error('Invalid token signature');
+      
+      // Log signature verification failure
+      await logAuditEvent(
+        supabase,
+        'payment_signature_invalid',
+        'payment',
+        payload.invoice_id,
+        { 
+          order_id: payload.order_id,
+          reason: 'Token signature mismatch'
+        },
+        ipAddress,
+        userAgent
+      );
+      
       return new Response(
         JSON.stringify({ error: 'Invalid signature' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -65,9 +133,42 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating order:', updateError);
+      
+      // Log order update failure
+      await logAuditEvent(
+        supabase,
+        'payment_update_failed',
+        'order',
+        payload.order_id,
+        { 
+          error: updateError.message,
+          invoice_id: payload.invoice_id
+        },
+        ipAddress,
+        userAgent
+      );
+      
       return new Response(
         JSON.stringify({ error: 'Failed to update order' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Log successful payment processing
+    if (orderStatus === 'completed') {
+      await logAuditEvent(
+        supabase,
+        'payment_completed',
+        'order',
+        payload.order_id,
+        { 
+          invoice_id: payload.invoice_id,
+          amount: payload.amount_crypto,
+          currency: payload.currency,
+          user_id: order?.user_id
+        },
+        ipAddress,
+        userAgent
       );
     }
 

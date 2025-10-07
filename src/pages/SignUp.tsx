@@ -37,10 +37,10 @@ export default function SignUp() {
         });
       } else {
         toast({
-          title: "Success",
-          description: "Check your email for verification link",
+          title: "Account Created",
+          description: "Please check your email to verify your account before signing in",
         });
-        navigate("/");
+        // Don't navigate immediately, let user read the message
       }
     } catch (error) {
       toast({
