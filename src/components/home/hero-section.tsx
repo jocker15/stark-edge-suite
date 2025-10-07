@@ -22,9 +22,9 @@ export function HeroSection() {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-heading mb-6 leading-tight">
-          <span className="text-gradient-primary">{lang === 'ru' ? 'ЦИФРОВОЕ' : 'DIGITAL'}</span>
+          <span className="text-gradient-primary">{lang === 'ru' ? 'STARK' : 'STARK'}</span>
           <br />
-          <span className="text-gradient-accent">{lang === 'ru' ? 'ПРЕИМУЩЕСТВО' : 'EDGE'}</span>
+          <span className="text-gradient-accent">{lang === 'ru' ? 'INCORP.' : 'INCORP.'}</span>
         </h1>
 
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
