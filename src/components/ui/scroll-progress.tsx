@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import * as React from "react";
 import { Progress } from "@/components/ui/progress";
 
 export function ScrollProgress() {
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollProgress, setScrollProgress] = React.useState(0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const updateScrollProgress = () => {
       const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrolled = (window.scrollY / scrollHeight) * 100;

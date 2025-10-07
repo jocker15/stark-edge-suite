@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import * as React from "react";
 
 interface AnimatedNumberProps {
   value: number;
@@ -7,11 +7,11 @@ interface AnimatedNumberProps {
 }
 
 export function AnimatedNumber({ value, duration = 2000, className = "" }: AnimatedNumberProps) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
+  const [displayValue, setDisplayValue] = React.useState(0);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const ref = React.useRef<HTMLSpanElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -28,7 +28,7 @@ export function AnimatedNumber({ value, duration = 2000, className = "" }: Anima
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isVisible) return;
 
     const startTime = Date.now();

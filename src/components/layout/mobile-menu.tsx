@@ -1,4 +1,4 @@
-import { useState } from "react";
+import * as React from "react";
 import { Menu, X, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export function MobileMenu() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
   const { lang } = useLanguage();
   const navigate = useNavigate();
 
