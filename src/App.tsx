@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { TelegramButton } from "@/components/ui/telegram-button";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
@@ -41,6 +42,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <TelegramButton />
             <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />

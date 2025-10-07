@@ -41,8 +41,23 @@ export function Header() {
   };
 
   return (
-    <header className="bg-card/50 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
+    <>
+      {/* Telegram Banner */}
+      <a 
+        href="https://t.me/+PEK5gWmsPxY4NGU6" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="block bg-gradient-accent hover:opacity-90 transition-opacity"
+      >
+        <div className="container mx-auto px-4 py-2 text-center">
+          <span className="text-sm font-heading tracking-wider text-black">
+            JOIN OUR TELEGRAM CHANNEL
+          </span>
+        </div>
+      </a>
+
+      <header className="bg-card/50 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity flex-shrink-0">
           <div className="w-8 h-8 bg-gradient-primary rounded glow-primary"></div>
@@ -132,5 +147,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }
