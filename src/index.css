@@ -277,7 +277,7 @@
   #tawk-bubble-container,
   .tawk-bubble-container,
   iframe[title*="chat"] {
-    bottom: 160px !important;
+    bottom: 24px !important;
     right: 20px !important;
   }
 
