@@ -6,9 +6,7 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-primary rounded glow-primary"></div>
-              <span className="text-xl font-heading text-gradient-primary">
-                DIGITAL EDGE
-              </span>
+              <span className="text-xl font-heading text-gradient-primary">STARK INC.</span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Next-generation digital solutions with military-grade security and cutting-edge technology.
