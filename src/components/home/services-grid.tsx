@@ -48,8 +48,8 @@ export function ServicesGrid() {
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             {lang === 'ru' 
-              ? 'Три основных направления бизнеса, предоставляющих премиум цифровые решения с военной безопасностью и передовыми технологиями.'
-              : 'Three core business lines delivering premium digital solutions with military-grade security and cutting-edge technology.'
+              ? 'Три основных направления бизнеса, предоставляющих премиум цифровые решения для вашего успеха'
+              : 'Three core business areas providing premium digital solutions to help you succeed'
             }
           </p>
         </div>
