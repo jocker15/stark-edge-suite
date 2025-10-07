@@ -1,6 +1,5 @@
 export function Footer() {
-  return (
-    <footer className="bg-card/30 backdrop-blur border-t border-border/50 py-12">
+  return <footer className="bg-card/30 backdrop-blur border-t border-border/50 py-12">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -68,7 +67,7 @@ export function Footer() {
         <div className="border-t border-border/30 mt-12 pt-8">
           {/* Accepted Cryptocurrencies */}
           <div className="mb-6">
-            <p className="text-sm text-muted-foreground text-center mb-4">We Accept</p>
+            <p className="text-sm text-muted-foreground text-center mb-4">We accept</p>
             <div className="flex flex-wrap justify-center items-center gap-6">
               <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                 <div className="w-8 h-8 rounded-full bg-[#F7931A] flex items-center justify-center">
@@ -126,6 +125,5 @@ export function Footer() {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 }
