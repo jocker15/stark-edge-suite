@@ -42,9 +42,9 @@ export function Header() {
 
   return (
     <header className="bg-card/50 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity flex-shrink-0">
           <div className="w-8 h-8 bg-gradient-primary rounded glow-primary"></div>
           <span className="text-xl font-heading text-gradient-primary">
             DIGITAL EDGE
@@ -52,7 +52,7 @@ export function Header() {
         </Link>
 
         {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="hidden md:flex items-center space-x-8 flex-shrink-0">
           <Link to="/verifications" className="text-muted-foreground hover:text-accent transition-colors font-heading text-sm tracking-wide">
             VERIFICATIONS
           </Link>
@@ -65,15 +65,15 @@ export function Header() {
         </nav>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="hidden md:flex items-center space-x-2 flex-1 max-w-xs mx-8">
-          <div className="relative flex-1">
+        <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-md">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-card/50 border-border/50"
+              className="pl-10 bg-card/50 border-border/50 w-full"
             />
           </div>
         </form>
