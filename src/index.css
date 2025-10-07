@@ -272,4 +272,22 @@
     width: 100% !important;
     margin-bottom: auto !important;
   }
+
+  /* Tawk.to Widget Customization */
+  #tawk-bubble-container,
+  .tawk-bubble-container {
+    bottom: 160px !important;
+    right: 20px !important;
+  }
+
+  .tawk-text-truncate,
+  .tawk-button-circle .tawk-chat-panel-close-text,
+  .tawk-min-container .tawk-text-truncate,
+  .tawk-custom-color .tawk-text-truncate,
+  [data-test-id="bubble-text"],
+  .bubble-text {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
 }
