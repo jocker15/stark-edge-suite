@@ -4,7 +4,7 @@ export function TelegramButton() {
       href="https://t.me/+PEK5gWmsPxY4NGU6"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-36 right-6 z-40 w-14 h-14 bg-gradient-accent hover:opacity-90 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 glow-accent"
+      className="fixed bottom-20 right-6 z-40 w-14 h-14 bg-gradient-accent hover:opacity-90 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 glow-accent"
       aria-label="Join our Telegram channel"
     >
       <svg
