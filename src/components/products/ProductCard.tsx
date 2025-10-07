@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFoo
 import { useCart } from "@/contexts/CartContext"
 import { useWishlist } from "@/hooks/useWishlist"
 import { Heart } from 'lucide-react'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 
 interface Product {
   id: string
@@ -49,10 +50,12 @@ export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
       <Link to={productLink} className="block no-underline">
         <Card className="w-full max-w-sm overflow-hidden transition-all hover:shadow-glow-accent border-border/50">
           <CardHeader className="p-0 relative">
-            <img
+            <OptimizedImage
               src={imageUrl}
               alt={getName()}
               className="w-full h-48 object-cover"
+              width={400}
+              height={300}
             />
             <button
               onClick={(e) => {

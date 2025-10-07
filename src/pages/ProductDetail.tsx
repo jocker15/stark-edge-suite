@@ -14,6 +14,7 @@ import { ReviewForm } from '@/components/products/ReviewForm'
 import { RecommendedProducts } from '@/components/products/RecommendedProducts'
 import { ProductSEO } from '@/components/seo/ProductSEO'
 import { TrustBar } from '@/components/products/TrustBar'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 
 interface Product {
   id: string
@@ -159,21 +160,26 @@ export default function ProductDetail() {
           <div className="flex flex-col md:flex-row gap-8">
             {/* Image Gallery */}
             <div className="md:w-1/2 space-y-4">
-              <img
+              <OptimizedImage
                 src={mainImage}
                 alt={getName()}
                 className="w-full h-96 object-cover rounded-lg"
+                width={800}
+                height={600}
+                priority
               />
               {product.image_urls && product.image_urls.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto">
                   {product.image_urls.map((url, index) => (
-                    <img
+                    <OptimizedImage
                       key={index}
                       src={url}
                       alt={`${getName()} ${index + 1}`}
                       className={`w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity ${
                         index === currentImageIndex ? 'ring-2 ring-primary ring-offset-2' : ''
                       }`}
+                      width={80}
+                      height={80}
                       onClick={() => setCurrentImageIndex(index)}
                     />
                   ))}

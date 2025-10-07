@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { X, Upload, Trash2 } from "lucide-react";
+import { convertToWebP } from "@/lib/imageOptimization";
 
 interface ProductFormProps {
   product?: any;
@@ -45,23 +46,54 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     const uploadedUrls: string[] = [];
 
     for (const image of images) {
-      const fileExt = image.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      try {
+        // Convert to WebP for better compression
+        const optimizedImage = await convertToWebP(image, {
+          maxWidth: 1920,
+          maxHeight: 1920,
+          quality: 0.85
+        });
 
-      const { error: uploadError } = await supabase.storage
-        .from("product-images")
-        .upload(filePath, image);
+        const fileName = `${crypto.randomUUID()}.webp`;
+        const filePath = fileName;
 
-      if (uploadError) {
-        throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, optimizedImage, {
+            contentType: 'image/webp',
+            cacheControl: '31536000' // 1 year cache
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(data.publicUrl);
+      } catch (error) {
+        console.error('Error optimizing image:', error);
+        // Fallback to original upload if optimization fails
+        const fileExt = image.name.split(".").pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = fileName;
+
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, image);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(data.publicUrl);
       }
-
-      const { data } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(filePath);
-
-      uploadedUrls.push(data.publicUrl);
     }
 
     return uploadedUrls;
