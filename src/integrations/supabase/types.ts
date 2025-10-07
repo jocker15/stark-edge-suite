@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          tawk_chat_id: string
+          telegram_message_id: number | null
+          updated_at: string
+          visitor_email: string | null
+          visitor_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          tawk_chat_id: string
+          telegram_message_id?: number | null
+          updated_at?: string
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          tawk_chat_id?: string
+          telegram_message_id?: number | null
+          updated_at?: string
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number | null

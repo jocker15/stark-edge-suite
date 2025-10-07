@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.optimize-image]
 verify_jwt = false
+
+[functions.tawk-to-telegram]
+verify_jwt = false
+
+[functions.telegram-webhook]
+verify_jwt = false
