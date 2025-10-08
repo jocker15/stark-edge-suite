@@ -176,7 +176,6 @@ export type Database = {
           is_blocked: boolean | null
           purchases: Json | null
           role: string
-          temp_password: string | null
           user_id: string
           username: string | null
         }
@@ -188,7 +187,6 @@ export type Database = {
           is_blocked?: boolean | null
           purchases?: Json | null
           role?: string
-          temp_password?: string | null
           user_id?: string
           username?: string | null
         }
@@ -200,7 +198,6 @@ export type Database = {
           is_blocked?: boolean | null
           purchases?: Json | null
           role?: string
-          temp_password?: string | null
           user_id?: string
           username?: string | null
         }
