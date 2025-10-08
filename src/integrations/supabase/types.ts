@@ -113,6 +113,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          invoice_id: string | null
+          ip_address: string | null
+          order_id: number
+          payment_method: string | null
+          payment_status: string | null
+          raw_callback_data: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          invoice_id?: string | null
+          ip_address?: string | null
+          order_id: number
+          payment_method?: string | null
+          payment_status?: string | null
+          raw_callback_data?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          invoice_id?: string | null
+          ip_address?: string | null
+          order_id?: number
+          payment_method?: string | null
+          payment_status?: string | null
+          raw_callback_data?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null

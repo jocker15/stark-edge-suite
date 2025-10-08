@@ -43,12 +43,26 @@ interface Order {
   } | null;
 }
 
+interface PaymentTransaction {
+  id: string;
+  invoice_id: string | null;
+  payment_status: string | null;
+  amount: number | null;
+  currency: string | null;
+  payment_method: string | null;
+  raw_callback_data: any;
+  ip_address: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -75,6 +89,22 @@ export function AdminOrders() {
       setOrders(data as any || []);
     }
     setLoading(false);
+  }
+
+  // Load full payment transaction details for selected order (admin only)
+  async function loadPaymentTransactions(orderId: number) {
+    const { data, error } = await supabase
+      .from("payment_transactions")
+      .select("*")
+      .eq("order_id", orderId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading payment transactions:", error);
+      setPaymentTransactions([]);
+    } else {
+      setPaymentTransactions(data || []);
+    }
   }
 
   async function updateStatus(orderId: number, newStatus: string) {
@@ -208,7 +238,10 @@ export function AdminOrders() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setSelectedOrder(order)}
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            loadPaymentTransactions(order.id);
+                          }}
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Детали
@@ -334,12 +367,79 @@ export function AdminOrders() {
               {/* Payment Details */}
               {selectedOrder.payment_details && (
                 <div>
-                  <h4 className="font-semibold mb-2">Данные оплаты</h4>
+                  <h4 className="font-semibold mb-2">Данные оплаты (для пользователя)</h4>
                   <Card>
                     <CardContent className="pt-4">
                       <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
                         {JSON.stringify(selectedOrder.payment_details, null, 2)}
                       </pre>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Full Payment Transaction Details (Admin Only) */}
+              {paymentTransactions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">
+                    Полные данные о платеже (только для администраторов)
+                  </h4>
+                  <Card className="border-orange-500">
+                    <CardContent className="pt-4">
+                      {paymentTransactions.map((transaction) => (
+                        <div key={transaction.id} className="space-y-3 mb-4 last:mb-0">
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">ID транзакции:</span>
+                              <p className="font-mono text-xs break-all">{transaction.id}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Invoice ID:</span>
+                              <p className="font-mono text-xs">{transaction.invoice_id || "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Статус:</span>
+                              <p>{transaction.payment_status || "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Сумма:</span>
+                              <p>{transaction.amount ? `${transaction.amount} ${transaction.currency}` : "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Метод оплаты:</span>
+                              <p>{transaction.payment_method || "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">IP адрес:</span>
+                              <p className="font-mono text-xs">{transaction.ip_address || "—"}</p>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Дата создания:</span>
+                              <p>
+                                {new Date(transaction.created_at).toLocaleDateString("ru-RU", {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {transaction.raw_callback_data && (
+                            <div>
+                              <h5 className="text-sm font-semibold mb-1 text-orange-600">
+                                ⚠️ Полные данные callback (конфиденциально)
+                              </h5>
+                              <pre className="text-xs bg-orange-50 dark:bg-orange-950 p-3 rounded overflow-x-auto border border-orange-200 dark:border-orange-800">
+                                {JSON.stringify(transaction.raw_callback_data, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </CardContent>
                   </Card>
                 </div>

@@ -121,11 +121,41 @@ serve(async (req) => {
       ? 'partial' 
       : 'failed';
 
+    // Store complete payment data in admin-only table for audit trail
+    const { error: transactionError } = await supabase
+      .from('payment_transactions')
+      .insert({
+        order_id: parseInt(payload.order_id),
+        invoice_id: payload.invoice_id,
+        payment_status: payload.status,
+        amount: payload.amount_crypto,
+        currency: payload.currency,
+        payment_method: payload.payment_method || 'crypto',
+        raw_callback_data: payload,
+        ip_address: ipAddress
+      });
+
+    if (transactionError) {
+      console.error('Error storing payment transaction:', transactionError);
+      // Continue anyway - order update is more critical for user experience
+    }
+
+    // Create sanitized payment details for orders table (user-accessible)
+    // Trigger will further sanitize this data
+    const sanitizedPaymentDetails = {
+      order_id: payload.order_id,
+      status: payload.status,
+      amount: payload.amount_crypto,
+      currency: payload.currency,
+      invoice_id: payload.invoice_id,
+      timestamp: new Date().toISOString()
+    };
+
     const { data: order, error: updateError } = await supabase
       .from('orders')
       .update({ 
         status: orderStatus,
-        payment_details: payload
+        payment_details: sanitizedPaymentDetails
       })
       .eq('id', parseInt(payload.order_id))
       .select()
