@@ -6,7 +6,6 @@ import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/types'
-import { CRYPTOCLOUD_CONFIG } from '@/lib/cryptocloudConfig'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,107 +36,91 @@ export default function Checkout() {
   const { toast } = useToast()
 
   const [orderReady, setOrderReady] = useState(false)
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  // Create pending order
+  // Create pending order and payment
   useEffect(() => {
     if (cart.length > 0 && !orderId) {
-      const createOrder = async () => {
-        const { data, error } = await supabase
-          .from('orders')
-          .insert([{
-            user_id: user?.id,
-            status: 'pending',
-            amount: total,
-            order_details: cart as any
-          }])
-          .select('id')
-          .single()
+      const createOrderAndPayment = async () => {
+        try {
+          setLoading(true)
+          
+          // Create order
+          const { data, error } = await supabase
+            .from('orders')
+            .insert([{
+              user_id: user?.id,
+              status: 'pending',
+              amount: total,
+              order_details: cart as any
+            }])
+            .select('id')
+            .single()
 
-        if (error) {
-          console.error('Error creating order:', error)
-          console.log(error)
-          toast({
-            title: "Error",
-            description: "Failed to create order. Please try again.",
+          if (error) {
+            console.error('Error creating order:', error)
+            toast({
+              title: lang === 'ru' ? "Ошибка" : "Error",
+              description: lang === 'ru' ? "Не удалось создать заказ. Попробуйте снова." : "Failed to create order. Please try again.",
+              variant: "destructive"
+            })
+            return
+          }
+
+          setOrderId(data.id)
+
+          // Create payment via edge function
+          const session = await supabase.auth.getSession()
+          const token = session.data.session?.access_token
+
+          if (!token) {
+            toast({
+              title: lang === 'ru' ? "Ошибка" : "Error",
+              description: lang === 'ru' ? "Требуется авторизация" : "Authentication required",
+              variant: "destructive"
+            })
+            return
+          }
+
+          const response = await supabase.functions.invoke('create-payment', {
+            body: {
+              orderId: data.id,
+              amount: total,
+              currency: 'USD'
+            }
           })
-          return
-        }
 
-        setOrderId(data.id)
-        setOrderReady(true)
+          if (response.error) {
+            throw new Error(response.error.message)
+          }
+
+          if (response.data?.success && response.data?.paymentUrl) {
+            setPaymentUrl(response.data.paymentUrl)
+            setOrderReady(true)
+          } else {
+            throw new Error(response.data?.error || 'Failed to create payment')
+          }
+        } catch (error) {
+          console.error('Error:', error)
+          toast({
+            title: lang === 'ru' ? "Ошибка" : "Error",
+            description: error instanceof Error ? error.message : (lang === 'ru' ? "Ошибка создания платежа" : "Failed to create payment"),
+            variant: "destructive"
+          })
+        } finally {
+          setLoading(false)
+        }
       }
 
-      createOrder()
+      createOrderAndPayment()
     }
-  }, [user, cart, total, orderId])
+  }, [user, cart, total, orderId, lang])
 
   const getName = (item: CartItem) => {
     if (lang === 'ru' && item.name_ru) return item.name_ru
     return item.name_en
   }
-
-  useEffect(() => {
-    if (!orderReady || !orderId) return
-
-    const div = widgetRef.current
-    if (!div) return
-
-    // Check if already loaded
-    if (div.querySelector('vue-widget')) return
-
-    const loadWidget = () => {
-      // Create vue-widget
-      const vueWidget = document.createElement('vue-widget')
-      vueWidget.setAttribute('shop_id', CRYPTOCLOUD_CONFIG.shopId)
-      vueWidget.setAttribute('api_key', CRYPTOCLOUD_CONFIG.apiKey)
-      vueWidget.setAttribute('currency', CRYPTOCLOUD_CONFIG.currency)
-      vueWidget.setAttribute('amount', total.toFixed(2))
-      vueWidget.setAttribute('locale', lang)
-      vueWidget.setAttribute('order_id', orderId.toString())
-      vueWidget.setAttribute('success_url', `${window.location.origin}/payment-success?invoice_id=${orderId}`)
-      vueWidget.setAttribute('fail_url', `${window.location.origin}/payment-failed?invoice_id=${orderId}`)
-      
-      div.innerHTML = ''
-      div.appendChild(vueWidget)
-      
-      console.log('CryptoCloud widget initialized with order:', orderId)
-    }
-
-    // Load CSS
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://api.cryptocloud.plus/static/widget/v2/css/app.css'
-    
-    if (!document.querySelector('link[href="https://api.cryptocloud.plus/static/widget/v2/css/app.css"]')) {
-      document.head.appendChild(link)
-    }
-
-    // Load script
-    const existingScript = document.querySelector('script[src="https://api.cryptocloud.plus/static/widget/v2/js/app.js"]')
-    
-    if (existingScript) {
-      loadWidget()
-    } else {
-      const script = document.createElement('script')
-      script.src = 'https://api.cryptocloud.plus/static/widget/v2/js/app.js'
-      script.async = true
-      script.onload = loadWidget
-      script.onerror = () => {
-        console.error('Failed to load CryptoCloud widget script')
-        toast({
-          title: "Error",
-          description: "Failed to load payment widget. Please refresh the page.",
-          variant: "destructive"
-        })
-      }
-      document.body.appendChild(script)
-    }
-
-    return () => {
-      // Cleanup widget content but keep scripts loaded for performance
-      if (div) div.innerHTML = ''
-    }
-  }, [total, orderId, orderReady, lang, toast])
 
   if (cart.length === 0) {
     return (
@@ -198,15 +181,43 @@ export default function Checkout() {
               </CardContent>
             </Card>
 
-            {/* CryptoCloud Widget */}
+            {/* Payment */}
             <Card>
               <CardHeader>
-                <CardTitle>CryptoCloud Payment</CardTitle>
+                <CardTitle>{lang === 'ru' ? 'Оплата' : 'Payment'}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div ref={widgetRef} className="w-full min-h-[400px] p-4 border rounded-md bg-muted/50">
-                  Loading payment widget...
-                </div>
+                {loading && (
+                  <div className="w-full min-h-[200px] flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">
+                        {lang === 'ru' ? 'Создание платежа...' : 'Creating payment...'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {!loading && paymentUrl && (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      {lang === 'ru' 
+                        ? 'Нажмите кнопку ниже для перехода к оплате' 
+                        : 'Click the button below to proceed with payment'}
+                    </p>
+                    <Button 
+                      onClick={() => window.location.href = paymentUrl}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {lang === 'ru' ? 'Перейти к оплате' : 'Proceed to Payment'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      {lang === 'ru' 
+                        ? 'Вы будете перенаправлены на защищенную страницу оплаты' 
+                        : 'You will be redirected to a secure payment page'}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -3,6 +3,9 @@ project_id = "kpuqqqaqiwxbjpbmmcfz"
 [functions.payment-callback]
 verify_jwt = false
 
+[functions.create-payment]
+verify_jwt = true
+
 [functions.optimize-image]
 verify_jwt = false
 

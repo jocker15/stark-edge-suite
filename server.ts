@@ -113,14 +113,13 @@ app.post('/api/payment-webhook', async (req, res) => {
           }
 
           // Insert profile for new user
-          const tempPassword = 'changeme123';
+          const tempPassword = crypto.randomBytes(16).toString('hex'); // Secure random password
           const orderDetails = Array.isArray(order.order_details) ? order.order_details : [];
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
               user_id: newUserId,
               email: data.customer_email,
-              temp_password: tempPassword,
               purchases: [orderDetails]
             });
 
@@ -128,20 +127,29 @@ app.post('/api/payment-webhook', async (req, res) => {
             console.error('Failed to insert profile:', profileError);
           }
 
+          // Send password reset link instead of temp password
+          const { error: resetError } = await supabase.auth.admin.generateLink({
+            type: 'recovery',
+            email: data.customer_email
+          });
+
+          if (resetError) {
+            console.error('Failed to generate reset link:', resetError);
+          }
+
           // Send confirmation email with products and login info
           const emailHtml = `
-            <h1>Order #${orderId} Confirmed</h1>
-            <p>Your payment has been received. Thank you for your purchase!</p>
-            <h2>Purchased Items:</h2>
+            <h1>Заказ #${orderId} Подтвержден</h1>
+            <p>Ваш платеж получен. Спасибо за покупку!</p>
+            <h2>Купленные товары:</h2>
             <ul>
-              ${orderDetails.map((item: any) => `<li>${item.name_en || 'Item'} - Quantity: ${item.quantity || 1} - Price: $${(item.price || 0).toFixed(2)}</li>`).join('')}
+              ${orderDetails.map((item: any) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: $${(item.price || 0).toFixed(2)}</li>`).join('')}
             </ul>
-            <p>Total: $${(order.amount || 0).toFixed(2)}</p>
-            <h2>Account Login Information</h2>
+            <p>Итого: $${(order.amount || 0).toFixed(2)}</p>
+            <h2>Информация для входа в аккаунт</h2>
             <p>Email: ${data.customer_email}</p>
-            <p>Temporary Password: ${tempPassword}</p>
-            <p>Please log in to your account at <a href="http://localhost:5173/account">Stark Edge Account</a> and change your password immediately for security.</p>
-            <p>If you have any questions, contact support.</p>
+            <p>Для установки пароля используйте ссылку для восстановления пароля, которая была отправлена на ваш email.</p>
+            <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
           `;
 
           const { data: emailData, error: emailError } = await resend.emails.send({
@@ -175,8 +183,7 @@ app.post('/api/payment-webhook', async (req, res) => {
             const { error: profileUpdateError } = await supabase
               .from('profiles')
               .update({
-                purchases: newPurchases,
-                temp_password: null
+                purchases: newPurchases
               })
               .eq('user_id', order.user_id);
     
@@ -184,36 +191,30 @@ app.post('/api/payment-webhook', async (req, res) => {
               console.error('Failed to update profile:', profileUpdateError);
             }
     
-            // Send email
-            if (profile.temp_password) {
-              const orderDetailsForEmail = Array.isArray(order.order_details) ? order.order_details : [];
-              const emailHtml = `
-                <h1>Order #${orderId} Confirmed</h1>
-                <p>Your payment has been received. Thank you for your purchase!</p>
-                <h2>Purchased Items:</h2>
-                <ul>
-                  ${orderDetailsForEmail.map((item: any) => `<li>${item.name_en || 'Item'} - Quantity: ${item.quantity || 1} - Price: $${(item.price || 0).toFixed(2)}</li>`).join('')}
-                </ul>
-                <p>Total: $${(order.amount || 0).toFixed(2)}</p>
-                <h2>Account Login Information</h2>
-                <p>Email: ${profile.email}</p>
-                <p>Temporary Password: ${profile.temp_password}</p>
-                <p>Please log in to your account at <a href="http://localhost:5173/account">Stark Edge Account</a> and change your password immediately for security.</p>
-                <p>If you have any questions, contact support.</p>
-              `;
+            // Send confirmation email
+            const orderDetailsForEmail = Array.isArray(order.order_details) ? order.order_details : [];
+            const emailHtml = `
+              <h1>Заказ #${orderId} Подтвержден</h1>
+              <p>Ваш платеж получен. Спасибо за покупку!</p>
+              <h2>Купленные товары:</h2>
+              <ul>
+                ${orderDetailsForEmail.map((item: any) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: $${(item.price || 0).toFixed(2)}</li>`).join('')}
+              </ul>
+              <p>Итого: $${(order.amount || 0).toFixed(2)}</p>
+              <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
+            `;
     
-              const { data: emailData, error: emailError } = await resend.emails.send({
-                from: 'no-reply@starkedgestore.com',
-                to: profile.email,
-                subject: 'Order Confirmed - Stark Edge Store',
-                html: emailHtml,
-              });
+            const { data: emailData, error: emailError } = await resend.emails.send({
+              from: 'no-reply@starkedgestore.com',
+              to: profile.email,
+              subject: 'Заказ Подтвержден - Stark Edge Store',
+              html: emailHtml,
+            });
     
-              if (emailError) {
-                console.error('Failed to send email:', emailError);
-              } else {
-                console.log('Email sent successfully');
-              }
+            if (emailError) {
+              console.error('Failed to send email:', emailError);
+            } else {
+              console.log('Email sent successfully');
             }
           }
         }
