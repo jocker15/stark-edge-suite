@@ -58,6 +58,16 @@ export default function Checkout() {
     setEmailSubmitted(true)
   }
 
+  // Auto-redirect to payment URL
+  useEffect(() => {
+    if (paymentUrl) {
+      const timer = setTimeout(() => {
+        window.location.href = paymentUrl;
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentUrl]);
+
   // Create pending order and payment
   useEffect(() => {
     if (cart.length > 0 && !orderId && (user || emailSubmitted)) {
@@ -294,20 +304,16 @@ export default function Checkout() {
                   </div>
                 )}
                 {!loading && paymentUrl && (
-                  <div className="space-y-4">
-                    <div className="bg-primary/10 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium mb-2">
-                        {lang === 'ru' ? '✅ Платеж создан' : '✅ Payment created'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {lang === 'ru' 
-                          ? 'Перенаправление на страницу оплаты...' 
-                          : 'Redirecting to payment page...'}
-                      </p>
-                    </div>
-                    <script dangerouslySetInnerHTML={{
-                      __html: `setTimeout(() => window.location.href = "${paymentUrl}", 1500)`
-                    }} />
+                  <div className="bg-primary/10 p-4 rounded-lg text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+                    <p className="text-sm font-medium mb-2">
+                      {lang === 'ru' ? '✅ Платеж создан' : '✅ Payment created'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {lang === 'ru' 
+                        ? 'Перенаправление на страницу оплаты...' 
+                        : 'Redirecting to payment page...'}
+                    </p>
                   </div>
                 )}
               </CardContent>
