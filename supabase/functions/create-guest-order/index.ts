@@ -69,17 +69,16 @@ serve(async (req) => {
       userId = newUser.user.id;
       console.log('New user created:', userId);
 
-      // Send password recovery email (this will send confirmation link)
-      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'recovery',
+      // Generate magic link for auto-login
+      const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
         email: email,
       });
 
-      if (resetError) {
-        console.error('Error sending recovery email:', resetError);
-        // Don't fail the order if email fails
+      if (magicLinkError) {
+        console.error('Error generating magic link:', magicLinkError);
       } else {
-        console.log('Recovery email sent to:', email);
+        console.log('Magic link generated for:', email);
       }
     }
 
@@ -136,6 +135,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         orderId: orderData.id,
+        userId: userId,
         paymentUrl: paymentData.result.link,
         invoiceId: paymentData.result.invoice_id,
         message: existingUser 

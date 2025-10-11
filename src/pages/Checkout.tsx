@@ -40,6 +40,7 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false)
   const [guestEmail, setGuestEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [guestUserId, setGuestUserId] = useState<string | null>(null)
 
   // Handle guest checkout email submission
   const handleGuestCheckout = async (e: React.FormEvent) => {
@@ -80,14 +81,22 @@ export default function Checkout() {
 
             if (response.data?.success && response.data?.paymentUrl) {
               setOrderId(response.data.orderId)
+              setGuestUserId(response.data.userId)
               setPaymentUrl(response.data.paymentUrl)
               setOrderReady(true)
+              
+              // Store guest order info in localStorage for later auto-login
+              localStorage.setItem('pendingGuestOrder', JSON.stringify({
+                orderId: response.data.orderId,
+                userId: response.data.userId,
+                email: guestEmail
+              }))
               
               toast({
                 title: lang === 'ru' ? "Аккаунт создан" : "Account Created",
                 description: lang === 'ru' 
-                  ? "Проверьте email для подтверждения и установки пароля" 
-                  : "Check your email to confirm and set your password",
+                  ? "После оплаты вы получите доступ к заказу" 
+                  : "After payment you will get access to your order",
               })
             } else {
               throw new Error(response.data?.error || 'Failed to create guest order')

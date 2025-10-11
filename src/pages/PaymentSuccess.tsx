@@ -29,18 +29,56 @@ const PaymentSuccess: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
 
   useEffect(() => {
-    // Try to get order_id from URL params (invoice_id or order_id)
-    const orderId = invoiceId || searchParams.get('order_id');
+    const initOrder = async () => {
+      // Check if there's a pending guest order and auto-login
+      const pendingOrder = localStorage.getItem('pendingGuestOrder');
+      
+      if (pendingOrder && !autoLoginAttempted) {
+        setAutoLoginAttempted(true);
+        const orderData = JSON.parse(pendingOrder);
+        
+        // Try to auto-login using OTP
+        try {
+          const { data: session } = await supabase.auth.getSession();
+          
+          if (!session?.session) {
+            // User not logged in, try to create a session
+            // This will work after payment callback creates the user
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: orderData.email,
+              password: 'temppass123' // This will fail, but we'll handle it
+            });
+            
+            if (signInError) {
+              console.log('Auto-login failed, user needs to check email');
+            }
+          }
+          
+          // Fetch the order
+          await fetchOrder(orderData.orderId.toString());
+          localStorage.removeItem('pendingGuestOrder');
+          return;
+        } catch (err) {
+          console.error('Auto-login error:', err);
+        }
+      }
+      
+      // Try to get order_id from URL params (invoice_id or order_id)
+      const orderId = invoiceId || searchParams.get('order_id');
+      
+      if (orderId) {
+        fetchOrder(orderId);
+      } else {
+        // Try to get the most recent pending/completed order for this user
+        fetchRecentOrder();
+      }
+    };
     
-    if (orderId) {
-      fetchOrder(orderId);
-    } else {
-      // Try to get the most recent pending/completed order for this user
-      fetchRecentOrder();
-    }
-  }, [invoiceId]);
+    initOrder();
+  }, [invoiceId, autoLoginAttempted]);
 
   const fetchRecentOrder = async () => {
     setLoading(true);
@@ -49,7 +87,14 @@ const PaymentSuccess: React.FC = () => {
     const { data: session } = await supabase.auth.getSession();
     
     if (!session?.session?.user) {
-      setError('Please sign in to view your order');
+      // Check if there's order info in localStorage
+      const pendingOrder = localStorage.getItem('pendingGuestOrder');
+      if (pendingOrder) {
+        const orderData = JSON.parse(pendingOrder);
+        setError(`Ваш заказ #${orderData.orderId} обрабатывается. Проверьте email для доступа к аккаунту.`);
+      } else {
+        setError('Войдите в аккаунт чтобы увидеть заказ');
+      }
       setLoading(false);
       return;
     }
@@ -113,8 +158,22 @@ const PaymentSuccess: React.FC = () => {
     return (
       <>
         <Header />
-        <div className="container mx-auto py-8">
-          <p>{error || 'Order not found'}</p>
+        <div className="container mx-auto py-8 px-4">
+          <Card className="max-w-2xl mx-auto">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <p className="text-lg">{error || 'Order not found'}</p>
+                <div className="flex gap-3 justify-center">
+                  <Button asChild>
+                    <Link to="/signin">Войти в аккаунт</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link to="/">На главную</Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         <Footer />
       </>

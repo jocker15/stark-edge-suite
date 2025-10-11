@@ -212,7 +212,7 @@ serve(async (req) => {
         userAgent
       );
 
-      // Get user email to send purchase confirmation
+      // Send email with purchased products
       if (order?.user_id) {
         const { data: userData } = await supabase.auth.admin.getUserById(order.user_id);
         
@@ -221,20 +221,88 @@ serve(async (req) => {
           
           // Get product details from order
           const orderDetails = order.order_details as any;
-          let productList = '';
+          let productListHTML = '';
+          let productListText = '';
           
           if (Array.isArray(orderDetails)) {
-            productList = orderDetails.map((item: any) => 
-              `- ${item.name_en || item.name_ru || 'Product'} (Quantity: ${item.quantity})`
+            productListHTML = orderDetails.map((item: any) => 
+              `<li style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
+                <strong>${item.name_en || item.name_ru || 'Product'}</strong><br>
+                Quantity: ${item.quantity}<br>
+                ${item.preview_link ? `<a href="${item.preview_link}" style="color: #0070f3;">Download Link</a>` : ''}
+              </li>`
+            ).join('');
+            
+            productListText = orderDetails.map((item: any) => 
+              `- ${item.name_en || item.name_ru || 'Product'} (Qty: ${item.quantity})${item.preview_link ? '\n  Link: ' + item.preview_link : ''}`
             ).join('\n');
           }
 
-          console.log('Purchase confirmed:', {
-            email: userData.user.email,
-            orderId: order.id,
-            amount: order.amount,
-            products: productList
-          });
+          // Send email via Resend API
+          const resendApiKey = Deno.env.get('RESEND_API_KEY');
+          
+          try {
+            const emailResponse = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${resendApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: 'STARK INC. <onboarding@resend.dev>',
+                to: [userData.user.email],
+                subject: `✅ Order #${order.id} - Your Digital Products`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #333;">Thank you for your purchase!</h1>
+                    <p style="font-size: 16px; color: #666;">Order ID: <strong>#${order.id}</strong></p>
+                    <p style="font-size: 16px; color: #666;">Amount: <strong>$${order.amount}</strong></p>
+                    
+                    <h2 style="color: #333; margin-top: 30px;">Your Digital Products:</h2>
+                    <ul style="list-style: none; padding: 0;">
+                      ${productListHTML}
+                    </ul>
+                    
+                    <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-radius: 5px;">
+                      <p style="margin: 0; font-size: 14px;">
+                        Access your account at: 
+                        <a href="https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account" 
+                           style="color: #0070f3; text-decoration: none;">
+                          View My Orders
+                        </a>
+                      </p>
+                    </div>
+                    
+                    <p style="margin-top: 30px; font-size: 14px; color: #999;">
+                      If you have any questions, please contact our support team.
+                    </p>
+                  </div>
+                `,
+                text: `
+Thank you for your purchase!
+
+Order ID: #${order.id}
+Amount: $${order.amount}
+
+Your Digital Products:
+${productListText}
+
+Access your account at: https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account
+
+If you have any questions, please contact our support team.
+                `
+              }),
+            });
+
+            if (!emailResponse.ok) {
+              const errorData = await emailResponse.json();
+              console.error('Failed to send email:', errorData);
+            } else {
+              console.log('Purchase confirmation email sent to:', userData.user.email);
+            }
+          } catch (emailErr) {
+            console.error('Error sending email:', emailErr);
+          }
         }
       }
     }
