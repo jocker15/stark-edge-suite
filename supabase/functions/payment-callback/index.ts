@@ -58,7 +58,18 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const payload: CryptoCloudCallback = await req.json();
+    // Parse form data (CryptoCloud sends URL-encoded data)
+    const contentType = req.headers.get('content-type') || '';
+    let payload: CryptoCloudCallback;
+    
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      const text = await req.text();
+      console.log('Raw payload:', text);
+      const params = new URLSearchParams(text);
+      payload = Object.fromEntries(params.entries()) as CryptoCloudCallback;
+    } else {
+      payload = await req.json();
+    }
     
     // Extract client information for audit logging
     const ipAddress = req.headers.get('x-forwarded-for') || 
@@ -158,7 +169,7 @@ serve(async (req) => {
         payment_details: sanitizedPaymentDetails
       })
       .eq('id', parseInt(payload.order_id))
-      .select()
+      .select('*, order_details')
       .single();
 
     if (updateError) {
@@ -200,6 +211,32 @@ serve(async (req) => {
         ipAddress,
         userAgent
       );
+
+      // Get user email to send purchase confirmation
+      if (order?.user_id) {
+        const { data: userData } = await supabase.auth.admin.getUserById(order.user_id);
+        
+        if (userData?.user?.email) {
+          console.log('Order completed for user:', userData.user.email);
+          
+          // Get product details from order
+          const orderDetails = order.order_details as any;
+          let productList = '';
+          
+          if (Array.isArray(orderDetails)) {
+            productList = orderDetails.map((item: any) => 
+              `- ${item.name_en || item.name_ru || 'Product'} (Quantity: ${item.quantity})`
+            ).join('\n');
+          }
+
+          console.log('Purchase confirmed:', {
+            email: userData.user.email,
+            orderId: order.id,
+            amount: order.amount,
+            products: productList
+          });
+        }
+      }
     }
 
     console.log('Order updated successfully:', order);
