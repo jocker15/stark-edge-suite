@@ -193,23 +193,39 @@ serve(async (req) => {
         if (userData?.user?.email) {
           console.log('Order completed for user:', userData.user.email);
           
+          // Generate magic link for user to login
+          const { data: magicLinkData, error: magicLinkError } = await supabase.auth.admin.generateLink({
+            type: 'magiclink',
+            email: userData.user.email,
+            options: {
+              redirectTo: 'https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account'
+            }
+          });
+          
+          const loginLink = magicLinkError ? '' : magicLinkData.properties.action_link;
+          
           // Get product details from order
           const orderDetails = order.order_details as any;
           let productListHTML = '';
           let productListText = '';
           
           if (Array.isArray(orderDetails)) {
-            productListHTML = orderDetails.map((item: any) => 
-              `<li style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
-                <strong>${item.name_en || item.name_ru || 'Product'}</strong><br>
-                Quantity: ${item.quantity}<br>
-                ${item.preview_link ? `<a href="${item.preview_link}" style="color: #0070f3;">Download Link</a>` : ''}
-              </li>`
-            ).join('');
+            productListHTML = orderDetails.map((item: any) => {
+              const downloadLink = item.preview_link || `https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account`;
+              return `<li style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 8px;">
+                <strong style="font-size: 16px; color: #333;">${item.name_en || item.name_ru || 'Product'}</strong><br>
+                <span style="color: #666; font-size: 14px;">Quantity: ${item.quantity}</span><br>
+                <a href="${downloadLink}" 
+                   style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                  📥 Download Now
+                </a>
+              </li>`;
+            }).join('');
             
-            productListText = orderDetails.map((item: any) => 
-              `- ${item.name_en || item.name_ru || 'Product'} (Qty: ${item.quantity})${item.preview_link ? '\n  Link: ' + item.preview_link : ''}`
-            ).join('\n');
+            productListText = orderDetails.map((item: any) => {
+              const downloadLink = item.preview_link || `https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account`;
+              return `- ${item.name_en || item.name_ru || 'Product'} (Qty: ${item.quantity})\n  Download: ${downloadLink}`;
+            }).join('\n\n');
           }
 
           // Send email via Resend API
@@ -227,43 +243,77 @@ serve(async (req) => {
                 to: [userData.user.email],
                 subject: `✅ Order #${order.id} - Your Digital Products`,
                 html: `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h1 style="color: #333;">Thank you for your purchase!</h1>
-                    <p style="font-size: 16px; color: #666;">Order ID: <strong>#${order.id}</strong></p>
-                    <p style="font-size: 16px; color: #666;">Amount: <strong>$${order.amount}</strong></p>
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                      <h1 style="color: #0070f3; margin: 0;">🎉 Thank you for your purchase!</h1>
+                    </div>
                     
-                    <h2 style="color: #333; margin-top: 30px;">Your Digital Products:</h2>
+                    <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                      <p style="font-size: 16px; color: #666; margin: 5px 0;">
+                        <strong>Order ID:</strong> #${order.id}
+                      </p>
+                      <p style="font-size: 16px; color: #666; margin: 5px 0;">
+                        <strong>Amount:</strong> $${order.amount}
+                      </p>
+                    </div>
+
+                    <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 25px;">
+                      <h3 style="color: #333; margin-top: 0;">🔑 Account Access</h3>
+                      <p style="color: #666; margin-bottom: 10px;">
+                        <strong>Your Email:</strong> ${userData.user.email}
+                      </p>
+                      ${loginLink ? `
+                        <a href="${loginLink}" 
+                           style="display: inline-block; margin-top: 10px; padding: 12px 25px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                          🚀 Access Your Account
+                        </a>
+                        <p style="font-size: 12px; color: #999; margin-top: 10px;">
+                          Click the button above to log in instantly. Link expires in 1 hour.
+                        </p>
+                      ` : ''}
+                    </div>
+                    
+                    <h2 style="color: #333; margin-top: 30px;">📦 Your Digital Products:</h2>
                     <ul style="list-style: none; padding: 0;">
                       ${productListHTML}
                     </ul>
                     
-                    <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-radius: 5px;">
-                      <p style="margin: 0; font-size: 14px;">
-                        Access your account at: 
-                        <a href="https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account" 
-                           style="color: #0070f3; text-decoration: none;">
-                          View My Orders
-                        </a>
+                    <div style="margin-top: 30px; padding: 20px; background-color: #e7f3ff; border-radius: 8px;">
+                      <p style="margin: 0; font-size: 14px; color: #333;">
+                        💡 <strong>Tip:</strong> All your orders and downloads are available in your account dashboard.
                       </p>
                     </div>
                     
-                    <p style="margin-top: 30px; font-size: 14px; color: #999;">
-                      If you have any questions, please contact our support team.
-                    </p>
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+                      <p style="font-size: 14px; color: #999; text-align: center;">
+                        Questions? Contact our support team<br>
+                        STARK INC. - Digital Products
+                      </p>
+                    </div>
                   </div>
                 `,
                 text: `
-Thank you for your purchase!
+🎉 Thank you for your purchase!
 
+Order Details:
+--------------
 Order ID: #${order.id}
 Amount: $${order.amount}
 
-Your Digital Products:
+🔑 Account Access:
+--------------
+Email: ${userData.user.email}
+${loginLink ? `Login Link: ${loginLink}\n(Link expires in 1 hour)` : ''}
+
+📦 Your Digital Products:
+--------------
 ${productListText}
 
-Access your account at: https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account
+All your orders and downloads are available at:
+https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account
 
-If you have any questions, please contact our support team.
+Questions? Contact our support team.
+STARK INC. - Digital Products
                 `
               }),
             });
