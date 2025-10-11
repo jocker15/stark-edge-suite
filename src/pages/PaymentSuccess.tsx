@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OrderDetail {
   product_name: string;
@@ -26,6 +27,7 @@ const PaymentSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const invoiceId = searchParams.get('invoice_id');
   const { clearCart } = useCart();
+  const { lang } = useLanguage();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,9 +93,12 @@ const PaymentSuccess: React.FC = () => {
       const pendingOrder = localStorage.getItem('pendingGuestOrder');
       if (pendingOrder) {
         const orderData = JSON.parse(pendingOrder);
-        setError(`Ваш заказ #${orderData.orderId} обрабатывается. Проверьте email для доступа к аккаунту.`);
+        setError(lang === 'ru' 
+          ? `Ваш заказ #${orderData.orderId} обрабатывается. Проверьте email для доступа к аккаунту.`
+          : `Your order #${orderData.orderId} is being processed. Check your email for account access.`
+        );
       } else {
-        setError('Войдите в аккаунт чтобы увидеть заказ');
+        setError(lang === 'ru' ? 'Войдите в аккаунт чтобы увидеть заказ' : 'Please sign in to view your order');
       }
       setLoading(false);
       return;
@@ -147,7 +152,7 @@ const PaymentSuccess: React.FC = () => {
       <>
         <Header />
         <div className="container mx-auto py-8">
-          <p>Loading...</p>
+          <p>{lang === 'ru' ? 'Загрузка...' : 'Loading...'}</p>
         </div>
         <Footer />
       </>
@@ -162,13 +167,13 @@ const PaymentSuccess: React.FC = () => {
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
-                <p className="text-lg">{error || 'Order not found'}</p>
+                <p className="text-lg">{error || (lang === 'ru' ? 'Заказ не найден' : 'Order not found')}</p>
                 <div className="flex gap-3 justify-center">
                   <Button asChild>
-                    <Link to="/signin">Войти в аккаунт</Link>
+                    <Link to="/signin">{lang === 'ru' ? 'Войти в аккаунт' : 'Sign In'}</Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link to="/">На главную</Link>
+                    <Link to="/">{lang === 'ru' ? 'На главную' : 'Home'}</Link>
                   </Button>
                 </div>
               </div>
@@ -186,16 +191,22 @@ const PaymentSuccess: React.FC = () => {
       <div className="container mx-auto py-8 px-4">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">🎉 Оплата успешна!</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              🎉 {lang === 'ru' ? 'Оплата успешна!' : 'Payment Successful!'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground">Номер заказа</p>
+              <p className="text-sm text-muted-foreground">
+                {lang === 'ru' ? 'Номер заказа' : 'Order Number'}
+              </p>
               <p className="text-xl font-bold">#{order?.id}</p>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-3 text-lg">Приобретенные товары:</h3>
+              <h3 className="font-semibold mb-3 text-lg">
+                {lang === 'ru' ? 'Приобретенные товары:' : 'Purchased Items:'}
+              </h3>
               <div className="space-y-3">
                 {order?.order_details.map((detail, index) => (
                   <div key={index} className="flex justify-between items-center p-3 bg-muted rounded-lg">
@@ -207,16 +218,22 @@ const PaymentSuccess: React.FC = () => {
             </div>
 
             <div className="bg-primary/10 p-4 rounded-lg">
-              <p className="text-sm mb-2">✅ Товары отправлены на вашу почту</p>
-              <p className="text-sm">✅ Доступ к личному кабинету активирован</p>
+              <p className="text-sm mb-2">
+                ✅ {lang === 'ru' ? 'Товары отправлены на вашу почту' : 'Items sent to your email'}
+              </p>
+              <p className="text-sm">
+                ✅ {lang === 'ru' ? 'Доступ к личному кабинету активирован' : 'Account access activated'}
+              </p>
             </div>
 
             <div className="flex flex-col gap-3">
               <Button asChild size="lg" className="w-full">
-                <Link to="/account">Перейти в личный кабинет</Link>
+                <Link to="/account">
+                  {lang === 'ru' ? 'Перейти в личный кабинет' : 'Go to Account'}
+                </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="w-full">
-                <Link to="/">На главную</Link>
+                <Link to="/">{lang === 'ru' ? 'На главную' : 'Home'}</Link>
               </Button>
             </div>
           </CardContent>

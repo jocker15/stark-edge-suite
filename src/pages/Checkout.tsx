@@ -295,23 +295,19 @@ export default function Checkout() {
                 )}
                 {!loading && paymentUrl && (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      {lang === 'ru' 
-                        ? 'Нажмите кнопку ниже для перехода к оплате' 
-                        : 'Click the button below to proceed with payment'}
-                    </p>
-                    <Button 
-                      onClick={() => window.location.href = paymentUrl}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {lang === 'ru' ? 'Перейти к оплате' : 'Proceed to Payment'}
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center">
-                      {lang === 'ru' 
-                        ? 'Вы будете перенаправлены на защищенную страницу оплаты' 
-                        : 'You will be redirected to a secure payment page'}
-                    </p>
+                    <div className="bg-primary/10 p-4 rounded-lg text-center">
+                      <p className="text-sm font-medium mb-2">
+                        {lang === 'ru' ? '✅ Платеж создан' : '✅ Payment created'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {lang === 'ru' 
+                          ? 'Перенаправление на страницу оплаты...' 
+                          : 'Redirecting to payment page...'}
+                      </p>
+                    </div>
+                    <script dangerouslySetInnerHTML={{
+                      __html: `setTimeout(() => window.location.href = "${paymentUrl}", 1500)`
+                    }} />
                   </div>
                 )}
               </CardContent>
