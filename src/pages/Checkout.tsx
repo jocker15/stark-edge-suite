@@ -38,68 +38,120 @@ export default function Checkout() {
   const [orderReady, setOrderReady] = useState(false)
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [guestEmail, setGuestEmail] = useState('')
+  const [emailSubmitted, setEmailSubmitted] = useState(false)
+
+  // Handle guest checkout email submission
+  const handleGuestCheckout = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!guestEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+      toast({
+        title: lang === 'ru' ? "Ошибка" : "Error",
+        description: lang === 'ru' ? "Введите корректный email" : "Please enter a valid email",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setEmailSubmitted(true)
+  }
 
   // Create pending order and payment
   useEffect(() => {
-    if (cart.length > 0 && !orderId) {
+    if (cart.length > 0 && !orderId && (user || emailSubmitted)) {
       const createOrderAndPayment = async () => {
         try {
           setLoading(true)
           
-          // Create order
-          const { data, error } = await supabase
-            .from('orders')
-            .insert([{
-              user_id: user?.id,
-              status: 'pending',
-              amount: total,
-              order_details: cart as any
-            }])
-            .select('id')
-            .single()
-
-          if (error) {
-            console.error('Error creating order:', error)
-            toast({
-              title: lang === 'ru' ? "Ошибка" : "Error",
-              description: lang === 'ru' ? "Не удалось создать заказ. Попробуйте снова." : "Failed to create order. Please try again.",
-              variant: "destructive"
+          // If user is not logged in but email was submitted - create guest order
+          if (!user && emailSubmitted && guestEmail) {
+            const response = await supabase.functions.invoke('create-guest-order', {
+              body: {
+                email: guestEmail,
+                cart: cart,
+                total: total
+              }
             })
-            return
-          }
 
-          setOrderId(data.id)
-
-          // Create payment via edge function
-          const session = await supabase.auth.getSession()
-          const token = session.data.session?.access_token
-
-          if (!token) {
-            toast({
-              title: lang === 'ru' ? "Ошибка" : "Error",
-              description: lang === 'ru' ? "Требуется авторизация" : "Authentication required",
-              variant: "destructive"
-            })
-            return
-          }
-
-          const response = await supabase.functions.invoke('create-payment', {
-            body: {
-              orderId: data.id,
-              amount: total,
-              currency: 'USD'
+            if (response.error) {
+              throw new Error(response.error.message)
             }
-          })
 
-          if (response.error) {
-            throw new Error(response.error.message)
+            if (response.data?.success && response.data?.paymentUrl) {
+              setOrderId(response.data.orderId)
+              setPaymentUrl(response.data.paymentUrl)
+              setOrderReady(true)
+              
+              toast({
+                title: lang === 'ru' ? "Аккаунт создан" : "Account Created",
+                description: lang === 'ru' 
+                  ? "Проверьте email для подтверждения и установки пароля" 
+                  : "Check your email to confirm and set your password",
+              })
+            } else {
+              throw new Error(response.data?.error || 'Failed to create guest order')
+            }
+            return
           }
 
-          if (response.data?.success && response.data?.paymentUrl) {
-            setPaymentUrl(response.data.paymentUrl)
-            setOrderReady(true)
-          } else {
-            throw new Error(response.data?.error || 'Failed to create payment')
+          // Regular logged-in user flow
+          if (user) {
+            // Create order
+            const { data, error } = await supabase
+              .from('orders')
+              .insert([{
+                user_id: user?.id,
+                status: 'pending',
+                amount: total,
+                order_details: cart as any
+              }])
+              .select('id')
+              .single()
+
+            if (error) {
+              console.error('Error creating order:', error)
+              toast({
+                title: lang === 'ru' ? "Ошибка" : "Error",
+                description: lang === 'ru' ? "Не удалось создать заказ. Попробуйте снова." : "Failed to create order. Please try again.",
+                variant: "destructive"
+              })
+              return
+            }
+
+            setOrderId(data.id)
+
+            // Create payment via edge function
+            const session = await supabase.auth.getSession()
+            const token = session.data.session?.access_token
+
+            if (!token) {
+              toast({
+                title: lang === 'ru' ? "Ошибка" : "Error",
+                description: lang === 'ru' ? "Требуется авторизация" : "Authentication required",
+                variant: "destructive"
+              })
+              return
+            }
+
+            const response = await supabase.functions.invoke('create-payment', {
+              body: {
+                orderId: data.id,
+                amount: total,
+                currency: 'USD'
+              }
+            })
+
+            if (response.error) {
+              throw new Error(response.error.message)
+            }
+
+            if (response.data?.success && response.data?.paymentUrl) {
+              setPaymentUrl(response.data.paymentUrl)
+              setOrderReady(true)
+            } else {
+              throw new Error(response.data?.error || 'Failed to create payment')
+            }
           }
         } catch (error) {
           console.error('Error:', error)
@@ -115,7 +167,7 @@ export default function Checkout() {
 
       createOrderAndPayment()
     }
-  }, [user, cart, total, orderId, lang])
+  }, [user, cart, total, orderId, lang, emailSubmitted, guestEmail])
 
   const getName = (item: CartItem) => {
     if (lang === 'ru' && item.name_ru) return item.name_ru
@@ -187,6 +239,41 @@ export default function Checkout() {
                 <CardTitle>{lang === 'ru' ? 'Оплата' : 'Payment'}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {!user && !emailSubmitted && (
+                  <form onSubmit={handleGuestCheckout} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">
+                        {lang === 'ru' ? 'Email для создания аккаунта' : 'Email to create account'}
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder={lang === 'ru' ? 'ваш@email.com' : 'your@email.com'}
+                        value={guestEmail}
+                        onChange={(e) => setGuestEmail(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {lang === 'ru' 
+                          ? 'Мы создадим аккаунт и отправим ссылку для подтверждения' 
+                          : 'We will create an account and send you a confirmation link'}
+                      </p>
+                    </div>
+                    <Button type="submit" className="w-full" size="lg">
+                      {lang === 'ru' ? 'Продолжить к оплате' : 'Continue to Payment'}
+                    </Button>
+                    <div className="text-center">
+                      <Button 
+                        type="button"
+                        variant="link" 
+                        onClick={() => navigate('/signin')}
+                        className="text-sm"
+                      >
+                        {lang === 'ru' ? 'Уже есть аккаунт? Войти' : 'Already have an account? Sign in'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
                 {loading && (
                   <div className="w-full min-h-[200px] flex items-center justify-center">
                     <div className="text-center">

@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.create-payment]
 verify_jwt = true
 
+[functions.create-guest-order]
+verify_jwt = false
+
 [functions.optimize-image]
 verify_jwt = false
 
