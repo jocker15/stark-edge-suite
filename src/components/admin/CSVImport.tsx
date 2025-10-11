@@ -27,20 +27,51 @@ export function CSVImport({ onClose }: CSVImportProps) {
       for (const row of rows) {
         if (!row.trim()) continue;
 
-        const [name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country] = 
-          row.split(",").map((s) => s.trim());
+        // Support two formats:
+        // 1. Old format: name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country
+        // 2. New format: №, Country, State, type of document, file name, Price, link
+        const values = row.split(",").map((s) => s.trim().replace(/^"|"$/g, ''));
+        
+        // Detect format by checking if second column looks like a country
+        if (values.length >= 7 && values[1]) {
+          // New format from Excel
+          const country = values[1];
+          const document_type = values[3];
+          const file_name = values[4];
+          const price = parseFloat(values[5]) || 25;
+          const link = values[6];
 
-        products.push({
-          name_en,
-          name_ru,
-          description_en,
-          description_ru,
-          price: parseFloat(price),
-          stock: parseInt(stock),
-          category,
-          document_type: document_type || null,
-          country: country || null,
-        });
+          products.push({
+            name_en: file_name,
+            name_ru: file_name,
+            description_en: `${country} ${document_type} - Digital Template`,
+            description_ru: `${country} ${document_type} - Цифровой шаблон`,
+            price: price,
+            stock: 1000,
+            category: 'Digital Template',
+            document_type: document_type || null,
+            country: country || null,
+            preview_link: link || null,
+          });
+        } else if (values.length >= 9) {
+          // Old format
+          const [name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country] = values;
+          products.push({
+            name_en,
+            name_ru,
+            description_en,
+            description_ru,
+            price: parseFloat(price),
+            stock: parseInt(stock),
+            category,
+            document_type: document_type || null,
+            country: country || null,
+          });
+        }
+      }
+
+      if (products.length === 0) {
+        throw new Error("Не удалось распознать формат файла");
       }
 
       const { error } = await supabase.from("products").insert(products);
@@ -52,10 +83,10 @@ export function CSVImport({ onClose }: CSVImportProps) {
         description: `Импортировано товаров: ${products.length}`,
       });
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Ошибка",
-        description: "Не удалось импортировать CSV",
+        description: error.message || "Не удалось импортировать CSV",
         variant: "destructive",
       });
     } finally {
@@ -70,7 +101,9 @@ export function CSVImport({ onClose }: CSVImportProps) {
           <div>
             <CardTitle>Импорт из CSV</CardTitle>
             <CardDescription className="mt-2">
-              Формат: name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country
+              Поддерживает два формата:<br/>
+              1. №, Country, State, type of document, file name, Price, link<br/>
+              2. name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country
             </CardDescription>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -80,7 +113,7 @@ export function CSVImport({ onClose }: CSVImportProps) {
         <CardContent className="space-y-4">
           <Input
             type="file"
-            accept=".csv"
+            accept=".csv,.xlsx,.xls"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
           <div className="flex justify-end gap-2">

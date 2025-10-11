@@ -29,6 +29,7 @@ export function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,12 +84,49 @@ export function AdminProducts() {
     loadProducts();
   }
 
+  async function handleDeleteTestTemplates() {
+    if (!confirm('Вы уверены, что хотите удалить все тестовые товары из категории "Digital Template"?')) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("category", "Digital Template");
+
+      if (error) throw error;
+
+      toast({
+        title: "Успешно",
+        description: "Тестовые товары удалены",
+      });
+      loadProducts();
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить тестовые товары",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>Управление товарами</CardTitle>
           <div className="flex gap-2">
+            <Button 
+              onClick={handleDeleteTestTemplates} 
+              variant="destructive"
+              disabled={deleting}
+            >
+              {deleting ? "Удаление..." : "Удалить тестовые"}
+            </Button>
             <Button onClick={() => setShowCSVImport(true)} variant="outline">
               <Upload className="mr-2 h-4 w-4" />
               Импорт CSV
