@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Download } from "lucide-react";
 import { ProductForm } from "./ProductForm";
 import { ProductsTable } from "./ProductsTable";
 import { CSVImport } from "./CSVImport";
@@ -114,6 +114,76 @@ export function AdminProducts() {
     }
   }
 
+  async function handleExportProducts() {
+    try {
+      const { data: products, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("id", { ascending: true });
+
+      if (error) throw error;
+      
+      if (!products || products.length === 0) {
+        toast({
+          title: "Предупреждение",
+          description: "Нет товаров для экспорта",
+        });
+        return;
+      }
+
+      const headers = ["№", "Country", "type of document", "file name", "Price", "link"];
+      
+      const escapeCsv = (value: any): string => {
+        if (value === null || value === undefined) return "";
+        const str = String(value);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      const rows = products.map((p, idx) => [
+        idx + 1,
+        p.country || "",
+        p.document_type || "",
+        p.name_en || "",
+        p.price || 0,
+        p.preview_link || ""
+      ]);
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map(row => row.map(escapeCsv).join(","))
+      ].join("\n");
+
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csvContent], { 
+        type: "text/csv;charset=utf-8;" 
+      });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `products_export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Успешно",
+        description: `Экспортировано товаров: ${products.length}`,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось экспортировать товары",
+        variant: "destructive",
+      });
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -126,6 +196,10 @@ export function AdminProducts() {
               disabled={deleting}
             >
               {deleting ? "Удаление..." : "Удалить тестовые"}
+            </Button>
+            <Button onClick={handleExportProducts} variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Экспорт CSV
             </Button>
             <Button onClick={() => setShowCSVImport(true)} variant="outline">
               <Upload className="mr-2 h-4 w-4" />

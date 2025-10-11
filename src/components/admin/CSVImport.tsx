@@ -18,6 +18,16 @@ export function CSVImport({ onClose }: CSVImportProps) {
   async function handleImport() {
     if (!file) return;
 
+    // Validate file extension
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast({
+        title: "Неверный формат",
+        description: "Пожалуйста, загрузите CSV файл. Если у вас Excel файл, сохраните его как CSV UTF-8.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const text = await file.text();
@@ -101,7 +111,10 @@ export function CSVImport({ onClose }: CSVImportProps) {
           <div>
             <CardTitle>Импорт из CSV</CardTitle>
             <CardDescription className="mt-2">
-              Поддерживает два формата:<br/>
+              Загрузите CSV файл в формате UTF-8.<br/>
+              <strong>Важно:</strong> Если у вас Excel файл (.xlsx), сначала сохраните его как CSV:<br/>
+              File → Save As → CSV UTF-8 (Comma delimited)<br/><br/>
+              Поддерживаемые форматы данных:<br/>
               1. №, Country, State, type of document, file name, Price, link<br/>
               2. name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country
             </CardDescription>
@@ -113,7 +126,7 @@ export function CSVImport({ onClose }: CSVImportProps) {
         <CardContent className="space-y-4">
           <Input
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
           <div className="flex justify-end gap-2">
