@@ -171,8 +171,17 @@ export function CSVImport({ onClose }: CSVImportProps) {
       
       for (let i = 0; i < products.length; i += batchSize) {
         const batch = products.slice(i, i + batchSize);
-        const { error } = await supabase.from("products").insert(batch);
-        if (error) throw error;
+        const { error } = await supabase
+          .from("products")
+          .insert(batch, { 
+            defaultToNull: false,
+          });
+        
+        if (error) {
+          console.error("Supabase insert error:", error);
+          console.error("Failed batch data:", batch);
+          throw error;
+        }
         totalInserted += batch.length;
       }
 
