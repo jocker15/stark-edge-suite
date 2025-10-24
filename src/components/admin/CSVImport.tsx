@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,6 @@ export function CSVImport({ onClose }: CSVImportProps) {
   async function handleImport() {
     if (!file) return;
 
-    // Validate file extension
     if (!file.name.toLowerCase().endsWith('.csv')) {
       toast({
         title: "Неверный формат",
@@ -57,7 +57,6 @@ export function CSVImport({ onClose }: CSVImportProps) {
     try {
       const text = await file.text();
       
-      // Parse CSV using PapaParse with auto-detection of delimiter
       const parseResult = Papa.parse<any>(text, {
         header: true,
         skipEmptyLines: true,
@@ -81,7 +80,6 @@ export function CSVImport({ onClose }: CSVImportProps) {
         throw new Error("CSV файл пустой");
       }
 
-      // Определение формата по заголовкам
       const headers = parseResult.meta.fields || Object.keys(rows[0] || {});
       const detectedFormat = detectFormat(headers);
       
@@ -90,7 +88,7 @@ export function CSVImport({ onClose }: CSVImportProps) {
           `Не удалось определить формат CSV.\n\n` +
           `Ожидаемые форматы:\n` +
           `1) Country, type of document, file name, Price, link\n` +
-          `2) name_en, name_ru, description_en, description_ru, price, stock, category\n\n` +
+          `2) name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country\n\n` +
           `Найденные заголовки: ${headers.join(', ')}`
         );
       }
@@ -103,21 +101,18 @@ export function CSVImport({ onClose }: CSVImportProps) {
       for (let i = 0; i < rows.length; i++) {
         const row: any = rows[i];
         
-        // Skip empty rows
         if (!row || Object.keys(row).filter(k => row[k]).length === 0) {
           continue;
         }
 
         try {
           if (detectedFormat === 'format1') {
-            // ФОРМАТ 1: Country, type of document, file name
             const country = row['Country'] || row['country'] || "";
             const document_type = row['type of document'] || row['document_type'] || "";
             const file_name = row['file name'] || row['file_name'] || "";
             const price = parseFloat(row['Price'] || row['price']) || 25;
             const link = row['link'] || "";
 
-            // Validate required fields
             if (!file_name || !country || !document_type) {
               console.warn(`Строка ${i + 2}: пропущена (отсутствуют обязательные поля)`, row);
               skippedRows++;
@@ -131,14 +126,13 @@ export function CSVImport({ onClose }: CSVImportProps) {
               description_ru: `${country} ${document_type}`,
               price: price,
               stock: 1000,
-              category: category, // Категория из UI для формата 1
+              category: category,
               document_type: document_type || null,
               country: country || null,
               preview_link: link || null,
             });
           } else if (detectedFormat === 'format2') {
-            // ФОРМАТ 2: Полный формат с категорией в CSV
-            const rowCategory = row['category'] || category; // Приоритет: CSV > UI
+            const rowCategory = row['category'] || category;
             
             if (!row['name_en']) {
               console.warn(`Строка ${i + 2}: отсутствует name_en, пропускаем`);
@@ -153,7 +147,7 @@ export function CSVImport({ onClose }: CSVImportProps) {
               description_ru: row['description_ru'] || row['description_en'] || "",
               price: parseFloat(row['price']) || 0,
               stock: parseInt(row['stock']) || 1000,
-              category: rowCategory, // Категория из CSV или UI как fallback
+              category: rowCategory,
               document_type: row['document_type'] || null,
               country: row['country'] || null,
               preview_link: row['preview_link'] || row['link'] || null,
@@ -169,18 +163,16 @@ export function CSVImport({ onClose }: CSVImportProps) {
         throw new Error("Не удалось импортировать ни одного товара. Проверьте формат файла.");
       }
 
-      // Insert products in batches to avoid timeout
+      // DEBUG: Log the first batch to see what's being sent
+      console.log("Data to be inserted (first batch):", products.slice(0, 100));
+
       const batchSize = 100;
       let totalInserted = 0;
       
       for (let i = 0; i < products.length; i += batchSize) {
         const batch = products.slice(i, i + batchSize);
         const { error } = await supabase.from("products").insert(batch);
-        if (error) {
-          console.error("Supabase insert error:", error);
-          console.error("Failed batch data:", batch);
-          throw error;
-        }
+        if (error) throw error;
         totalInserted += batch.length;
       }
 
