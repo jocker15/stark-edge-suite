@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { X, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import Papa from 'papaparse';
 
 interface CSVImportProps {
   onClose: () => void;
@@ -13,6 +16,7 @@ interface CSVImportProps {
 export function CSVImport({ onClose }: CSVImportProps) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [category, setCategory] = useState<string>("Digital Template");
   const { toast } = useToast();
 
   async function handleImport() {
@@ -31,69 +35,91 @@ export function CSVImport({ onClose }: CSVImportProps) {
     setLoading(true);
     try {
       const text = await file.text();
-      const rows = text.split("\n").slice(1); // Skip header
-      const products = [];
+      
+      // Parse CSV using PapaParse with auto-detection of delimiter
+      const parseResult = Papa.parse<any>(text, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: true,
+        delimiter: "", // Auto-detect comma or semicolon
+        transformHeader: (header: string) => header.trim(),
+      });
 
-      for (const row of rows) {
-        if (!row.trim()) continue;
-
-        // Support two formats:
-        // 1. Old format: name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country
-        // 2. New format: №, Country, State, type of document, file name, Price, link
-        const values = row.split(",").map((s) => s.trim().replace(/^"|"$/g, ''));
-        
-        // Detect format by checking if second column looks like a country
-        if (values.length >= 7 && values[1]) {
-          // New format from Excel
-          const country = values[1];
-          const document_type = values[3];
-          const file_name = values[4];
-          const price = parseFloat(values[5]) || 25;
-          const link = values[6];
-
-          products.push({
-            name_en: file_name,
-            name_ru: file_name,
-            description_en: `${country} ${document_type} - Digital Template`,
-            description_ru: `${country} ${document_type} - Цифровой шаблон`,
-            price: price,
-            stock: 1000,
-            category: 'Digital Template',
-            document_type: document_type || null,
-            country: country || null,
-            preview_link: link || null,
-          });
-        } else if (values.length >= 9) {
-          // Old format
-          const [name_en, name_ru, description_en, description_ru, price, stock, category, document_type, country] = values;
-          products.push({
-            name_en,
-            name_ru,
-            description_en,
-            description_ru,
-            price: parseFloat(price),
-            stock: parseInt(stock),
-            category,
-            document_type: document_type || null,
-            country: country || null,
-          });
+      if (parseResult.errors && parseResult.errors.length > 0) {
+        console.error("CSV parsing errors:", parseResult.errors);
+        const criticalErrors = parseResult.errors.filter((e: any) => e.type === 'Quotes' || e.type === 'FieldMismatch');
+        if (criticalErrors.length > 0) {
+          throw new Error(`Критическая ошибка парсинга CSV: ${criticalErrors[0].message}`);
         }
       }
 
-      if (products.length === 0) {
-        throw new Error("Не удалось распознать формат файла");
+      const rows = parseResult.data as any[];
+      const products = [];
+      let skippedRows = 0;
+
+      for (let i = 0; i < rows.length; i++) {
+        const row: any = rows[i];
+        
+        // Skip empty rows
+        if (!row || Object.keys(row).filter(k => row[k]).length === 0) {
+          continue;
+        }
+
+        // Handle format: № п/п;Country;State;type of document;file name;Price;link
+        const country = row['Country'] || row['country'] || "";
+        const document_type = row['type of document'] || row['document_type'] || "";
+        const file_name = row['file name'] || row['file_name'] || "";
+        const price = parseFloat(row['Price'] || row['price']) || 25;
+        const link = row['link'] || "";
+
+        // Validate required fields
+        if (!file_name || !country || !document_type) {
+          console.warn(`Строка ${i + 2}: пропущена (отсутствуют обязательные поля)`, row);
+          skippedRows++;
+          continue;
+        }
+
+        products.push({
+          name_en: file_name,
+          name_ru: file_name,
+          description_en: `${country} ${document_type}`,
+          description_ru: `${country} ${document_type}`,
+          price: price,
+          stock: 1000,
+          category: category,
+          document_type: document_type || null,
+          country: country || null,
+          preview_link: link || null,
+        });
       }
 
-      const { error } = await supabase.from("products").insert(products);
+      if (products.length === 0) {
+        throw new Error("Не удалось импортировать ни одного товара. Проверьте формат файла.");
+      }
 
-      if (error) throw error;
+      // Insert products in batches to avoid timeout
+      const batchSize = 100;
+      let totalInserted = 0;
+      
+      for (let i = 0; i < products.length; i += batchSize) {
+        const batch = products.slice(i, i + batchSize);
+        const { error } = await supabase.from("products").insert(batch);
+        if (error) throw error;
+        totalInserted += batch.length;
+      }
+
+      let message = `Импортировано товаров: ${totalInserted}`;
+      if (skippedRows > 0) {
+        message += ` (пропущено строк: ${skippedRows})`;
+      }
 
       toast({
         title: "Успешно",
-        description: `Импортировано товаров: ${products.length}`,
+        description: message,
       });
       onClose();
     } catch (error: any) {
+      console.error("Import error:", error);
       toast({
         title: "Ошибка",
         description: error.message || "Не удалось импортировать CSV",
@@ -124,11 +150,28 @@ export function CSVImport({ onClose }: CSVImportProps) {
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
-            type="file"
-            accept=".csv"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="category">Категория</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Выберите категорию" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Digital Template">Цифровые шаблоны</SelectItem>
+                <SelectItem value="Game Account">Игровые аккаунты</SelectItem>
+                <SelectItem value="Verification">Верификация</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="file">CSV файл</Label>
+            <Input
+              id="file"
+              type="file"
+              accept=".csv"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>
               Отмена
