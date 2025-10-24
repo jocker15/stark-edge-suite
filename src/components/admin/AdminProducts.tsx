@@ -114,6 +114,87 @@ export function AdminProducts() {
     }
   }
 
+  async function handleImportMegaCSV() {
+    if (!confirm('Импортировать 722 товара из mega_full_report.csv?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Читаем CSV файл из public/
+      const response = await fetch('/mega_full_report.csv');
+      const text = await response.text();
+      
+      // Парсим CSV
+      const lines = text.split('\n');
+      const products = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Убираем BOM если есть
+        const cleanLine = line.replace(/^\uFEFF/, '');
+        const parts = cleanLine.split(';');
+
+        if (parts.length < 7) continue;
+
+        const [num, country, state, document_type, file_name, price, link] = parts;
+
+        if (!file_name || !country || !document_type) continue;
+
+        products.push({
+          name_en: file_name.trim(),
+          name_ru: file_name.trim(),
+          description_en: `${country.trim()} ${document_type.trim()}`,
+          description_ru: `${country.trim()} ${document_type.trim()}`,
+          price: parseFloat(price) || 25,
+          stock: 1000,
+          category: 'Digital Template',
+          document_type: document_type.trim() || null,
+          country: country.trim() || null,
+          preview_link: link.trim() || null,
+        });
+      }
+
+      if (products.length === 0) {
+        throw new Error('No valid products found in CSV');
+      }
+
+      // Вставляем товары батчами по 100
+      const batchSize = 100;
+      let totalInserted = 0;
+
+      for (let i = 0; i < products.length; i += batchSize) {
+        const batch = products.slice(i, i + batchSize);
+        const { error } = await supabase
+          .from('products')
+          .insert(batch);
+
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
+        totalInserted += batch.length;
+      }
+
+      toast({
+        title: "Успешно",
+        description: `Импортировано товаров: ${totalInserted}`,
+      });
+      loadProducts();
+    } catch (error: any) {
+      console.error('Import error:', error);
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось импортировать товары",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleExportProducts() {
     try {
       const { data: products, error } = await supabase
@@ -187,28 +268,34 @@ export function AdminProducts() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle>Управление товарами</CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleDeleteTestTemplates} 
-              variant="destructive"
-              disabled={deleting}
-            >
-              {deleting ? "Удаление..." : "Удалить тестовые"}
-            </Button>
-            <Button onClick={handleExportProducts} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Экспорт CSV
-            </Button>
-            <Button onClick={() => setShowCSVImport(true)} variant="outline">
-              <Upload className="mr-2 h-4 w-4" />
-              Импорт CSV
-            </Button>
-            <Button onClick={() => setShowForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить товар
-            </Button>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardTitle>Управление товарами</CardTitle>
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <Button onClick={() => setShowForm(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Добавить товар
+              </Button>
+              <Button onClick={handleImportMegaCSV} variant="default" disabled={loading}>
+                <Upload className="mr-2 h-4 w-4" />
+                {loading ? "Импорт..." : "Импорт Mega CSV"}
+              </Button>
+              <Button onClick={() => setShowCSVImport(true)} variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Импорт CSV
+              </Button>
+              <Button onClick={handleExportProducts} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Экспорт CSV
+              </Button>
+              <Button 
+                onClick={handleDeleteTestTemplates} 
+                variant="destructive"
+                disabled={deleting}
+              >
+                {deleting ? "Удаление..." : "Удалить тестовые"}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
