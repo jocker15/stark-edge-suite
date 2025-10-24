@@ -10,7 +10,7 @@ import { Heart } from 'lucide-react'
 import { OptimizedImage } from '@/components/ui/optimized-image'
 
 interface Product {
-  id: string
+  id: number
   name_en: string | null
   name_ru: string | null
   description_en: string | null

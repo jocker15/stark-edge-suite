@@ -3,7 +3,7 @@ import { useProductReviews } from '@/hooks/useProductReviews'
 
 interface ProductSEOProps {
   product: {
-    id: string
+    id: number
     name_en: string | null
     name_ru: string | null
     description_en: string | null

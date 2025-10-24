@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async'
 
 interface Product {
-  id: string
+  id: number
   name_en: string | null
   name_ru: string | null
   price: number

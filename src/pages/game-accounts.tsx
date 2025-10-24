@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '@/integrations/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ProductCard } from '@/components/products/ProductCard'
@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ProductListSEO } from '@/components/seo/ProductListSEO'
 
 interface Product {
-  id: string
+  id: number
   name_en: string | null
   name_ru: string | null
   description_en: string | null
@@ -34,7 +34,10 @@ export default function GameAccounts() {
           .eq('category', 'Game Account')
 
         if (error) throw error
-        setProducts(data || [])
+        setProducts((data || []).map(p => ({
+          ...p,
+          image_urls: Array.isArray(p.image_urls) ? p.image_urls as string[] : []
+        })))
       } catch (error) {
         console.error('Error fetching products:', error)
       } finally {

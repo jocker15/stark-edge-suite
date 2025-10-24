@@ -8,7 +8,7 @@ import { useWishlist } from '@/hooks/useWishlist'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface Product {
-  id: string
+  id: number
   name_en: string | null
   name_ru: string | null
   description_en: string | null
@@ -46,10 +46,9 @@ export default function Wishlist() {
     if (!error && data) {
       const convertedData = data.map(p => ({
         ...p,
-        id: String(p.id),
         image_urls: Array.isArray(p.image_urls) ? p.image_urls : []
       }))
-      setProducts(convertedData as any)
+      setProducts(convertedData)
     }
     setLoading(false)
   }

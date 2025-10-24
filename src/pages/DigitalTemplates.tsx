@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '@/integrations/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ProductCard } from '@/components/products/ProductCard'
@@ -11,7 +11,7 @@ import { ProductListSEO } from '@/components/seo/ProductListSEO'
 import { TrustBar } from '@/components/products/TrustBar'
 
 interface Product {
-  id: string
+  id: number
   name_en: string | null
   name_ru: string | null
   description_en: string | null
@@ -46,7 +46,10 @@ export default function DigitalTemplates() {
           .eq('category', 'Digital Template')
 
         if (error) throw error
-        const productsData = data || []
+        const productsData = (data || []).map(p => ({
+          ...p,
+          image_urls: Array.isArray(p.image_urls) ? p.image_urls as string[] : []
+        }))
         setAllProducts(productsData)
         setProducts(productsData)
 

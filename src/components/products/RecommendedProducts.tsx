@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Product {
-  id: string
+  id: number
   name_en: string | null
   name_ru: string | null
   description_en: string | null
@@ -45,10 +45,9 @@ export function RecommendedProducts({ currentProductId, category }: Omit<Recomme
       // Convert data to match ProductCard interface
       const convertedData = data.map(p => ({
         ...p,
-        id: String(p.id),
-        image_urls: Array.isArray(p.image_urls) ? p.image_urls : []
+        image_urls: Array.isArray(p.image_urls) ? p.image_urls as string[] : []
       }))
-      setProducts(convertedData as any)
+      setProducts(convertedData)
     }
     setLoading(false)
   }

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Product {
-  id: string;
+  id: number;
   name_en: string | null;
   name_ru: string | null;
   description_en: string | null;
@@ -45,7 +45,10 @@ export default function SearchResults() {
           .or(`name_en.ilike.${searchPattern},name_ru.ilike.${searchPattern},description_en.ilike.${searchPattern},description_ru.ilike.${searchPattern}`);
 
         if (error) throw error;
-        setProducts(data || []);
+        setProducts((data || []).map(p => ({
+          ...p,
+          image_urls: Array.isArray(p.image_urls) ? p.image_urls as string[] : []
+        })));
       } catch (error) {
         console.error('Error searching products:', error);
       } finally {

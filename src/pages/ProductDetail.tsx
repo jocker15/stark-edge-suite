@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '@/integrations/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,7 +17,7 @@ import { TrustBar } from '@/components/products/TrustBar'
 import { OptimizedImage } from '@/components/ui/optimized-image'
 
 interface Product {
-  id: string
+  id: number
   name_en: string | null
   name_ru: string | null
   description_en: string | null
@@ -64,7 +64,7 @@ export default function ProductDetail() {
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .eq('id', id)
+          .eq('id', Number(id))
           .single()
 
         if (error) throw error
@@ -74,8 +74,8 @@ export default function ProductDetail() {
           const processedData = {
             ...data,
             image_urls: Array.isArray(data.image_urls) 
-              ? data.image_urls 
-              : (data.image_urls ? [data.image_urls] : ['/placeholder.svg'])
+              ? (data.image_urls as string[])
+              : (data.image_urls ? [data.image_urls as string] : ['/placeholder.svg'])
           }
           setProduct(processedData)
         }
