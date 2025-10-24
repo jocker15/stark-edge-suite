@@ -31,6 +31,8 @@ export function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
+  
+  console.log('AdminProducts component loaded - version 2.0');
 
   useEffect(() => {
     loadProducts();
