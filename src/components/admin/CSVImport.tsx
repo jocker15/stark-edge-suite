@@ -60,8 +60,8 @@ export function CSVImport({ onClose }: CSVImportProps) {
       const parseResult = Papa.parse<any>(text, {
         header: true,
         skipEmptyLines: true,
-        dynamicTyping: true,
-        delimiter: "", // Auto-detect comma or semicolon
+        dynamicTyping: false,
+        delimiter: "",
         transformHeader: (header: string) => header.trim(),
       });
 
