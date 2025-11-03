@@ -30,11 +30,11 @@ interface OrderDetailDrawerProps {
 }
 
 interface OrderDetails {
-  order: any;
-  profile: any;
-  payment_transactions: any[];
-  products: any[];
-  audit_logs: any[];
+  order: Record<string, unknown>;
+  profile: Record<string, unknown> | null;
+  payment_transactions: Array<Record<string, unknown>>;
+  products: Array<Record<string, unknown>>;
+  audit_logs: Array<Record<string, unknown>>;
 }
 
 export function OrderDetailDrawer({
@@ -57,6 +57,7 @@ export function OrderDetailDrawer({
     if (open && order) {
       loadOrderDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, order]);
 
   const loadOrderDetails = async () => {
@@ -229,43 +230,57 @@ export function OrderDetailDrawer({
                   <CardContent>
                     {details?.products && details.products.length > 0 ? (
                       <div className="space-y-4">
-                        {details.products.map((product: any, index: number) => (
-                          <div key={index} className="border-b last:border-0 pb-4 last:pb-0">
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <p className="font-medium">
-                                  {lang === "ru" ? product.name_ru : product.name_en}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {product.is_digital ? (
-                                    <Badge variant="secondary">{t.drawer.products.digital}</Badge>
-                                  ) : (
-                                    <Badge variant="outline">{t.drawer.products.physical}</Badge>
-                                  )}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-semibold">${product.price?.toFixed(2)}</p>
-                              </div>
-                            </div>
-                            
-                            {product.files && product.files.length > 0 && (
-                              <div className="mt-2">
-                                <p className="text-sm font-medium mb-1">{t.drawer.products.files}:</p>
-                                <div className="space-y-1">
-                                  {product.files.map((file: any) => (
-                                    <div key={file.id} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
-                                      <span>{file.file_name}</span>
-                                      <span className="text-muted-foreground">
-                                        {file.file_size ? `${(file.file_size / 1024 / 1024).toFixed(2)} MB` : ""}
-                                      </span>
-                                    </div>
-                                  ))}
+                        {details.products.map((product, index) => {
+                          const productData = product as { 
+                            name_en?: string; 
+                            name_ru?: string; 
+                            is_digital?: boolean; 
+                            price?: number;
+                            files?: Array<{ 
+                              id: string; 
+                              file_name: string; 
+                              file_size?: number;
+                            }>;
+                          };
+                          
+                          return (
+                            <div key={index} className="border-b last:border-0 pb-4 last:pb-0">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-medium">
+                                    {lang === "ru" ? productData.name_ru : productData.name_en}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {productData.is_digital ? (
+                                      <Badge variant="secondary">{t.drawer.products.digital}</Badge>
+                                    ) : (
+                                      <Badge variant="outline">{t.drawer.products.physical}</Badge>
+                                    )}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-semibold">${productData.price?.toFixed(2)}</p>
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        ))}
+                              
+                              {productData.files && productData.files.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium mb-1">{t.drawer.products.files}:</p>
+                                  <div className="space-y-1">
+                                    {productData.files.map((file) => (
+                                      <div key={file.id} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
+                                        <span>{file.file_name}</span>
+                                        <span className="text-muted-foreground">
+                                          {file.file_size ? `${(file.file_size / 1024 / 1024).toFixed(2)} MB` : ""}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">{t.drawer.products.noProducts}</p>
@@ -276,59 +291,72 @@ export function OrderDetailDrawer({
 
               <TabsContent value="payment" className="space-y-4 mt-4">
                 {details?.payment_transactions && details.payment_transactions.length > 0 ? (
-                  details.payment_transactions.map((transaction: any) => (
-                    <Card key={transaction.id}>
-                      <CardHeader>
-                        <CardTitle>{t.drawer.payment.title}</CardTitle>
-                        <CardDescription className="text-orange-600">
-                          {t.drawer.payment.adminOnly}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.payment.transactionId}</span>
-                          <span className="font-mono text-xs">{transaction.id}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.payment.invoiceId}</span>
-                          <span className="font-mono text-xs">{transaction.invoice_id || "—"}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.payment.paymentStatus}</span>
-                          {getStatusBadge(transaction.payment_status || "pending")}
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.payment.paymentMethod}</span>
-                          <span>{transaction.payment_method || "—"}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.payment.currency}</span>
-                          <span>{transaction.currency || "USD"}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.payment.ipAddress}</span>
-                          <span className="font-mono text-xs">{transaction.ip_address || "—"}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.payment.timestamp}</span>
-                          <span className="text-sm">
-                            {new Date(transaction.created_at).toLocaleString(lang === "ru" ? "ru-RU" : "en-US")}
-                          </span>
-                        </div>
-                        
-                        {transaction.raw_callback_data && (
-                          <div className="mt-4">
-                            <h5 className="text-sm font-semibold mb-2 text-orange-600">
-                              {t.drawer.payment.rawData}
-                            </h5>
-                            <pre className="text-xs bg-orange-50 dark:bg-orange-950 p-3 rounded overflow-x-auto border border-orange-200 dark:border-orange-800 max-h-64">
-                              {JSON.stringify(transaction.raw_callback_data, null, 2)}
-                            </pre>
+                  details.payment_transactions.map((transaction) => {
+                    const txData = transaction as {
+                      id: string;
+                      invoice_id?: string;
+                      payment_status?: string;
+                      payment_method?: string;
+                      currency?: string;
+                      ip_address?: string;
+                      created_at: string;
+                      raw_callback_data?: Record<string, unknown>;
+                    };
+                    
+                    return (
+                      <Card key={txData.id}>
+                        <CardHeader>
+                          <CardTitle>{t.drawer.payment.title}</CardTitle>
+                          <CardDescription className="text-orange-600">
+                            {t.drawer.payment.adminOnly}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t.drawer.payment.transactionId}</span>
+                            <span className="font-mono text-xs">{txData.id}</span>
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t.drawer.payment.invoiceId}</span>
+                            <span className="font-mono text-xs">{txData.invoice_id || "—"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t.drawer.payment.paymentStatus}</span>
+                            {getStatusBadge(txData.payment_status || "pending")}
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t.drawer.payment.paymentMethod}</span>
+                            <span>{txData.payment_method || "—"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t.drawer.payment.currency}</span>
+                            <span>{txData.currency || "USD"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t.drawer.payment.ipAddress}</span>
+                            <span className="font-mono text-xs">{txData.ip_address || "—"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t.drawer.payment.timestamp}</span>
+                            <span className="text-sm">
+                              {new Date(txData.created_at).toLocaleString(lang === "ru" ? "ru-RU" : "en-US")}
+                            </span>
+                          </div>
+                          
+                          {txData.raw_callback_data && (
+                            <div className="mt-4">
+                              <h5 className="text-sm font-semibold mb-2 text-orange-600">
+                                {t.drawer.payment.rawData}
+                              </h5>
+                              <pre className="text-xs bg-orange-50 dark:bg-orange-950 p-3 rounded overflow-x-auto border border-orange-200 dark:border-orange-800 max-h-64">
+                                {JSON.stringify(txData.raw_callback_data, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 ) : (
                   <Card>
                     <CardContent className="pt-6">
@@ -348,21 +376,30 @@ export function OrderDetailDrawer({
                   <CardContent>
                     {details?.audit_logs && details.audit_logs.length > 0 ? (
                       <div className="space-y-4">
-                        {details.audit_logs.map((log: any) => (
-                          <div key={log.id} className="border-l-2 border-primary pl-4 pb-4 last:pb-0">
-                            <div className="flex justify-between items-start mb-1">
-                              <span className="font-medium">{log.action_type}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(log.created_at).toLocaleString(lang === "ru" ? "ru-RU" : "en-US")}
-                              </span>
+                        {details.audit_logs.map((log) => {
+                          const logData = log as {
+                            id: string;
+                            action_type: string;
+                            created_at: string;
+                            details?: Record<string, unknown>;
+                          };
+                          
+                          return (
+                            <div key={logData.id} className="border-l-2 border-primary pl-4 pb-4 last:pb-0">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-medium">{logData.action_type}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(logData.created_at).toLocaleString(lang === "ru" ? "ru-RU" : "en-US")}
+                                </span>
+                              </div>
+                              {logData.details && (
+                                <pre className="text-xs bg-muted p-2 rounded mt-2 overflow-x-auto">
+                                  {JSON.stringify(logData.details, null, 2)}
+                                </pre>
+                              )}
                             </div>
-                            {log.details && (
-                              <pre className="text-xs bg-muted p-2 rounded mt-2 overflow-x-auto">
-                                {JSON.stringify(log.details, null, 2)}
-                              </pre>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground text-center">

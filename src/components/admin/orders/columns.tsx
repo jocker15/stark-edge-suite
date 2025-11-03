@@ -10,8 +10,8 @@ export interface OrderRow {
   amount: number | null;
   status: string;
   delivery_status: string | null;
-  order_details: any;
-  payment_details: any;
+  order_details: Record<string, unknown> | null;
+  payment_details: Record<string, unknown> | null;
   created_at: string;
   updated_at: string | null;
   customer_email: string | null;

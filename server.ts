@@ -63,7 +63,15 @@ app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
       return res.status(400).json({ error: 'No customer email found' });
     }
 
-    const digitalProducts = products.filter((p: any) => p.is_digital && p.files && p.files.length > 0);
+    interface ProductWithFiles {
+      is_digital?: boolean;
+      files?: Array<{ file_name: string; file_path: string; file_size?: number }>;
+      name_en?: string;
+    }
+
+    const digitalProducts = (products as ProductWithFiles[]).filter(
+      (p) => p.is_digital && p.files && p.files.length > 0
+    );
 
     if (digitalProducts.length === 0) {
       return res.status(400).json({ error: 'No digital products in this order' });
@@ -290,14 +298,19 @@ app.post('/api/payment-webhook', async (req, res) => {
           }
 
           // Send confirmation email with products and login info
+          interface OrderItem {
+            name_en?: string;
+            quantity?: number;
+            price?: number;
+          }
           const emailHtml = `
             <h1>Заказ #${orderId} Подтвержден</h1>
             <p>Ваш платеж получен. Спасибо за покупку!</p>
             <h2>Купленные товары:</h2>
             <ul>
-              ${orderDetails.map((item: any) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: $${(item.price || 0).toFixed(2)}</li>`).join('')}
+              ${(orderDetails as OrderItem[]).map((item) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: ${(item.price || 0).toFixed(2)}</li>`).join('')}
             </ul>
-            <p>Итого: $${(order.amount || 0).toFixed(2)}</p>
+            <p>Итого: ${(order.amount || 0).toFixed(2)}</p>
             <h2>Информация для входа в аккаунт</h2>
             <p>Email: ${data.customer_email}</p>
             <p>Для установки пароля используйте ссылку для восстановления пароля, которая была отправлена на ваш email.</p>
@@ -344,15 +357,20 @@ app.post('/api/payment-webhook', async (req, res) => {
             }
     
             // Send confirmation email
+            interface EmailOrderItem {
+              name_en?: string;
+              quantity?: number;
+              price?: number;
+            }
             const orderDetailsForEmail = Array.isArray(order.order_details) ? order.order_details : [];
             const emailHtml = `
               <h1>Заказ #${orderId} Подтвержден</h1>
               <p>Ваш платеж получен. Спасибо за покупку!</p>
               <h2>Купленные товары:</h2>
               <ul>
-                ${orderDetailsForEmail.map((item: any) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: $${(item.price || 0).toFixed(2)}</li>`).join('')}
+                ${(orderDetailsForEmail as EmailOrderItem[]).map((item) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: ${(item.price || 0).toFixed(2)}</li>`).join('')}
               </ul>
-              <p>Итого: $${(order.amount || 0).toFixed(2)}</p>
+              <p>Итого: ${(order.amount || 0).toFixed(2)}</p>
               <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
             `;
     
