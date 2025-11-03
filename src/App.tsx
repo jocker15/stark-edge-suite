@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { TelegramButton } from "@/components/ui/telegram-button";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
@@ -14,6 +15,7 @@ import Account from "./pages/Account";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSecurityCenter from "./pages/AdminSecurityCenter";
+import AdminSettings from "./pages/AdminSettings";
 import GameAccounts from "./pages/game-accounts";
 import DigitalTemplates from "./pages/DigitalTemplates";
 import Verifications from "./pages/Verifications";
@@ -41,11 +43,12 @@ const App = () => (
     <AuthProvider>
       <CartProvider>
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <TelegramButton />
-            <BrowserRouter>
+          <SettingsProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <TelegramButton />
+              <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/signup" element={<SignUp />} />
@@ -54,6 +57,7 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/security" element={<AdminSecurityCenter />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/game-accounts" element={<GameAccounts />} />
               <Route path="/digital-templates" element={<DigitalTemplates />} />
               <Route path="/products/:id" element={<ProductDetail />} />
@@ -74,9 +78,10 @@ const App = () => (
               <Route path="/security" element={<Security />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          </TooltipProvider>
+              </Routes>
+            </BrowserRouter>
+            </TooltipProvider>
+          </SettingsProvider>
         </LanguageProvider>
       </CartProvider>
     </AuthProvider>

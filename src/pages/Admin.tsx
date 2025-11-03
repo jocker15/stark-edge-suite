@@ -76,7 +76,8 @@ export default function Admin() {
             permissions.canModerateReviews,
             permissions.canManageOrders,
             permissions.canManageUsers,
-            permissions.canAccessSecurityCenter
+            permissions.canAccessSecurityCenter,
+            permissions.canManageSettings
           ].filter(Boolean).length}, minmax(0, 1fr))` }}>
             {permissions.canAccessDashboard && (
               <TabsTrigger value="dashboard" onClick={() => navigate('/admin/dashboard')}>Панель</TabsTrigger>
@@ -95,6 +96,9 @@ export default function Admin() {
             )}
             {permissions.canAccessSecurityCenter && (
               <TabsTrigger value="security" onClick={() => navigate('/admin/security')}>Безопасность</TabsTrigger>
+            )}
+            {permissions.canManageSettings && (
+              <TabsTrigger value="settings" onClick={() => navigate('/admin/settings')}>Настройки</TabsTrigger>
             )}
           </TabsList>
 

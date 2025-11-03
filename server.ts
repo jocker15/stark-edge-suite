@@ -28,6 +28,61 @@ const secretKey = process.env.CRYPTOCLOUD_SECRET!;
 app.use(cors());
 app.use(bodyParser.json());
 
+async function getSettings() {
+  const { data, error } = await supabase.from('site_settings').select('key, value');
+  
+  if (error) {
+    console.error('Error fetching settings:', error);
+    return null;
+  }
+
+  const settings: Record<string, unknown> = {};
+  data?.forEach((setting) => {
+    settings[setting.key] = setting.value;
+  });
+
+  return settings;
+}
+
+async function getSetting(key: string) {
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', key)
+    .single();
+  
+  if (error) {
+    console.error(`Error fetching setting ${key}:`, error);
+    return null;
+  }
+
+  return data?.value;
+}
+
+async function sendEmailWithSettings(to: string, subject: string, html: string) {
+  const emailSettings = await getSetting('email');
+  
+  let fromEmail = 'no-reply@starkedgestore.com';
+  let fromName = 'Stark Edge Store';
+  let apiKey = process.env.RESEND_API_KEY!;
+
+  if (emailSettings && typeof emailSettings === 'object') {
+    const settings = emailSettings as { sender_email?: string; sender_name?: string; resend_api_key?: string };
+    if (settings.sender_email) fromEmail = settings.sender_email;
+    if (settings.sender_name) fromName = settings.sender_name;
+    if (settings.resend_api_key) apiKey = settings.resend_api_key;
+  }
+
+  const resendClient = new Resend(apiKey);
+  
+  return await resendClient.emails.send({
+    from: `${fromName} <${fromEmail}>`,
+    to,
+    subject,
+    html,
+  });
+}
+
 app.use('/api/payment-webhook', bodyParser.raw({ type: 'application/json', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 async function generateSignedUrl(filePath: string): Promise<string> {
@@ -106,12 +161,11 @@ app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
       <p>If you have any questions, please contact our support team.</p>
     `;
 
-    const { error: emailError } = await resend.emails.send({
-      from: 'no-reply@starkedgestore.com',
-      to: profile.email,
-      subject: `Digital Products Download - Order #${orderId}`,
-      html: emailHtml,
-    });
+    const { error: emailError } = await sendEmailWithSettings(
+      profile.email,
+      `Digital Products Download - Order #${orderId}`,
+      emailHtml
+    );
 
     if (emailError) {
       console.error('Failed to send email:', emailError);
@@ -160,12 +214,11 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
       </p>
     `;
 
-    const { error: emailError } = await resend.emails.send({
-      from: 'no-reply@starkedgestore.com',
-      to: email,
-      subject: subject,
-      html: emailHtml,
-    });
+    const { error: emailError } = await sendEmailWithSettings(
+      email,
+      subject,
+      emailHtml
+    );
 
     if (emailError) {
       console.error('Failed to send email:', emailError);
@@ -317,12 +370,11 @@ app.post('/api/payment-webhook', async (req, res) => {
             <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
           `;
 
-          const { data: emailData, error: emailError } = await resend.emails.send({
-            from: 'no-reply@starkedgestore.com',
-            to: data.customer_email,
-            subject: 'Order Confirmed - Stark Edge Store',
-            html: emailHtml,
-          });
+          const { error: emailError } = await sendEmailWithSettings(
+            data.customer_email,
+            'Order Confirmed - Stark Edge Store',
+            emailHtml
+          );
 
           if (emailError) {
             console.error('Failed to send email:', emailError);
@@ -374,12 +426,11 @@ app.post('/api/payment-webhook', async (req, res) => {
               <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
             `;
     
-            const { data: emailData, error: emailError } = await resend.emails.send({
-              from: 'no-reply@starkedgestore.com',
-              to: profile.email,
-              subject: 'Заказ Подтвержден - Stark Edge Store',
-              html: emailHtml,
-            });
+            const { error: emailError } = await sendEmailWithSettings(
+              profile.email,
+              'Заказ Подтвержден - Stark Edge Store',
+              emailHtml
+            );
     
             if (emailError) {
               console.error('Failed to send email:', emailError);
