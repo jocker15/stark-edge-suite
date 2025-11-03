@@ -7,23 +7,38 @@ const corsHeaders = {
 
 interface ProductImport {
   sku?: string;
+  slug?: string;
   name_en: string;
   name_ru?: string;
   description_en?: string;
   description_ru?: string;
   price: number;
+  old_price?: number;
   stock?: number;
   category?: string;
+  category_id?: number;
   document_type?: string;
   country?: string;
   state?: string;
+  tags?: string[];
+  main_image_url?: string;
+  gallery_urls?: unknown;
   preview_link?: string;
   file_url?: string;
   external_url?: string;
-  status?: string;
+  digital_delivery_type?: 'storage' | 'external';
+  digital_external_url?: string;
+  digital_link_expires_in_hours?: number;
+  digital_max_downloads?: number;
+  status?: 'draft' | 'published' | 'archived';
   currency?: string;
   meta_title?: string;
   meta_description?: string;
+  // TODO: Future tickets will implement:
+  // - Automatic slug generation if not provided
+  // - Category mapping from category string to category_id
+  // - Image optimization and upload to storage
+  // - Digital file handling and validation
 }
 
 interface ImportRequest {
@@ -154,7 +169,7 @@ Deno.serve(async (req) => {
           // Log successful batch
           console.log(`Batch ${Math.floor(i / batchSize) + 1}: Inserted ${batch.length} products`);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
           retries++;
           console.error(`Batch ${Math.floor(i / batchSize) + 1} attempt ${retries} failed:`, error);
 
@@ -175,11 +190,12 @@ Deno.serve(async (req) => {
                 } else {
                   result.inserted++;
                 }
-              } catch (singleError: any) {
+              } catch (singleError: unknown) {
                 result.failed++;
+                const errorMessage = singleError instanceof Error ? singleError.message : 'Unknown error';
                 result.errors.push({
                   product,
-                  error: singleError.message,
+                  error: errorMessage,
                 });
               }
             }
@@ -202,11 +218,12 @@ Deno.serve(async (req) => {
       }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Import error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error',
+        error: errorMessage,
         success: false 
       }),
       { 

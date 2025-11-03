@@ -73,6 +73,13 @@ Deno.serve(async (req) => {
 
       if (!file_name || !country || !document_type) continue;
 
+      // TODO: Future tickets should add:
+      // - slug generation from name_en
+      // - tags based on country/document_type
+      // - main_image_url from preview_link or default
+      // - gallery_urls array
+      // - digital_delivery_type based on file presence
+      // - category_id lookup from category string
       products.push({
         name_en: file_name.trim(),
         name_ru: file_name.trim(),
@@ -126,10 +133,11 @@ Deno.serve(async (req) => {
       }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

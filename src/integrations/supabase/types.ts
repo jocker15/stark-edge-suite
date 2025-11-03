@@ -155,57 +155,208 @@ export type Database = {
         }
         Relationships: []
       }
+      product_files: {
+        Row: {
+          checksum: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          is_primary: boolean | null
+          product_id: number
+          storage_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          checksum?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_primary?: boolean | null
+          product_id: number
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checksum?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_primary?: boolean | null
+          product_id?: number
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_files_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_localizations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          locale: string
+          meta_description: string | null
+          meta_title: string | null
+          name: string | null
+          product_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          locale: string
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          product_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          locale?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          product_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_localizations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
+          category_id: number | null
           country: string | null
           created_at: string
+          currency: string | null
           description_en: string | null
           description_ru: string | null
+          digital_delivery_type: Database["public"]["Enums"]["digital_delivery_type"] | null
+          digital_external_url: string | null
+          digital_link_expires_in_hours: number | null
+          digital_max_downloads: number | null
           document_type: string | null
+          download_limit: number | null
+          external_url: string | null
+          file_url: string | null
+          gallery_urls: Json | null
           id: number
           image_urls: Json | null
+          is_digital: boolean | null
+          main_image_url: string | null
           meta_description: string | null
           meta_title: string | null
           name_en: string | null
           name_ru: string | null
+          old_price: number | null
           preview_link: string | null
           price: number
+          sku: string
+          slug: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["product_status"]
           stock: number
+          tags: string[] | null
+          updated_at: string
         }
         Insert: {
           category?: string | null
+          category_id?: number | null
           country?: string | null
           created_at?: string
+          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
+          digital_delivery_type?: Database["public"]["Enums"]["digital_delivery_type"] | null
+          digital_external_url?: string | null
+          digital_link_expires_in_hours?: number | null
+          digital_max_downloads?: number | null
           document_type?: string | null
+          download_limit?: number | null
+          external_url?: string | null
+          file_url?: string | null
+          gallery_urls?: Json | null
           id?: number
           image_urls?: Json | null
+          is_digital?: boolean | null
+          main_image_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
+          old_price?: number | null
           preview_link?: string | null
           price?: number
+          sku?: string
+          slug?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
           stock?: number
+          tags?: string[] | null
+          updated_at?: string
         }
         Update: {
           category?: string | null
+          category_id?: number | null
           country?: string | null
           created_at?: string
+          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
+          digital_delivery_type?: Database["public"]["Enums"]["digital_delivery_type"] | null
+          digital_external_url?: string | null
+          digital_link_expires_in_hours?: number | null
+          digital_max_downloads?: number | null
           document_type?: string | null
+          download_limit?: number | null
+          external_url?: string | null
+          file_url?: string | null
+          gallery_urls?: Json | null
           id?: number
           image_urls?: Json | null
+          is_digital?: boolean | null
+          main_image_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
+          old_price?: number | null
           preview_link?: string | null
           price?: number
+          sku?: string
+          slug?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
           stock?: number
+          tags?: string[] | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -382,6 +533,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      digital_delivery_type: "storage" | "external"
+      product_status: "draft" | "published" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -244,7 +244,7 @@ export function CSVImporter({ onClose }: CSVImporterProps) {
         });
 
         // Set defaults
-        if (!productData.status) productData.status = 'active';
+        if (!productData.status) productData.status = 'published';
         if (!productData.currency) productData.currency = 'USD';
         if (!productData.stock) productData.stock = 1000;
         if (!productData.name_ru) productData.name_ru = productData.name_en;
