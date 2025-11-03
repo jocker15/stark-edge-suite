@@ -1,0 +1,318 @@
+export const settingsTranslations = {
+  en: {
+    title: "Settings",
+    description: "Manage site configuration and preferences",
+    
+    tabs: {
+      general: "General",
+      branding: "Branding",
+      payments: "Payments",
+      email: "Email",
+      language: "Language",
+    },
+    
+    general: {
+      title: "General Settings",
+      description: "Configure basic site information",
+      siteNameEn: "Site Name (English)",
+      siteNameRu: "Site Name (Russian)",
+      contactEmail: "Contact Email",
+      contactPhone: "Contact Phone",
+      socialLinks: "Social Media Links",
+      facebook: "Facebook URL",
+      twitter: "Twitter URL",
+      instagram: "Instagram URL",
+      telegram: "Telegram URL",
+      vk: "VK URL",
+      placeholders: {
+        siteNameEn: "Enter site name in English",
+        siteNameRu: "Enter site name in Russian",
+        contactEmail: "contact@example.com",
+        contactPhone: "+1 234 567 8900",
+        facebook: "https://facebook.com/yourpage",
+        twitter: "https://twitter.com/yourhandle",
+        instagram: "https://instagram.com/yourhandle",
+        telegram: "https://t.me/yourchannel",
+        vk: "https://vk.com/yourgroup",
+      },
+    },
+    
+    branding: {
+      title: "Branding Settings",
+      description: "Customize your site's visual identity",
+      logo: "Site Logo",
+      favicon: "Favicon",
+      primaryColor: "Primary Color",
+      secondaryColor: "Secondary Color",
+      uploadLogo: "Upload Logo",
+      uploadFavicon: "Upload Favicon",
+      currentLogo: "Current Logo",
+      currentFavicon: "Current Favicon",
+      noLogo: "No logo uploaded",
+      noFavicon: "No favicon uploaded",
+      logoDescription: "Recommended: 200x50px, PNG or SVG",
+      faviconDescription: "Recommended: 32x32px, PNG or ICO",
+      uploadSuccess: "File uploaded successfully",
+      uploadError: "Failed to upload file",
+      deleteSuccess: "File deleted successfully",
+      deleteError: "Failed to delete file",
+    },
+    
+    payments: {
+      title: "Payment Settings",
+      description: "Configure payment gateway integration",
+      cryptocloudShopId: "CryptoCloud Shop ID",
+      cryptocloudApiKey: "CryptoCloud API Key",
+      mode: "Mode",
+      modeTest: "Test",
+      modeProduction: "Production",
+      defaultCurrency: "Default Currency",
+      enabled: "Enable Payments",
+      testConnection: "Test Connection",
+      testSuccess: "Payment gateway connection successful",
+      testError: "Payment gateway connection failed",
+      testInProgress: "Testing connection...",
+      placeholders: {
+        shopId: "Enter your CryptoCloud Shop ID",
+        apiKey: "Enter your CryptoCloud API Key",
+      },
+      warning: "Store your API keys securely. Never share them publicly.",
+    },
+    
+    email: {
+      title: "Email Settings",
+      description: "Configure email service integration",
+      resendApiKey: "Resend API Key",
+      senderEmail: "Sender Email",
+      senderName: "Sender Name",
+      templateIds: "Email Template IDs",
+      welcome: "Welcome Email",
+      passwordReset: "Password Reset",
+      orderConfirmation: "Order Confirmation",
+      orderShipped: "Order Shipped",
+      testEmail: "Send Test Email",
+      testEmailAddress: "Test Email Address",
+      testSuccess: "Test email sent successfully",
+      testError: "Failed to send test email",
+      testInProgress: "Sending test email...",
+      placeholders: {
+        apiKey: "Enter your Resend API Key",
+        senderEmail: "noreply@example.com",
+        senderName: "Digital Store",
+        testEmail: "test@example.com",
+        templateId: "template_id",
+      },
+      warning: "Ensure your sender email is verified in Resend.",
+    },
+    
+    language: {
+      title: "Language Settings",
+      description: "Configure available languages and defaults",
+      activeLocales: "Active Languages",
+      defaultLanguage: "Default Language",
+      english: "English",
+      russian: "Russian",
+      localeDescription: "Select which languages are available on your site",
+    },
+    
+    actions: {
+      save: "Save Changes",
+      saving: "Saving...",
+      cancel: "Cancel",
+      delete: "Delete",
+      upload: "Upload",
+      test: "Test",
+      reset: "Reset to Default",
+    },
+    
+    messages: {
+      saveSuccess: "Settings saved successfully",
+      saveError: "Failed to save settings",
+      loadError: "Failed to load settings",
+      confirmReset: "Are you sure you want to reset these settings to default?",
+      resetSuccess: "Settings reset successfully",
+      resetError: "Failed to reset settings",
+      invalidEmail: "Please enter a valid email address",
+      invalidUrl: "Please enter a valid URL",
+      requiredField: "This field is required",
+      uploadTooLarge: "File is too large. Maximum size is 5MB.",
+      uploadInvalidType: "Invalid file type. Please upload an image.",
+    },
+    
+    validation: {
+      siteNameRequired: "Site name is required",
+      emailInvalid: "Invalid email format",
+      phoneInvalid: "Invalid phone format",
+      urlInvalid: "Invalid URL format",
+      apiKeyRequired: "API key is required",
+      shopIdRequired: "Shop ID is required",
+    },
+  },
+  
+  ru: {
+    title: "Настройки",
+    description: "Управление конфигурацией и настройками сайта",
+    
+    tabs: {
+      general: "Общие",
+      branding: "Брендинг",
+      payments: "Платежи",
+      email: "Email",
+      language: "Язык",
+    },
+    
+    general: {
+      title: "Общие настройки",
+      description: "Настройка основной информации о сайте",
+      siteNameEn: "Название сайта (Английский)",
+      siteNameRu: "Название сайта (Русский)",
+      contactEmail: "Контактный Email",
+      contactPhone: "Контактный телефон",
+      socialLinks: "Социальные сети",
+      facebook: "URL Facebook",
+      twitter: "URL Twitter",
+      instagram: "URL Instagram",
+      telegram: "URL Telegram",
+      vk: "URL VK",
+      placeholders: {
+        siteNameEn: "Введите название сайта на английском",
+        siteNameRu: "Введите название сайта на русском",
+        contactEmail: "contact@example.com",
+        contactPhone: "+7 900 123 45 67",
+        facebook: "https://facebook.com/yourpage",
+        twitter: "https://twitter.com/yourhandle",
+        instagram: "https://instagram.com/yourhandle",
+        telegram: "https://t.me/yourchannel",
+        vk: "https://vk.com/yourgroup",
+      },
+    },
+    
+    branding: {
+      title: "Настройки брендинга",
+      description: "Настройка визуального стиля вашего сайта",
+      logo: "Логотип сайта",
+      favicon: "Favicon",
+      primaryColor: "Основной цвет",
+      secondaryColor: "Вторичный цвет",
+      uploadLogo: "Загрузить логотип",
+      uploadFavicon: "Загрузить favicon",
+      currentLogo: "Текущий логотип",
+      currentFavicon: "Текущий favicon",
+      noLogo: "Логотип не загружен",
+      noFavicon: "Favicon не загружен",
+      logoDescription: "Рекомендуется: 200x50px, PNG или SVG",
+      faviconDescription: "Рекомендуется: 32x32px, PNG или ICO",
+      uploadSuccess: "Файл успешно загружен",
+      uploadError: "Не удалось загрузить файл",
+      deleteSuccess: "Файл успешно удален",
+      deleteError: "Не удалось удалить файл",
+    },
+    
+    payments: {
+      title: "Настройки платежей",
+      description: "Настройка интеграции платежного шлюза",
+      cryptocloudShopId: "CryptoCloud Shop ID",
+      cryptocloudApiKey: "CryptoCloud API ключ",
+      mode: "Режим",
+      modeTest: "Тест",
+      modeProduction: "Продакшн",
+      defaultCurrency: "Валюта по умолчанию",
+      enabled: "Включить платежи",
+      testConnection: "Проверить подключение",
+      testSuccess: "Подключение к платежному шлюзу успешно",
+      testError: "Ошибка подключения к платежному шлюзу",
+      testInProgress: "Проверка подключения...",
+      placeholders: {
+        shopId: "Введите ваш CryptoCloud Shop ID",
+        apiKey: "Введите ваш CryptoCloud API ключ",
+      },
+      warning: "Храните ваши API ключи в безопасности. Никогда не делитесь ими публично.",
+    },
+    
+    email: {
+      title: "Настройки Email",
+      description: "Настройка интеграции email сервиса",
+      resendApiKey: "Resend API ключ",
+      senderEmail: "Email отправителя",
+      senderName: "Имя отправителя",
+      templateIds: "ID шаблонов Email",
+      welcome: "Приветственное письмо",
+      passwordReset: "Сброс пароля",
+      orderConfirmation: "Подтверждение заказа",
+      orderShipped: "Заказ отправлен",
+      testEmail: "Отправить тестовое письмо",
+      testEmailAddress: "Адрес для тестового письма",
+      testSuccess: "Тестовое письмо отправлено успешно",
+      testError: "Не удалось отправить тестовое письмо",
+      testInProgress: "Отправка тестового письма...",
+      placeholders: {
+        apiKey: "Введите ваш Resend API ключ",
+        senderEmail: "noreply@example.com",
+        senderName: "Цифровой магазин",
+        testEmail: "test@example.com",
+        templateId: "template_id",
+      },
+      warning: "Убедитесь, что email отправителя верифицирован в Resend.",
+    },
+    
+    language: {
+      title: "Настройки языка",
+      description: "Настройка доступных языков и языка по умолчанию",
+      activeLocales: "Активные языки",
+      defaultLanguage: "Язык по умолчанию",
+      english: "Английский",
+      russian: "Русский",
+      localeDescription: "Выберите, какие языки доступны на вашем сайте",
+    },
+    
+    actions: {
+      save: "Сохранить изменения",
+      saving: "Сохранение...",
+      cancel: "Отмена",
+      delete: "Удалить",
+      upload: "Загрузить",
+      test: "Проверить",
+      reset: "Сбросить до значений по умолчанию",
+    },
+    
+    messages: {
+      saveSuccess: "Настройки успешно сохранены",
+      saveError: "Не удалось сохранить настройки",
+      loadError: "Не удалось загрузить настройки",
+      confirmReset: "Вы уверены, что хотите сбросить эти настройки до значений по умолчанию?",
+      resetSuccess: "Настройки успешно сброшены",
+      resetError: "Не удалось сбросить настройки",
+      invalidEmail: "Пожалуйста, введите корректный email адрес",
+      invalidUrl: "Пожалуйста, введите корректный URL",
+      requiredField: "Это поле обязательно",
+      uploadTooLarge: "Файл слишком большой. Максимальный размер 5MB.",
+      uploadInvalidType: "Неверный тип файла. Пожалуйста, загрузите изображение.",
+    },
+    
+    validation: {
+      siteNameRequired: "Название сайта обязательно",
+      emailInvalid: "Неверный формат email",
+      phoneInvalid: "Неверный формат телефона",
+      urlInvalid: "Неверный формат URL",
+      apiKeyRequired: "API ключ обязателен",
+      shopIdRequired: "Shop ID обязателен",
+    },
+  },
+};
+
+export type SettingsLanguage = 'en' | 'ru';
+
+export const getTranslation = (lang: SettingsLanguage, key: string): string => {
+  const keys = key.split('.');
+  let value: Record<string, unknown> | string = settingsTranslations[lang];
+  
+  for (const k of keys) {
+    if (typeof value === 'object' && value !== null) {
+      value = (value as Record<string, unknown>)[k] as Record<string, unknown> | string;
+    } else {
+      return key;
+    }
+  }
+  
+  return typeof value === 'string' ? value : key;
+};

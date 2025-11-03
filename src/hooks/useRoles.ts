@@ -14,6 +14,7 @@ export interface RolePermissions {
   canModerateReviews: boolean;
   canAccessDashboard: boolean;
   canAccessSecurityCenter: boolean;
+  canManageSettings: boolean;
 }
 
 export function useRoles() {
@@ -29,7 +30,8 @@ export function useRoles() {
     canViewLoginEvents: false,
     canModerateReviews: false,
     canAccessDashboard: false,
-    canAccessSecurityCenter: false
+    canAccessSecurityCenter: false,
+    canManageSettings: false
   });
 
   useEffect(() => {
@@ -63,7 +65,8 @@ export function useRoles() {
           canViewLoginEvents: hasSuperAdmin || hasAdmin,
           canModerateReviews: hasSuperAdmin || hasAdmin || hasModerator,
           canAccessDashboard: hasSuperAdmin || hasAdmin,
-          canAccessSecurityCenter: hasSuperAdmin || hasAdmin
+          canAccessSecurityCenter: hasSuperAdmin || hasAdmin,
+          canManageSettings: hasSuperAdmin
         });
       } catch (error) {
         console.error("Error fetching roles:", error);
