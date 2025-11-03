@@ -228,6 +228,48 @@ export const auditLogger = {
         entityType: "review",
         entityId: reviewId,
         details
+      }),
+    replied: (reviewId: string, details?: Record<string, unknown>) =>
+      logAuditEvent({
+        actionType: "review_replied",
+        entityType: "review",
+        entityId: reviewId,
+        details
+      }),
+    markedUnread: (reviewId: string, details?: Record<string, unknown>) =>
+      logAuditEvent({
+        actionType: "review_marked_unread",
+        entityType: "review",
+        entityId: reviewId,
+        details
+      }),
+    markedRead: (reviewId: string, details?: Record<string, unknown>) =>
+      logAuditEvent({
+        actionType: "review_marked_read",
+        entityType: "review",
+        entityId: reviewId,
+        details
+      }),
+    bulkApproved: (reviewIds: string[], details?: Record<string, unknown>) =>
+      logAuditEvent({
+        actionType: "bulk_review_approved",
+        entityType: "review",
+        entityId: reviewIds.join(","),
+        details: { ...details, count: reviewIds.length }
+      }),
+    bulkRejected: (reviewIds: string[], details?: Record<string, unknown>) =>
+      logAuditEvent({
+        actionType: "bulk_review_rejected",
+        entityType: "review",
+        entityId: reviewIds.join(","),
+        details: { ...details, count: reviewIds.length }
+      }),
+    bulkDeleted: (reviewIds: string[], details?: Record<string, unknown>) =>
+      logAuditEvent({
+        actionType: "bulk_review_deleted",
+        entityType: "review",
+        entityId: reviewIds.join(","),
+        details: { ...details, count: reviewIds.length }
       })
   },
 

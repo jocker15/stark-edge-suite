@@ -14,6 +14,8 @@ interface Review {
   created_at: string
   user_id: string
   status: string
+  reply_text: string | null
+  reply_at: string | null
 }
 
 interface ReviewsListProps {
@@ -28,6 +30,7 @@ export function ReviewsList({ productId }: ReviewsListProps) {
 
   useEffect(() => {
     loadReviews()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId])
 
   async function loadReviews() {
@@ -115,11 +118,27 @@ export function ReviewsList({ productId }: ReviewsListProps) {
                 </div>
               </div>
             </CardHeader>
-            {review.comment && (
-              <CardContent>
+            <CardContent className="space-y-4">
+              {review.comment && (
                 <p className="text-foreground">{review.comment}</p>
-              </CardContent>
-            )}
+              )}
+              {review.reply_text && (
+                <div className="mt-4 pl-4 border-l-2 border-primary/50 bg-muted/50 p-3 rounded">
+                  <p className="text-sm font-semibold text-primary mb-1">
+                    {lang === 'ru' ? 'Ответ магазина' : 'Store Reply'}
+                  </p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{review.reply_text}</p>
+                  {review.reply_at && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {formatDistanceToNow(new Date(review.reply_at), {
+                        addSuffix: true,
+                        locale: lang === 'ru' ? ru : enUS,
+                      })}
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
           </Card>
         ))
       )}

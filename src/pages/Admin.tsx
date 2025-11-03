@@ -10,7 +10,7 @@ import { Footer } from "@/components/layout/footer";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminUsersNew } from "@/components/admin/users";
 import { AdminOrdersNew } from "@/components/admin/orders";
-import { AdminReviews } from "@/components/admin/AdminReviews";
+import { AdminReviewsNew } from "@/components/admin/reviews";
 import { Loader2 } from "lucide-react";
 
 export default function Admin() {
@@ -106,7 +106,7 @@ export default function Admin() {
 
           {permissions.canModerateReviews && (
             <TabsContent value="reviews">
-              <AdminReviews />
+              <AdminReviewsNew />
             </TabsContent>
           )}
 
