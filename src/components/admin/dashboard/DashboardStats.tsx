@@ -27,6 +27,7 @@ interface DashboardStatsProps {
     new_users_month: number;
     active_products: number;
     pending_reviews: number;
+    unread_reviews: number;
     pending_orders: number;
     failed_orders: number;
     total_revenue: number;
@@ -189,6 +190,14 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
       <StatCard
         title={t('stats.pendingReviews')}
         value={stats?.pending_reviews ?? 0}
+        icon={<Star className="h-4 w-4" />}
+        loading={loading}
+        variant="warning"
+      />
+      
+      <StatCard
+        title={t('stats.unreadReviews')}
+        value={stats?.unread_reviews ?? 0}
         icon={<Star className="h-4 w-4" />}
         loading={loading}
         variant="warning"
