@@ -11,6 +11,7 @@ import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminUsersNew } from "@/components/admin/users";
 import { AdminOrdersNew } from "@/components/admin/orders";
 import { AdminReviewsNew } from "@/components/admin/reviews";
+import { AdminCategoriesNew } from "@/components/admin/categories";
 import { Loader2 } from "lucide-react";
 
 export default function Admin() {
@@ -73,6 +74,7 @@ export default function Admin() {
           <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${[
             permissions.canAccessDashboard,
             permissions.canManageProducts,
+            permissions.canManageProducts,
             permissions.canModerateReviews,
             permissions.canManageOrders,
             permissions.canManageUsers,
@@ -84,6 +86,9 @@ export default function Admin() {
             )}
             {permissions.canManageProducts && (
               <TabsTrigger value="products">Товары</TabsTrigger>
+            )}
+            {permissions.canManageProducts && (
+              <TabsTrigger value="categories">Категории</TabsTrigger>
             )}
             {permissions.canModerateReviews && (
               <TabsTrigger value="reviews">Отзывы</TabsTrigger>
@@ -105,6 +110,12 @@ export default function Admin() {
           {permissions.canManageProducts && (
             <TabsContent value="products">
               <AdminProducts />
+            </TabsContent>
+          )}
+
+          {permissions.canManageProducts && (
+            <TabsContent value="categories">
+              <AdminCategoriesNew />
             </TabsContent>
           )}
 
