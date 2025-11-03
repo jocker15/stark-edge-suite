@@ -87,28 +87,34 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string
+          delivery_status: string | null
           id: number
           order_details: Json | null
           payment_details: Json | null
           status: string
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
           amount?: number | null
           created_at?: string
+          delivery_status?: string | null
           id?: number
           order_details?: Json | null
           payment_details?: Json | null
           status?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           amount?: number | null
           created_at?: string
+          delivery_status?: string | null
           id?: number
           order_details?: Json | null
           payment_details?: Json | null
           status?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -451,6 +457,42 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_filtered_orders: {
+        Args: {
+          search_param?: string | null
+          status_filter?: string | null
+          payment_status_filter?: string | null
+          delivery_status_filter?: string | null
+          date_from?: string | null
+          date_to?: string | null
+          min_amount?: number | null
+          max_amount?: number | null
+          limit_param?: number
+          offset_param?: number
+        }
+        Returns: {
+          id: number
+          user_id: string
+          amount: number
+          status: string
+          delivery_status: string
+          order_details: Json
+          payment_details: Json
+          created_at: string
+          updated_at: string
+          customer_email: string
+          customer_username: string
+          payment_status: string
+          invoice_id: string
+          total_count: number
+        }[]
+      }
+      get_order_details: {
+        Args: {
+          order_id_param: number
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

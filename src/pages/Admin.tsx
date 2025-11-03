@@ -8,7 +8,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminUsersNew } from "@/components/admin/users";
-import { AdminOrders } from "@/components/admin/AdminOrders";
+import { AdminOrdersNew } from "@/components/admin/orders";
 import { AdminReviews } from "@/components/admin/AdminReviews";
 import { Loader2 } from "lucide-react";
 
@@ -85,7 +85,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="orders">
-            <AdminOrders />
+            <AdminOrdersNew />
           </TabsContent>
 
           <TabsContent value="users">
