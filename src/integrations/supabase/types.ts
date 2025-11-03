@@ -155,57 +155,140 @@ export type Database = {
         }
         Relationships: []
       }
+      product_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          is_primary: boolean | null
+          product_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_primary?: boolean | null
+          product_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_primary?: boolean | null
+          product_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_files_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       products: {
         Row: {
           category: string | null
           country: string | null
           created_at: string
+          currency: string | null
           description_en: string | null
           description_ru: string | null
           document_type: string | null
+          download_limit: number | null
+          external_url: string | null
+          file_url: string | null
+          gallery_urls: Json | null
           id: number
           image_urls: Json | null
+          is_digital: boolean | null
           meta_description: string | null
           meta_title: string | null
           name_en: string | null
           name_ru: string | null
+          old_price: number | null
           preview_link: string | null
           price: number
+          sku: string | null
+          slug: string | null
+          state: string | null
+          status: string | null
           stock: number
+          tags: Json | null
+          updated_at: string
         }
         Insert: {
           category?: string | null
           country?: string | null
           created_at?: string
+          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
           document_type?: string | null
+          download_limit?: number | null
+          external_url?: string | null
+          file_url?: string | null
+          gallery_urls?: Json | null
           id?: number
           image_urls?: Json | null
+          is_digital?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
+          old_price?: number | null
           preview_link?: string | null
           price?: number
+          sku?: string | null
+          slug?: string | null
+          state?: string | null
+          status?: string | null
           stock?: number
+          tags?: Json | null
+          updated_at?: string
         }
         Update: {
           category?: string | null
           country?: string | null
           created_at?: string
+          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
           document_type?: string | null
+          download_limit?: number | null
+          external_url?: string | null
+          file_url?: string | null
+          gallery_urls?: Json | null
           id?: number
           image_urls?: Json | null
+          is_digital?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
+          old_price?: number | null
           preview_link?: string | null
           price?: number
+          sku?: string | null
+          slug?: string | null
+          state?: string | null
+          status?: string | null
           stock?: number
+          tags?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }

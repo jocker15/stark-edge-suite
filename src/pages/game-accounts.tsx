@@ -32,6 +32,7 @@ export default function GameAccounts() {
           .from('products')
           .select('*')
           .eq('category', 'Game Account')
+          .eq('status', 'active')
 
         if (error) throw error
         setProducts((data || []).map(p => ({
