@@ -37,6 +37,7 @@ export function RecommendedProducts({ currentProductId, category }: Omit<Recomme
       .from('products')
       .select('*')
       .eq('category', category)
+      .eq('status', 'active')
       .neq('id', currentProductId)
       .gt('stock', 0)
       .limit(4)

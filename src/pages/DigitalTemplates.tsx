@@ -44,6 +44,7 @@ export default function DigitalTemplates() {
           .from('products')
           .select('*')
           .eq('category', 'Digital Template')
+          .eq('status', 'active')
 
         if (error) throw error
         const productsData = (data || []).map(p => ({

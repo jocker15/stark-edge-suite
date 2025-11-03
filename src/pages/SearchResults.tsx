@@ -42,6 +42,7 @@ export default function SearchResults() {
         const { data, error } = await supabase
           .from('products')
           .select('*')
+          .eq('status', 'active')
           .or(`name_en.ilike.${searchPattern},name_ru.ilike.${searchPattern},description_en.ilike.${searchPattern},description_ru.ilike.${searchPattern}`);
 
         if (error) throw error;
