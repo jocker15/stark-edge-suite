@@ -99,7 +99,7 @@ export default function AdminDashboard() {
     recentOrders: [],
   });
 
-  const t = (key: string) => getTranslation(language, key);
+  const t = useCallback((key: string) => getTranslation(language, key), [language]);
 
   useEffect(() => {
     async function checkAdminRole() {
