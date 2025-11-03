@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Form } from "@/components/ui/form";
@@ -6,19 +6,52 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Loader2 } from "lucide-react";
 import { ProductFormValues } from "@/lib/validations/product";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getProductManagerTranslation } from "@/lib/translations/product-manager";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CategorizationTabProps {
   form: UseFormReturn<ProductFormValues>;
+}
+
+interface Category {
+  id: string;
+  name_en: string;
+  name_ru: string;
+  slug: string;
+  sort_order: number;
 }
 
 export function CategorizationTab({ form }: CategorizationTabProps) {
   const { lang } = useLanguage();
   const t = (key: string) => getProductManagerTranslation(lang, key);
   const [tagInput, setTagInput] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const { data, error } = await supabase
+        .from("product_categories")
+        .select("id, name_en, name_ru, slug, sort_order")
+        .order("sort_order", { ascending: true });
+
+      if (error) throw error;
+
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   const addTag = () => {
     if (tagInput.trim()) {
@@ -47,19 +80,25 @@ export function CategorizationTab({ form }: CategorizationTabProps) {
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value || undefined}
+                disabled={loadingCategories}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={loadingCategories ? "Loading categories..." : "Select category"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="game-accounts">Game Accounts</SelectItem>
-                  <SelectItem value="digital-templates">Digital Templates</SelectItem>
-                  <SelectItem value="verifications">Verifications</SelectItem>
-                  <SelectItem value="software-licenses">Software Licenses</SelectItem>
-                  <SelectItem value="educational">Educational</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {loadingCategories ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {lang === "ru" ? category.name_ru : category.name_en}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />

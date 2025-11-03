@@ -72,6 +72,8 @@ export function ProductFormDialog({
 
   useEffect(() => {
     if (product) {
+      const categoryId = (product as unknown as { category_id?: string }).category_id;
+      
       form.reset({
         name_en: product.name_en || "",
         name_ru: product.name_ru || "",
@@ -82,7 +84,7 @@ export function ProductFormDialog({
         price: product.price,
         old_price: product.old_price,
         currency: (product.currency as "USD" | "EUR" | "RUB") || "USD",
-        category: product.category,
+        category: categoryId || product.category,
         tags: (product.tags as string[]) || [],
         is_digital: product.is_digital ?? true,
         file_url: product.file_url,
@@ -107,12 +109,15 @@ export function ProductFormDialog({
   const onSubmit = async (values: ProductFormValues) => {
     setLoading(true);
     try {
-      const productData = {
+      const productData: Record<string, unknown> = {
         ...values,
         image_urls: values.image_urls,
         gallery_urls: values.gallery_urls,
         tags: values.tags,
+        category_id: values.category || null,
       };
+
+      delete productData.category;
 
       if (product) {
         const { error } = await supabase
