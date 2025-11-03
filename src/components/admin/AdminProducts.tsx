@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Upload, Download } from "lucide-react";
 import { ProductForm } from "./ProductForm";
 import { ProductsTable } from "./ProductsTable";
-import { CSVImport } from "./CSVImport";
+import { CSVImporter } from "./csv-import";
 
 interface Product {
   id: number;
@@ -19,7 +19,7 @@ interface Product {
   category: string;
   document_type: string | null;
   country: string | null;
-  image_urls: any;
+  image_urls: string[] | null;
   preview_link: string | null;
 }
 
@@ -185,11 +185,11 @@ export function AdminProducts() {
         description: `Импортировано товаров: ${totalInserted}`,
       });
       loadProducts();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Import error:', error);
       toast({
         title: "Ошибка",
-        description: error.message || "Не удалось импортировать товары",
+        description: error instanceof Error ? error.message : "Не удалось импортировать товары",
         variant: "destructive",
       });
     } finally {
@@ -216,7 +216,7 @@ export function AdminProducts() {
 
       const headers = ["№", "Country", "type of document", "file name", "Price", "link"];
       
-      const escapeCsv = (value: any): string => {
+      const escapeCsv = (value: string | number | null | undefined): string => {
         if (value === null || value === undefined) return "";
         const str = String(value);
         if (str.includes(',') || str.includes('"') || str.includes('\n')) {
@@ -318,7 +318,7 @@ export function AdminProducts() {
       )}
 
       {showCSVImport && (
-        <CSVImport
+        <CSVImporter
           onClose={() => {
             setShowCSVImport(false);
             loadProducts();
