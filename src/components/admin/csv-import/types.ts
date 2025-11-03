@@ -17,20 +17,30 @@ export interface ParsedProduct {
 
 export interface ProductImportData {
   sku?: string;
+  slug?: string;
   name_en: string;
   name_ru?: string;
   description_en?: string;
   description_ru?: string;
   price: number;
+  old_price?: number;
   stock?: number;
   category?: string;
+  category_id?: number;
   document_type?: string;
   country?: string;
   state?: string;
+  tags?: string[];
+  main_image_url?: string;
+  gallery_urls?: unknown;
   preview_link?: string;
   file_url?: string;
   external_url?: string;
-  status?: 'active' | 'draft' | 'archived';
+  digital_delivery_type?: 'storage' | 'external';
+  digital_external_url?: string;
+  digital_link_expires_in_hours?: number;
+  digital_max_downloads?: number;
+  status?: 'draft' | 'published' | 'archived';
   currency?: 'USD' | 'EUR' | 'RUB';
   is_digital?: boolean;
   meta_title?: string;
@@ -73,7 +83,7 @@ export const PRODUCT_FIELDS: Array<{
   { key: 'preview_link', label_en: 'Preview Link', label_ru: 'Ссылка на просмотр', required: false, type: 'url' },
   { key: 'file_url', label_en: 'File URL', label_ru: 'URL файла', required: false, type: 'url' },
   { key: 'external_url', label_en: 'External URL', label_ru: 'Внешняя ссылка', required: false, type: 'url' },
-  { key: 'status', label_en: 'Status', label_ru: 'Статус', required: false, type: 'select', options: ['active', 'draft', 'archived'] },
+  { key: 'status', label_en: 'Status', label_ru: 'Статус', required: false, type: 'select', options: ['draft', 'published', 'archived'] },
   { key: 'currency', label_en: 'Currency', label_ru: 'Валюта', required: false, type: 'select', options: ['USD', 'EUR', 'RUB'] },
   { key: 'is_digital', label_en: 'Digital Product', label_ru: 'Цифровой товар', required: false, type: 'select', options: ['true', 'false'] },
   { key: 'meta_title', label_en: 'Meta Title', label_ru: 'Meta заголовок', required: false, type: 'text' },
