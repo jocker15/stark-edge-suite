@@ -30,6 +30,166 @@ app.use(bodyParser.json());
 
 app.use('/api/payment-webhook', bodyParser.raw({ type: 'application/json', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
+async function generateSignedUrl(filePath: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('digital-products')
+    .createSignedUrl(filePath, 604800);
+  
+  if (error) {
+    console.error('Error generating signed URL:', error);
+    throw error;
+  }
+  
+  return data.signedUrl;
+}
+
+app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.orderId);
+    
+    const { data: orderDetails, error: detailsError } = await supabase
+      .rpc('get_order_details', { order_id_param: orderId });
+    
+    if (detailsError || !orderDetails) {
+      console.error('Error fetching order details:', detailsError);
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orderDetails.order;
+    const profile = orderDetails.profile;
+    const products = orderDetails.products || [];
+
+    if (!profile || !profile.email) {
+      return res.status(400).json({ error: 'No customer email found' });
+    }
+
+    interface ProductWithFiles {
+      is_digital?: boolean;
+      files?: Array<{ file_name: string; file_path: string; file_size?: number }>;
+      name_en?: string;
+    }
+
+    const digitalProducts = (products as ProductWithFiles[]).filter(
+      (p) => p.is_digital && p.files && p.files.length > 0
+    );
+
+    if (digitalProducts.length === 0) {
+      return res.status(400).json({ error: 'No digital products in this order' });
+    }
+
+    let emailHtml = `
+      <h1>Digital Products Download - Order #${orderId}</h1>
+      <p>Hello! Here are your digital products:</p>
+    `;
+
+    for (const product of digitalProducts) {
+      emailHtml += `
+        <h2>${product.name_en}</h2>
+        <ul>
+      `;
+      
+      for (const file of product.files) {
+        try {
+          const signedUrl = await generateSignedUrl(file.file_path);
+          emailHtml += `<li><a href="${signedUrl}">${file.file_name}</a> (${file.file_size ? (file.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'Size unknown'})</li>`;
+        } catch (error) {
+          console.error('Error generating signed URL for file:', file.file_name, error);
+          emailHtml += `<li>${file.file_name} - Error generating download link</li>`;
+        }
+      }
+      
+      emailHtml += `</ul>`;
+    }
+
+    emailHtml += `
+      <p>Download links are valid for 7 days.</p>
+      <p>If you have any questions, please contact our support team.</p>
+    `;
+
+    const { error: emailError } = await resend.emails.send({
+      from: 'no-reply@starkedgestore.com',
+      to: profile.email,
+      subject: `Digital Products Download - Order #${orderId}`,
+      html: emailHtml,
+    });
+
+    if (emailError) {
+      console.error('Failed to send email:', emailError);
+      return res.status(500).json({ error: 'Failed to send email' });
+    }
+
+    await supabase.from('orders').update({
+      delivery_status: 'delivered',
+      updated_at: new Date().toISOString(),
+    }).eq('id', orderId);
+
+    await supabase.from('audit_logs').insert({
+      entity_type: 'order',
+      entity_id: orderId.toString(),
+      action_type: 'resend_digital_goods',
+      details: {
+        product_count: digitalProducts.length,
+        email: profile.email,
+      },
+    });
+
+    console.log('Digital goods email sent successfully to:', profile.email);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error resending digital goods:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/orders/:orderId/send-email', async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.orderId);
+    const { email, subject, message } = req.body;
+
+    if (!email || !subject || !message) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const emailHtml = `
+      <h1>${subject}</h1>
+      <p>${message.replace(/\n/g, '<br>')}</p>
+      <hr>
+      <p style="color: #666; font-size: 12px;">
+        This email is regarding order #${orderId}<br>
+        Stark Edge Store
+      </p>
+    `;
+
+    const { error: emailError } = await resend.emails.send({
+      from: 'no-reply@starkedgestore.com',
+      to: email,
+      subject: subject,
+      html: emailHtml,
+    });
+
+    if (emailError) {
+      console.error('Failed to send email:', emailError);
+      return res.status(500).json({ error: 'Failed to send email' });
+    }
+
+    await supabase.from('audit_logs').insert({
+      entity_type: 'order',
+      entity_id: orderId.toString(),
+      action_type: 'send_custom_email',
+      details: {
+        email,
+        subject,
+      },
+    });
+
+    console.log('Custom email sent successfully to:', email);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error sending custom email:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/api/payment-webhook', async (req, res) => {
   try {
     console.log('Webhook received');
@@ -138,14 +298,19 @@ app.post('/api/payment-webhook', async (req, res) => {
           }
 
           // Send confirmation email with products and login info
+          interface OrderItem {
+            name_en?: string;
+            quantity?: number;
+            price?: number;
+          }
           const emailHtml = `
             <h1>Заказ #${orderId} Подтвержден</h1>
             <p>Ваш платеж получен. Спасибо за покупку!</p>
             <h2>Купленные товары:</h2>
             <ul>
-              ${orderDetails.map((item: any) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: $${(item.price || 0).toFixed(2)}</li>`).join('')}
+              ${(orderDetails as OrderItem[]).map((item) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: ${(item.price || 0).toFixed(2)}</li>`).join('')}
             </ul>
-            <p>Итого: $${(order.amount || 0).toFixed(2)}</p>
+            <p>Итого: ${(order.amount || 0).toFixed(2)}</p>
             <h2>Информация для входа в аккаунт</h2>
             <p>Email: ${data.customer_email}</p>
             <p>Для установки пароля используйте ссылку для восстановления пароля, которая была отправлена на ваш email.</p>
@@ -192,15 +357,20 @@ app.post('/api/payment-webhook', async (req, res) => {
             }
     
             // Send confirmation email
+            interface EmailOrderItem {
+              name_en?: string;
+              quantity?: number;
+              price?: number;
+            }
             const orderDetailsForEmail = Array.isArray(order.order_details) ? order.order_details : [];
             const emailHtml = `
               <h1>Заказ #${orderId} Подтвержден</h1>
               <p>Ваш платеж получен. Спасибо за покупку!</p>
               <h2>Купленные товары:</h2>
               <ul>
-                ${orderDetailsForEmail.map((item: any) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: $${(item.price || 0).toFixed(2)}</li>`).join('')}
+                ${(orderDetailsForEmail as EmailOrderItem[]).map((item) => `<li>${item.name_en || 'Item'} - Количество: ${item.quantity || 1} - Цена: ${(item.price || 0).toFixed(2)}</li>`).join('')}
               </ul>
-              <p>Итого: $${(order.amount || 0).toFixed(2)}</p>
+              <p>Итого: ${(order.amount || 0).toFixed(2)}</p>
               <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
             `;
     
