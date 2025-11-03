@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoles } from "@/hooks/useRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,13 +15,14 @@ import { Loader2 } from "lucide-react";
 
 export default function Admin() {
   const { user, loading: authLoading } = useAuth();
+  const { permissions, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
     async function checkAdminRole() {
-      if (authLoading) return;
+      if (authLoading || rolesLoading) return;
       
       if (!user) {
         navigate("/signin");
@@ -40,9 +42,9 @@ export default function Admin() {
     }
 
     checkAdminRole();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, rolesLoading, navigate]);
 
-  if (authLoading || checkingRole) {
+  if (authLoading || checkingRole || rolesLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -67,30 +69,58 @@ export default function Admin() {
           </CardHeader>
         </Card>
 
-        <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="dashboard" onClick={() => navigate('/admin/dashboard')}>Панель</TabsTrigger>
-            <TabsTrigger value="products">Товары</TabsTrigger>
-            <TabsTrigger value="reviews">Отзывы</TabsTrigger>
-            <TabsTrigger value="orders">Заказы</TabsTrigger>
-            <TabsTrigger value="users">Пользователи</TabsTrigger>
+        <Tabs defaultValue={permissions.canManageProducts ? "products" : permissions.canModerateReviews ? "reviews" : "dashboard"} className="space-y-6">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${[
+            permissions.canAccessDashboard,
+            permissions.canManageProducts,
+            permissions.canModerateReviews,
+            permissions.canManageOrders,
+            permissions.canManageUsers,
+            permissions.canAccessSecurityCenter
+          ].filter(Boolean).length}, minmax(0, 1fr))` }}>
+            {permissions.canAccessDashboard && (
+              <TabsTrigger value="dashboard" onClick={() => navigate('/admin/dashboard')}>Панель</TabsTrigger>
+            )}
+            {permissions.canManageProducts && (
+              <TabsTrigger value="products">Товары</TabsTrigger>
+            )}
+            {permissions.canModerateReviews && (
+              <TabsTrigger value="reviews">Отзывы</TabsTrigger>
+            )}
+            {permissions.canManageOrders && (
+              <TabsTrigger value="orders">Заказы</TabsTrigger>
+            )}
+            {permissions.canManageUsers && (
+              <TabsTrigger value="users">Пользователи</TabsTrigger>
+            )}
+            {permissions.canAccessSecurityCenter && (
+              <TabsTrigger value="security" onClick={() => navigate('/admin/security')}>Безопасность</TabsTrigger>
+            )}
           </TabsList>
 
-          <TabsContent value="products">
-            <AdminProducts />
-          </TabsContent>
+          {permissions.canManageProducts && (
+            <TabsContent value="products">
+              <AdminProducts />
+            </TabsContent>
+          )}
 
-          <TabsContent value="reviews">
-            <AdminReviews />
-          </TabsContent>
+          {permissions.canModerateReviews && (
+            <TabsContent value="reviews">
+              <AdminReviews />
+            </TabsContent>
+          )}
 
-          <TabsContent value="orders">
-            <AdminOrdersNew />
-          </TabsContent>
+          {permissions.canManageOrders && (
+            <TabsContent value="orders">
+              <AdminOrdersNew />
+            </TabsContent>
+          )}
 
-          <TabsContent value="users">
-            <AdminUsersNew />
-          </TabsContent>
+          {permissions.canManageUsers && (
+            <TabsContent value="users">
+              <AdminUsersNew />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
       <Footer />
