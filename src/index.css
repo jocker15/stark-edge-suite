@@ -46,6 +46,13 @@
 
     --radius: 0.75rem;
 
+    /* Chart Colors */
+    --chart-1: 0 65% 51%; /* Primary Red */
+    --chart-2: 180 100% 50%; /* Accent Blue */
+    --chart-3: 142 76% 36%; /* Green */
+    --chart-4: 262 83% 58%; /* Purple */
+    --chart-5: 346 77% 50%; /* Pink */
+
     /* Gradients and Effects */
     --gradient-primary: linear-gradient(135deg, hsl(0 65% 51%), hsl(0 75% 61%));
     --gradient-accent: linear-gradient(135deg, hsl(180 100% 50%), hsl(190 100% 60%));

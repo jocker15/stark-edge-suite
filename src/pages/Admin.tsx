@@ -68,7 +68,8 @@ export default function Admin() {
         </Card>
 
         <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="dashboard" onClick={() => navigate('/admin/dashboard')}>Панель</TabsTrigger>
             <TabsTrigger value="products">Товары</TabsTrigger>
             <TabsTrigger value="reviews">Отзывы</TabsTrigger>
             <TabsTrigger value="orders">Заказы</TabsTrigger>

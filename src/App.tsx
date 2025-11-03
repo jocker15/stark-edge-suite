@@ -12,6 +12,7 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Account from "./pages/Account";
 import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
 import GameAccounts from "./pages/game-accounts";
 import DigitalTemplates from "./pages/DigitalTemplates";
 import Verifications from "./pages/Verifications";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/signin" element={<SignIn />} />
               <Route path="/account" element={<Account />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/game-accounts" element={<GameAccounts />} />
               <Route path="/digital-templates" element={<DigitalTemplates />} />
               <Route path="/products/:id" element={<ProductDetail />} />
