@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, RefreshCw, Eye, X } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import Papa from "papaparse";
 
 interface AuditLog {
   id: string;
@@ -91,7 +90,7 @@ export function AuditLogsTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, filters]);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const csvData = logs.map(log => ({
       User: log.user_email || log.user_username,
       Action: log.action_type,
@@ -101,6 +100,7 @@ export function AuditLogsTable() {
       Time: format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss")
     }));
 
+    const Papa = (await import("papaparse")).default;
     const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
