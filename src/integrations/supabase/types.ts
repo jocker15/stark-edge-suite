@@ -87,34 +87,28 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string
-          delivery_status: string | null
           id: number
           order_details: Json | null
           payment_details: Json | null
           status: string
-          updated_at: string | null
           user_id: string | null
         }
         Insert: {
           amount?: number | null
           created_at?: string
-          delivery_status?: string | null
           id?: number
           order_details?: Json | null
           payment_details?: Json | null
           status?: string
-          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           amount?: number | null
           created_at?: string
-          delivery_status?: string | null
           id?: number
           order_details?: Json | null
           payment_details?: Json | null
           status?: string
-          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -161,140 +155,57 @@ export type Database = {
         }
         Relationships: []
       }
-      product_files: {
-        Row: {
-          created_at: string
-          file_name: string
-          file_path: string
-          file_size: number | null
-          file_type: string | null
-          id: string
-          is_primary: boolean | null
-          product_id: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          file_name: string
-          file_path: string
-          file_size?: number | null
-          file_type?: string | null
-          id?: string
-          is_primary?: boolean | null
-          product_id: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          file_name?: string
-          file_path?: string
-          file_size?: number | null
-          file_type?: string | null
-          id?: string
-          is_primary?: boolean | null
-          product_id?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_files_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       products: {
         Row: {
           category: string | null
           country: string | null
           created_at: string
-          currency: string | null
           description_en: string | null
           description_ru: string | null
           document_type: string | null
-          download_limit: number | null
-          external_url: string | null
-          file_url: string | null
-          gallery_urls: Json | null
           id: number
           image_urls: Json | null
-          is_digital: boolean | null
           meta_description: string | null
           meta_title: string | null
           name_en: string | null
           name_ru: string | null
-          old_price: number | null
           preview_link: string | null
           price: number
-          sku: string | null
-          slug: string | null
-          state: string | null
-          status: string | null
           stock: number
-          tags: Json | null
-          updated_at: string
         }
         Insert: {
           category?: string | null
           country?: string | null
           created_at?: string
-          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
           document_type?: string | null
-          download_limit?: number | null
-          external_url?: string | null
-          file_url?: string | null
-          gallery_urls?: Json | null
           id?: number
           image_urls?: Json | null
-          is_digital?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
-          old_price?: number | null
           preview_link?: string | null
           price?: number
-          sku?: string | null
-          slug?: string | null
-          state?: string | null
-          status?: string | null
           stock?: number
-          tags?: Json | null
-          updated_at?: string
         }
         Update: {
           category?: string | null
           country?: string | null
           created_at?: string
-          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
           document_type?: string | null
-          download_limit?: number | null
-          external_url?: string | null
-          file_url?: string | null
-          gallery_urls?: Json | null
           id?: number
           image_urls?: Json | null
-          is_digital?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
-          old_price?: number | null
           preview_link?: string | null
           price?: number
-          sku?: string | null
-          slug?: string | null
-          state?: string | null
-          status?: string | null
           stock?: number
-          tags?: Json | null
-          updated_at?: string
         }
         Relationships: []
       }
@@ -457,42 +368,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_filtered_orders: {
-        Args: {
-          search_param?: string | null
-          status_filter?: string | null
-          payment_status_filter?: string | null
-          delivery_status_filter?: string | null
-          date_from?: string | null
-          date_to?: string | null
-          min_amount?: number | null
-          max_amount?: number | null
-          limit_param?: number
-          offset_param?: number
-        }
-        Returns: {
-          id: number
-          user_id: string
-          amount: number
-          status: string
-          delivery_status: string
-          order_details: Json
-          payment_details: Json
-          created_at: string
-          updated_at: string
-          customer_email: string
-          customer_username: string
-          payment_status: string
-          invoice_id: string
-          total_count: number
-        }[]
-      }
-      get_order_details: {
-        Args: {
-          order_id_param: number
-        }
-        Returns: Json
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -500,10 +375,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_user_blocked: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
