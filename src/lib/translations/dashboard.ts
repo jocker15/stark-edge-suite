@@ -9,6 +9,7 @@ export const dashboardTranslations = {
       enabled: "Auto-refresh enabled",
       disabled: "Auto-refresh disabled",
       interval: "every 30s",
+      retry: "Retry",
     },
     
     stats: {
@@ -69,10 +70,19 @@ export const dashboardTranslations = {
       completed: "Completed",
     },
     
+    sections: {
+      stats: "Statistics",
+      sales: "Sales chart",
+      topProducts: "Top products",
+      geography: "Geography",
+      recentOrders: "Recent orders",
+    },
+    
     errors: {
       loadStats: "Failed to load dashboard statistics",
       loadChart: "Failed to load chart data",
       tryAgain: "Please try again",
+      partialData: "Some dashboard data failed to load. Showing fallback values.",
     },
     
     loading: {
@@ -91,6 +101,7 @@ export const dashboardTranslations = {
       enabled: "Автообновление включено",
       disabled: "Автообновление выключено",
       interval: "каждые 30с",
+      retry: "Повторить",
     },
     
     stats: {
@@ -151,10 +162,19 @@ export const dashboardTranslations = {
       completed: "Завершён",
     },
     
+    sections: {
+      stats: "Статистика",
+      sales: "График продаж",
+      topProducts: "Топ товаров",
+      geography: "География заказов",
+      recentOrders: "Последние заказы",
+    },
+    
     errors: {
       loadStats: "Не удалось загрузить статистику панели управления",
       loadChart: "Не удалось загрузить данные графика",
       tryAgain: "Пожалуйста, попробуйте снова",
+      partialData: "Не удалось загрузить часть данных панели. Показаны запасные значения.",
     },
     
     loading: {

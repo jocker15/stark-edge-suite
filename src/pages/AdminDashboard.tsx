@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -11,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import {
   DashboardStats,
   SalesChart,
@@ -33,6 +35,7 @@ interface DashboardStats {
   new_users_month: number;
   active_products: number;
   pending_reviews: number;
+  unread_reviews: number;
   pending_orders: number;
   failed_orders: number;
   total_revenue: number;
@@ -71,12 +74,44 @@ interface OrderData {
 }
 
 interface DashboardData {
-  stats: DashboardStats | null;
+  stats: DashboardStats;
   salesByDay: SalesData[];
   topProducts: TopProductData[];
   geography: GeographyData[];
   recentOrders: OrderData[];
 }
+
+type DashboardSection = 'stats' | 'sales' | 'topProducts' | 'geography' | 'recentOrders';
+
+type RpcResult<T> = PromiseSettledResult<PostgrestSingleResponse<T>>;
+
+const defaultStats: DashboardStats = {
+  sales_today: 0,
+  sales_week: 0,
+  sales_month: 0,
+  revenue_today: 0,
+  revenue_week: 0,
+  revenue_month: 0,
+  new_users_today: 0,
+  new_users_week: 0,
+  new_users_month: 0,
+  active_products: 0,
+  pending_reviews: 0,
+  unread_reviews: 0,
+  pending_orders: 0,
+  failed_orders: 0,
+  total_revenue: 0,
+  total_orders: 0,
+  total_users: 0,
+};
+
+const getDefaultDashboardData = (): DashboardData => ({
+  stats: { ...defaultStats },
+  salesByDay: [],
+  topProducts: [],
+  geography: [],
+  recentOrders: [],
+});
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -90,14 +125,9 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [salesPeriod, setSalesPeriod] = useState(30);
-  
-  const [data, setData] = useState<DashboardData>({
-    stats: null,
-    salesByDay: [],
-    topProducts: [],
-    geography: [],
-    recentOrders: [],
-  });
+
+  const [data, setData] = useState<DashboardData>(() => getDefaultDashboardData());
+  const [dataErrors, setDataErrors] = useState<DashboardSection[]>([]);
 
   const t = useCallback((key: string) => getTranslation(language, key), [language]);
 
@@ -107,19 +137,32 @@ export default function AdminDashboard() {
       
       if (!user) {
         navigate("/signin");
+        setCheckingRole(false);
         return;
       }
 
-      const { data: hasAdminRole } = await supabase
-        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      try {
+        const { data: hasAdminRole, error } = await supabase
+          .rpc('has_role', { _user_id: user.id, _role: 'admin' });
 
-      if (!hasAdminRole) {
+        if (error) {
+          console.error('Error checking admin role:', error);
+          navigate("/");
+          return;
+        }
+
+        if (!hasAdminRole) {
+          navigate("/");
+          return;
+        }
+
+        setIsAdmin(true);
+      } catch (error) {
+        console.error('Unexpected error checking admin role:', error);
         navigate("/");
-        return;
+      } finally {
+        setCheckingRole(false);
       }
-
-      setIsAdmin(true);
-      setCheckingRole(false);
     }
 
     checkAdminRole();
@@ -132,33 +175,80 @@ export default function AdminDashboard() {
       setRefreshing(true);
     }
 
-    try {
-      const [statsRes, salesRes, productsRes, geographyRes, ordersRes] = await Promise.all([
-        supabase.rpc('get_dashboard_stats'),
-        supabase.rpc('get_sales_by_day', { days_count: salesPeriod }),
-        supabase.rpc('get_top_products', { limit_count: 5, days_count: 30 }),
-        supabase.rpc('get_orders_by_geography', { days_count: 30 }),
-        supabase.rpc('get_orders_requiring_attention', { limit_count: 10 }),
-      ]);
+    const sectionsWithErrors: DashboardSection[] = [];
 
-      if (statsRes.error) throw statsRes.error;
-      if (salesRes.error) throw salesRes.error;
-      if (productsRes.error) throw productsRes.error;
-      if (geographyRes.error) throw geographyRes.error;
-      if (ordersRes.error) throw ordersRes.error;
+    const recordError = (section: DashboardSection, detail: unknown) => {
+      console.error(`[AdminDashboard] Failed to load ${section}:`, detail);
+      if (!sectionsWithErrors.includes(section)) {
+        sectionsWithErrors.push(section);
+      }
+    };
+
+    const handleSettledResult = <T,>(
+      result: RpcResult<T>,
+      section: DashboardSection,
+      fallback: T
+    ): T => {
+      if (result.status === "fulfilled") {
+        const { data, error } = result.value;
+        if (error) {
+          recordError(section, error);
+          return fallback;
+        }
+        return (data ?? fallback) as T;
+      } else {
+        recordError(section, result.reason);
+        return fallback;
+      }
+    };
+
+    try {
+      const [
+        statsResult,
+        salesResult,
+        productsResult,
+        geographyResult,
+        ordersResult,
+      ] = await Promise.allSettled([
+        supabase.rpc<DashboardStats>('get_dashboard_stats'),
+        supabase.rpc<SalesData[]>('get_sales_by_day', { days_count: salesPeriod }),
+        supabase.rpc<TopProductData[]>('get_top_products', { limit_count: 5, days_count: 30 }),
+        supabase.rpc<GeographyData[]>('get_orders_by_geography', { days_count: 30 }),
+        supabase.rpc<OrderData[]>('get_orders_requiring_attention', { limit_count: 10 }),
+      ]) as [
+        RpcResult<DashboardStats>,
+        RpcResult<SalesData[]>,
+        RpcResult<TopProductData[]>,
+        RpcResult<GeographyData[]>,
+        RpcResult<OrderData[]>
+      ];
+
+      const statsData = {
+        ...defaultStats,
+        ...handleSettledResult(statsResult, "stats", defaultStats),
+      };
+
+      const salesData = handleSettledResult(salesResult, "sales", [] as SalesData[]);
+      const topProductsData = handleSettledResult(productsResult, "topProducts", [] as TopProductData[]);
+      const geographyData = handleSettledResult(geographyResult, "geography", [] as GeographyData[]);
+      const ordersData = handleSettledResult(ordersResult, "recentOrders", [] as OrderData[]);
 
       setData({
-        stats: statsRes.data,
-        salesByDay: salesRes.data || [],
-        topProducts: productsRes.data || [],
-        geography: geographyRes.data || [],
-        recentOrders: ordersRes.data || [],
+        stats: statsData,
+        salesByDay: salesData,
+        topProducts: topProductsData,
+        geography: geographyData,
+        recentOrders: ordersData,
       });
+
+      setDataErrors(sectionsWithErrors);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error("Error loading dashboard data:", error);
+      setData(getDefaultDashboardData());
+      setDataErrors(["stats", "sales", "topProducts", "geography", "recentOrders"] as DashboardSection[]);
       toast({
-        title: t('errors.loadStats'),
-        description: t('errors.tryAgain'),
+        title: t("errors.loadStats"),
+        description: t("errors.tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -259,6 +349,32 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
         </Card>
+
+        {dataErrors.length > 0 && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{t('errors.loadStats')}</AlertTitle>
+            <AlertDescription className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p>{t('errors.partialData')}</p>
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {dataErrors.map((section) => (
+                    <li key={section}>{t(`sections.${section}`)}</li>
+                  ))}
+                </ul>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManualRefresh}
+                disabled={refreshing}
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                {t('refresh.retry')}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs value="dashboard" className="mb-6">
           <TabsList className="grid w-full grid-cols-5">
