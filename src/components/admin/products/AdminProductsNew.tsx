@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Upload, Download } from "lucide-react";
+import { Plus, Upload, Download, Loader2 } from "lucide-react";
 import { ProductsDataTable } from "./ProductsDataTable";
 import { ProductFormDialog } from "./ProductFormDialog";
-import { CSVImporter } from "../csv-import";
 import { Tables } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getProductManagerTranslation } from "@/lib/translations/product-manager";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import Papa from "papaparse";
+
+const CSVImporter = lazy(() => import("../csv-import").then(m => ({ default: m.CSVImporter })));
 
 type Product = Tables<"products">;
 
@@ -200,6 +200,7 @@ export function AdminProductsNew() {
         meta_description: p.meta_description || "",
       }));
 
+      const Papa = (await import("papaparse")).default;
       const csv = Papa.unparse(csvData);
       const BOM = "\uFEFF";
       const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
@@ -265,12 +266,14 @@ export function AdminProductsNew() {
       />
 
       {showCSVImport && (
-        <CSVImporter
-          onClose={() => {
-            setShowCSVImport(false);
-            loadProducts();
-          }}
-        />
+        <Suspense fallback={<div className="flex h-96 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+          <CSVImporter
+            onClose={() => {
+              setShowCSVImport(false);
+              loadProducts();
+            }}
+          />
+        </Suspense>
       )}
 
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}>

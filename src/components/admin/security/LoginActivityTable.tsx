@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, RefreshCw, Filter, X } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import Papa from "papaparse";
 
 interface LoginEvent {
   id: string;
@@ -83,7 +82,7 @@ export function LoginActivityTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, filters]);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const csvData = events.map(event => ({
       Email: event.user_email || event.user_username,
       "IP Address": event.ip_address,
@@ -93,6 +92,7 @@ export function LoginActivityTable() {
       "User Agent": event.user_agent
     }));
 
+    const Papa = (await import("papaparse")).default;
     const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRoles } from "@/hooks/useRoles";
@@ -7,11 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { AdminProducts } from "@/components/admin/AdminProducts";
-import { AdminUsersNew } from "@/components/admin/users";
-import { AdminOrdersNew } from "@/components/admin/orders";
-import { AdminReviewsNew } from "@/components/admin/reviews";
+import { LoadingCard } from "@/components/ui/loading-spinner";
 import { Loader2 } from "lucide-react";
+
+const AdminProducts = lazy(() => import("@/components/admin/AdminProducts").then(m => ({ default: m.AdminProducts })));
+const AdminUsersNew = lazy(() => import("@/components/admin/users").then(m => ({ default: m.AdminUsersNew })));
+const AdminOrdersNew = lazy(() => import("@/components/admin/orders").then(m => ({ default: m.AdminOrdersNew })));
+const AdminReviewsNew = lazy(() => import("@/components/admin/reviews").then(m => ({ default: m.AdminReviewsNew })));
 
 export default function Admin() {
   const { user, loading: authLoading } = useAuth();
@@ -104,25 +106,33 @@ export default function Admin() {
 
           {permissions.canManageProducts && (
             <TabsContent value="products">
-              <AdminProducts />
+              <Suspense fallback={<LoadingCard />}>
+                <AdminProducts />
+              </Suspense>
             </TabsContent>
           )}
 
           {permissions.canModerateReviews && (
             <TabsContent value="reviews">
-              <AdminReviewsNew />
+              <Suspense fallback={<LoadingCard />}>
+                <AdminReviewsNew />
+              </Suspense>
             </TabsContent>
           )}
 
           {permissions.canManageOrders && (
             <TabsContent value="orders">
-              <AdminOrdersNew />
+              <Suspense fallback={<LoadingCard />}>
+                <AdminOrdersNew />
+              </Suspense>
             </TabsContent>
           )}
 
           {permissions.canManageUsers && (
             <TabsContent value="users">
-              <AdminUsersNew />
+              <Suspense fallback={<LoadingCard />}>
+                <AdminUsersNew />
+              </Suspense>
             </TabsContent>
           )}
         </Tabs>
