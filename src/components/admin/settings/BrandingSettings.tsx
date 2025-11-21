@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,7 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslation } from "@/lib/translations/settings-center";
 import type { BrandingSettings as BrandingSettingsType } from "@/types/settings";
 import { updateSetting, uploadBrandingAsset, deleteBrandingAsset } from "@/lib/settings";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X, Clipboard } from "lucide-react";
 
 const brandingSettingsSchema = z.object({
   logo_url: z.string(),
@@ -31,6 +31,7 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
   const t = (key: string) => getTranslation(language, key);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [pasteTarget, setPasteTarget] = useState<'logo' | 'favicon' | null>(null);
 
   const form = useForm<BrandingSettingsType>({
     resolver: zodResolver(brandingSettingsSchema),
@@ -127,6 +128,56 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
     }
   };
 
+  const handlePaste = async (e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items || !pasteTarget) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        e.preventDefault();
+        const blob = item.getAsFile();
+        if (!blob) continue;
+
+        const extension = blob.type.split('/')[1] || 'png';
+        const timestamp = Date.now();
+        const uuid = crypto.randomUUID();
+        const fileName = `pasted-${timestamp}-${uuid}.${extension}`;
+        
+        const file = new File([blob], fileName, { type: blob.type });
+        await handleFileUpload(file, pasteTarget);
+        
+        toast({
+          title: t('branding.imagePasted'),
+          variant: 'default',
+        });
+        break;
+      } else if (item.kind === 'file' && !item.type.startsWith('image/')) {
+        toast({
+          title: t('branding.invalidImageType'),
+          variant: 'destructive',
+        });
+        break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      handlePaste(e);
+    };
+
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => {
+      window.removeEventListener('paste', handleGlobalPaste);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pasteTarget, uploadingLogo, uploadingFavicon]);
+
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const pasteHintKey = isMac ? 'branding.pasteHintMac' : 'branding.pasteHint';
+
   return (
     <Card>
       <CardHeader>
@@ -166,7 +217,16 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                           </Button>
                         </div>
                       ) : (
-                        <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                        <div 
+                          className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+                            pasteTarget === 'logo'
+                              ? 'border-primary bg-primary/5'
+                              : 'hover:border-muted-foreground/50'
+                          }`}
+                          onClick={() => setPasteTarget('logo')}
+                          onFocus={() => setPasteTarget('logo')}
+                          tabIndex={0}
+                        >
                           <p className="text-sm text-muted-foreground mb-4">
                             {t('branding.noLogo')}
                           </p>
@@ -175,7 +235,10 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               type="button"
                               variant="outline"
                               disabled={uploadingLogo}
-                              onClick={() => document.getElementById('logo-upload')?.click()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                document.getElementById('logo-upload')?.click();
+                              }}
                             >
                               {uploadingLogo ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -195,6 +258,10 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               if (file) handleFileUpload(file, 'logo');
                             }}
                           />
+                          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-4">
+                            <Clipboard className="h-3 w-3" />
+                            <span>{t(pasteHintKey)}</span>
+                          </div>
                         </div>
                       )}
                       <FormMessage />
@@ -232,7 +299,16 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                           </Button>
                         </div>
                       ) : (
-                        <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                        <div 
+                          className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+                            pasteTarget === 'favicon'
+                              ? 'border-primary bg-primary/5'
+                              : 'hover:border-muted-foreground/50'
+                          }`}
+                          onClick={() => setPasteTarget('favicon')}
+                          onFocus={() => setPasteTarget('favicon')}
+                          tabIndex={0}
+                        >
                           <p className="text-sm text-muted-foreground mb-4">
                             {t('branding.noFavicon')}
                           </p>
@@ -241,7 +317,10 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               type="button"
                               variant="outline"
                               disabled={uploadingFavicon}
-                              onClick={() => document.getElementById('favicon-upload')?.click()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                document.getElementById('favicon-upload')?.click();
+                              }}
                             >
                               {uploadingFavicon ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -261,6 +340,10 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               if (file) handleFileUpload(file, 'favicon');
                             }}
                           />
+                          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-4">
+                            <Clipboard className="h-3 w-3" />
+                            <span>{t(pasteHintKey)}</span>
+                          </div>
                         </div>
                       )}
                       <FormMessage />
