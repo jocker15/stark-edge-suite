@@ -12,6 +12,8 @@ import { getTranslation } from "@/lib/translations/settings-center";
 import type { BrandingSettings as BrandingSettingsType } from "@/types/settings";
 import { updateSetting, uploadBrandingAsset, deleteBrandingAsset } from "@/lib/settings";
 import { Loader2, Upload, X } from "lucide-react";
+import { useClipboardImagePaste, getPasteHintKey } from "@/hooks/useClipboardImagePaste";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 
 const brandingSettingsSchema = z.object({
   logo_url: z.string(),
@@ -127,6 +129,32 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
     }
   };
 
+  // Clipboard paste for logo
+  const logoPaste = useClipboardImagePaste({
+    onPaste: async (file) => {
+      await handleFileUpload(file, 'logo');
+    },
+    successMessage: t('branding.imagePasted'),
+    errorMessages: {
+      invalidType: t('branding.invalidImageType'),
+      tooLarge: t('branding.imageTooLarge'),
+    },
+  });
+
+  // Clipboard paste for favicon
+  const faviconPaste = useClipboardImagePaste({
+    onPaste: async (file) => {
+      await handleFileUpload(file, 'favicon');
+    },
+    successMessage: t('branding.imagePasted'),
+    errorMessages: {
+      invalidType: t('branding.invalidImageType'),
+      tooLarge: t('branding.imageTooLarge'),
+    },
+  });
+
+  const pasteHint = t(getPasteHintKey('branding.pasteHint'));
+
   return (
     <Card>
       <CardHeader>
@@ -166,7 +194,12 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                           </Button>
                         </div>
                       ) : (
-                        <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                        <ImageUploadZone
+                          isActive={logoPaste.isActive}
+                          onActivate={logoPaste.setActive}
+                          pasteHint={pasteHint}
+                          className="p-8 text-center"
+                        >
                           <p className="text-sm text-muted-foreground mb-4">
                             {t('branding.noLogo')}
                           </p>
@@ -175,7 +208,10 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               type="button"
                               variant="outline"
                               disabled={uploadingLogo}
-                              onClick={() => document.getElementById('logo-upload')?.click()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                document.getElementById('logo-upload')?.click();
+                              }}
                             >
                               {uploadingLogo ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -195,7 +231,7 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               if (file) handleFileUpload(file, 'logo');
                             }}
                           />
-                        </div>
+                        </ImageUploadZone>
                       )}
                       <FormMessage />
                     </FormItem>
@@ -232,7 +268,12 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                           </Button>
                         </div>
                       ) : (
-                        <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                        <ImageUploadZone
+                          isActive={faviconPaste.isActive}
+                          onActivate={faviconPaste.setActive}
+                          pasteHint={pasteHint}
+                          className="p-8 text-center"
+                        >
                           <p className="text-sm text-muted-foreground mb-4">
                             {t('branding.noFavicon')}
                           </p>
@@ -241,7 +282,10 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               type="button"
                               variant="outline"
                               disabled={uploadingFavicon}
-                              onClick={() => document.getElementById('favicon-upload')?.click()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                document.getElementById('favicon-upload')?.click();
+                              }}
                             >
                               {uploadingFavicon ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -261,7 +305,7 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                               if (file) handleFileUpload(file, 'favicon');
                             }}
                           />
-                        </div>
+                        </ImageUploadZone>
                       )}
                       <FormMessage />
                     </FormItem>

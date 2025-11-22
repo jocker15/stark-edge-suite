@@ -11,6 +11,8 @@ import { getProductManagerTranslation } from "@/lib/translations/product-manager
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { convertToWebP } from "@/lib/imageOptimization";
+import { useClipboardImagePaste, getPasteHintKey } from "@/hooks/useClipboardImagePaste";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 
 interface MediaTabProps {
   form: UseFormReturn<ProductFormValues>;
@@ -148,6 +150,48 @@ export function MediaTab({ form }: MediaTabProps) {
     form.setValue("gallery_urls", currentGallery.filter((img) => img !== url));
   };
 
+  // Clipboard paste for main image
+  const mainImagePaste = useClipboardImagePaste({
+    onPaste: async (file) => {
+      if (uploadingMain) return;
+      setUploadingMain(true);
+      try {
+        const url = await uploadImage(file);
+        const currentImages = form.getValues("image_urls");
+        form.setValue("image_urls", [url, ...currentImages]);
+      } finally {
+        setUploadingMain(false);
+      }
+    },
+    successMessage: t("form.messages.imagePasted"),
+    errorMessages: {
+      invalidType: t("form.messages.invalidImageType"),
+      tooLarge: t("form.messages.imageTooLarge"),
+    },
+  });
+
+  // Clipboard paste for gallery
+  const galleryPaste = useClipboardImagePaste({
+    onPaste: async (file) => {
+      if (uploadingGallery) return;
+      setUploadingGallery(true);
+      try {
+        const url = await uploadImage(file);
+        const currentGallery = form.getValues("gallery_urls");
+        form.setValue("gallery_urls", [...currentGallery, url]);
+      } finally {
+        setUploadingGallery(false);
+      }
+    },
+    successMessage: t("form.messages.imagePasted"),
+    errorMessages: {
+      invalidType: t("form.messages.invalidImageType"),
+      tooLarge: t("form.messages.imageTooLarge"),
+    },
+  });
+
+  const pasteHint = t(getPasteHintKey("form.messages.pasteHint"));
+
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
@@ -159,28 +203,37 @@ export function MediaTab({ form }: MediaTabProps) {
             </FormDescription>
           </div>
           
-          <div className="flex items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={uploadingMain}
-              onClick={() => document.getElementById("main-image-upload")?.click()}
-            >
-              {uploadingMain ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {uploadingMain ? "Uploading..." : t("form.actions.upload")}
-            </Button>
-            <input
-              id="main-image-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleMainImageUpload}
-            />
-          </div>
+          <ImageUploadZone
+            isActive={mainImagePaste.isActive}
+            onActivate={mainImagePaste.setActive}
+            pasteHint={pasteHint}
+          >
+            <div className="flex items-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploadingMain}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  document.getElementById("main-image-upload")?.click();
+                }}
+              >
+                {uploadingMain ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                {uploadingMain ? "Uploading..." : t("form.actions.upload")}
+              </Button>
+              <input
+                id="main-image-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleMainImageUpload}
+              />
+            </div>
+          </ImageUploadZone>
 
           {form.watch("image_urls").length > 0 && (
             <div className="grid grid-cols-4 gap-4">
@@ -219,29 +272,38 @@ export function MediaTab({ form }: MediaTabProps) {
             </FormDescription>
           </div>
           
-          <div className="flex items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={uploadingGallery}
-              onClick={() => document.getElementById("gallery-upload")?.click()}
-            >
-              {uploadingGallery ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {uploadingGallery ? "Uploading..." : t("form.actions.upload")}
-            </Button>
-            <input
-              id="gallery-upload"
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleGalleryUpload}
-            />
-          </div>
+          <ImageUploadZone
+            isActive={galleryPaste.isActive}
+            onActivate={galleryPaste.setActive}
+            pasteHint={pasteHint}
+          >
+            <div className="flex items-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploadingGallery}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  document.getElementById("gallery-upload")?.click();
+                }}
+              >
+                {uploadingGallery ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                {uploadingGallery ? "Uploading..." : t("form.actions.upload")}
+              </Button>
+              <input
+                id="gallery-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleGalleryUpload}
+              />
+            </div>
+          </ImageUploadZone>
 
           {form.watch("gallery_urls").length > 0 && (
             <div className="grid grid-cols-4 gap-4">
