@@ -1,16 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Loader2, Clipboard } from "lucide-react";
+import { Upload, Trash2, Loader2 } from "lucide-react";
 import { ProductFormValues } from "@/lib/validations/product";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getProductManagerTranslation } from "@/lib/translations/product-manager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { convertToWebP } from "@/lib/imageOptimization";
+import { useClipboardImagePaste, getPasteHintKey } from "@/hooks/useClipboardImagePaste";
+import { ImageUploadZone } from "@/components/ui/image-upload-zone";
 
 interface MediaTabProps {
   form: UseFormReturn<ProductFormValues>;
@@ -22,9 +24,6 @@ export function MediaTab({ form }: MediaTabProps) {
   const { toast } = useToast();
   const [uploadingMain, setUploadingMain] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
-  const [pasteTarget, setPasteTarget] = useState<'main' | 'gallery' | null>(null);
-  const mainImageContainerRef = useRef<HTMLDivElement>(null);
-  const galleryContainerRef = useRef<HTMLDivElement>(null);
 
   const uploadImage = async (file: File): Promise<string> => {
     try {
@@ -151,93 +150,47 @@ export function MediaTab({ form }: MediaTabProps) {
     form.setValue("gallery_urls", currentGallery.filter((img) => img !== url));
   };
 
-  const handlePasteImage = async (file: File, target: 'main' | 'gallery') => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: t("toasts.error"),
-        description: t("form.messages.imageTooLarge"),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const isUploading = target === 'main' ? uploadingMain : uploadingGallery;
-    if (isUploading) return;
-
-    const setUploading = target === 'main' ? setUploadingMain : setUploadingGallery;
-    setUploading(true);
-
-    try {
-      const url = await uploadImage(file);
-      
-      if (target === 'main') {
+  // Clipboard paste for main image
+  const mainImagePaste = useClipboardImagePaste({
+    onPaste: async (file) => {
+      if (uploadingMain) return;
+      setUploadingMain(true);
+      try {
+        const url = await uploadImage(file);
         const currentImages = form.getValues("image_urls");
         form.setValue("image_urls", [url, ...currentImages]);
-      } else {
+      } finally {
+        setUploadingMain(false);
+      }
+    },
+    successMessage: t("form.messages.imagePasted"),
+    errorMessages: {
+      invalidType: t("form.messages.invalidImageType"),
+      tooLarge: t("form.messages.imageTooLarge"),
+    },
+  });
+
+  // Clipboard paste for gallery
+  const galleryPaste = useClipboardImagePaste({
+    onPaste: async (file) => {
+      if (uploadingGallery) return;
+      setUploadingGallery(true);
+      try {
+        const url = await uploadImage(file);
         const currentGallery = form.getValues("gallery_urls");
         form.setValue("gallery_urls", [...currentGallery, url]);
+      } finally {
+        setUploadingGallery(false);
       }
-      
-      toast({
-        title: t("form.messages.imagePasted"),
-      });
-    } catch (error) {
-      console.error("Error uploading pasted image:", error);
-      toast({
-        title: t("toasts.error"),
-        description: error instanceof Error ? error.message : t("errors.uploadFile"),
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
+    },
+    successMessage: t("form.messages.imagePasted"),
+    errorMessages: {
+      invalidType: t("form.messages.invalidImageType"),
+      tooLarge: t("form.messages.imageTooLarge"),
+    },
+  });
 
-  const handlePaste = async (e: ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items || !pasteTarget) return;
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      
-      if (item.kind === 'file' && item.type.startsWith('image/')) {
-        e.preventDefault();
-        const blob = item.getAsFile();
-        if (!blob) continue;
-
-        const extension = blob.type.split('/')[1] || 'png';
-        const timestamp = Date.now();
-        const uuid = crypto.randomUUID();
-        const fileName = `pasted-${timestamp}-${uuid}.${extension}`;
-        
-        const file = new File([blob], fileName, { type: blob.type });
-        await handlePasteImage(file, pasteTarget);
-        break;
-      } else if (item.kind === 'file' && !item.type.startsWith('image/')) {
-        toast({
-          title: t("toasts.error"),
-          description: t("form.messages.invalidImageType"),
-          variant: "destructive",
-        });
-        break;
-      }
-    }
-  };
-
-  useEffect(() => {
-    const handleGlobalPaste = (e: ClipboardEvent) => {
-      handlePaste(e);
-    };
-
-    window.addEventListener('paste', handleGlobalPaste);
-    return () => {
-      window.removeEventListener('paste', handleGlobalPaste);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pasteTarget, uploadingMain, uploadingGallery]);
-
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const pasteHintKey = isMac ? 'form.messages.pasteHintMac' : 'form.messages.pasteHint';
+  const pasteHint = t(getPasteHintKey("form.messages.pasteHint"));
 
   return (
     <Form {...form}>
@@ -250,16 +203,10 @@ export function MediaTab({ form }: MediaTabProps) {
             </FormDescription>
           </div>
           
-          <div
-            ref={mainImageContainerRef}
-            className={`rounded-lg border-2 border-dashed p-4 transition-all ${
-              pasteTarget === 'main' 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-            }`}
-            onClick={() => setPasteTarget('main')}
-            onFocus={() => setPasteTarget('main')}
-            tabIndex={0}
+          <ImageUploadZone
+            isActive={mainImagePaste.isActive}
+            onActivate={mainImagePaste.setActive}
+            pasteHint={pasteHint}
           >
             <div className="flex items-center gap-4">
               <Button
@@ -285,12 +232,8 @@ export function MediaTab({ form }: MediaTabProps) {
                 className="hidden"
                 onChange={handleMainImageUpload}
               />
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clipboard className="h-4 w-4" />
-                <span>{t(pasteHintKey)}</span>
-              </div>
             </div>
-          </div>
+          </ImageUploadZone>
 
           {form.watch("image_urls").length > 0 && (
             <div className="grid grid-cols-4 gap-4">
@@ -329,16 +272,10 @@ export function MediaTab({ form }: MediaTabProps) {
             </FormDescription>
           </div>
           
-          <div
-            ref={galleryContainerRef}
-            className={`rounded-lg border-2 border-dashed p-4 transition-all ${
-              pasteTarget === 'gallery' 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-            }`}
-            onClick={() => setPasteTarget('gallery')}
-            onFocus={() => setPasteTarget('gallery')}
-            tabIndex={0}
+          <ImageUploadZone
+            isActive={galleryPaste.isActive}
+            onActivate={galleryPaste.setActive}
+            pasteHint={pasteHint}
           >
             <div className="flex items-center gap-4">
               <Button
@@ -365,12 +302,8 @@ export function MediaTab({ form }: MediaTabProps) {
                 className="hidden"
                 onChange={handleGalleryUpload}
               />
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clipboard className="h-4 w-4" />
-                <span>{t(pasteHintKey)}</span>
-              </div>
             </div>
-          </div>
+          </ImageUploadZone>
 
           {form.watch("gallery_urls").length > 0 && (
             <div className="grid grid-cols-4 gap-4">
