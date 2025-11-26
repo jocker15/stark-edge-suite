@@ -160,52 +160,85 @@ export type Database = {
           category: string | null
           country: string | null
           created_at: string
+          currency: string | null
           description_en: string | null
           description_ru: string | null
           document_type: string | null
+          download_limit: number | null
+          external_url: string | null
+          file_url: string | null
           id: number
           image_urls: Json | null
+          is_digital: boolean | null
           meta_description: string | null
           meta_title: string | null
           name_en: string | null
           name_ru: string | null
+          old_price: number | null
           preview_link: string | null
           price: number
+          sku: string | null
+          slug: string | null
+          state: string | null
+          status: string | null
           stock: number
+          tags: string[] | null
         }
         Insert: {
           category?: string | null
           country?: string | null
           created_at?: string
+          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
           document_type?: string | null
+          download_limit?: number | null
+          external_url?: string | null
+          file_url?: string | null
           id?: number
           image_urls?: Json | null
+          is_digital?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
+          old_price?: number | null
           preview_link?: string | null
           price?: number
+          sku?: string | null
+          slug?: string | null
+          state?: string | null
+          status?: string | null
           stock?: number
+          tags?: string[] | null
         }
         Update: {
           category?: string | null
           country?: string | null
           created_at?: string
+          currency?: string | null
           description_en?: string | null
           description_ru?: string | null
           document_type?: string | null
+          download_limit?: number | null
+          external_url?: string | null
+          file_url?: string | null
           id?: number
           image_urls?: Json | null
+          is_digital?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           name_en?: string | null
           name_ru?: string | null
+          old_price?: number | null
           preview_link?: string | null
           price?: number
+          sku?: string | null
+          slug?: string | null
+          state?: string | null
+          status?: string | null
           stock?: number
+          tags?: string[] | null
         }
         Relationships: []
       }
@@ -371,6 +404,13 @@ export type Database = {
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role_hierarchy: {
+        Args: {
+          _min_role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
