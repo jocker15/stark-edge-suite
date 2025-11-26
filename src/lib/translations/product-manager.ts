@@ -119,6 +119,10 @@ export const productManagerTranslations = {
         maxImageSize: "Max image size: 5MB",
         removeImage: "Remove image",
         primaryImage: "Set as primary",
+        pasteHint: "You can also paste an image from clipboard (Ctrl+V)",
+        imagePasted: "Image pasted from clipboard",
+        invalidImageFormat: "Invalid image format. Please paste a valid image.",
+        pasteImageTooLarge: "Pasted image is too large. Max size: 5MB",
       },
     },
     
@@ -296,6 +300,10 @@ export const productManagerTranslations = {
         maxImageSize: "Макс. размер изображения: 5МБ",
         removeImage: "Удалить изображение",
         primaryImage: "Сделать главным",
+        pasteHint: "Можно вставить изображение из буфера памяти (Ctrl+V)",
+        imagePasted: "Изображение вставлено из буфера",
+        invalidImageFormat: "Неверный формат изображения. Вставьте правильное изображение.",
+        pasteImageTooLarge: "Вставленное изображение слишком большое. Макс. размер: 5МБ",
       },
     },
     

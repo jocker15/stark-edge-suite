@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Form } from "@/components/ui/form";
@@ -22,6 +22,131 @@ export function MediaTab({ form }: MediaTabProps) {
   const { toast } = useToast();
   const [uploadingMain, setUploadingMain] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const mainImageContainerRef = useRef<HTMLDivElement>(null);
+  const galleryContainerRef = useRef<HTMLDivElement>(null);
+
+  const getFileExtensionFromMimeType = (mimeType: string): string => {
+    const mimeMap: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+      'image/bmp': 'bmp',
+      'image/svg+xml': 'svg',
+    };
+    return mimeMap[mimeType] || 'jpg';
+  };
+
+  const blobToFile = (blob: Blob, mimeType: string): File => {
+    const extension = getFileExtensionFromMimeType(mimeType);
+    const fileName = `product-${crypto.randomUUID()}-${Date.now()}.${extension}`;
+    return new File([blob], fileName, { type: mimeType });
+  };
+
+  const handlePasteEvent = async (e: ClipboardEvent, isGallery: boolean = false) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const imageItems: File[] = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const blob = item.getAsFile();
+        if (blob) {
+          const file = blobToFile(blob, item.type);
+          
+          if (file.size > 5 * 1024 * 1024) {
+            toast({
+              title: t("toasts.error"),
+              description: t("form.messages.pasteImageTooLarge"),
+              variant: "destructive",
+            });
+            continue;
+          }
+
+          imageItems.push(file);
+        }
+      }
+    }
+
+    if (imageItems.length === 0) {
+      return;
+    }
+
+    e.preventDefault();
+
+    if (isGallery) {
+      setUploadingGallery(true);
+      try {
+        const uploadPromises = imageItems.map(file => uploadImage(file));
+        const urls = await Promise.all(uploadPromises);
+        
+        const currentGallery = form.getValues("gallery_urls");
+        form.setValue("gallery_urls", [...currentGallery, ...urls]);
+        
+        toast({
+          title: t("form.messages.imagePasted"),
+        });
+      } catch (error) {
+        console.error("Error uploading pasted images:", error);
+        toast({
+          title: t("toasts.error"),
+          description: error instanceof Error ? error.message : t("errors.uploadFile"),
+          variant: "destructive",
+        });
+      } finally {
+        setUploadingGallery(false);
+      }
+    } else {
+      const file = imageItems[0];
+      setUploadingMain(true);
+      try {
+        const url = await uploadImage(file);
+        const currentImages = form.getValues("image_urls");
+        form.setValue("image_urls", [url, ...currentImages]);
+        
+        toast({
+          title: t("form.messages.imagePasted"),
+        });
+      } catch (error) {
+        console.error("Error uploading pasted image:", error);
+        toast({
+          title: t("toasts.error"),
+          description: error instanceof Error ? error.message : t("errors.uploadFile"),
+          variant: "destructive",
+        });
+      } finally {
+        setUploadingMain(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const mainContainer = mainImageContainerRef.current;
+    const galleryContainer = galleryContainerRef.current;
+
+    const handleMainPaste = (e: ClipboardEvent) => handlePasteEvent(e, false);
+    const handleGalleryPaste = (e: ClipboardEvent) => handlePasteEvent(e, true);
+
+    if (mainContainer) {
+      mainContainer.addEventListener('paste', handleMainPaste);
+    }
+    if (galleryContainer) {
+      galleryContainer.addEventListener('paste', handleGalleryPaste);
+    }
+
+    return () => {
+      if (mainContainer) {
+        mainContainer.removeEventListener('paste', handleMainPaste);
+      }
+      if (galleryContainer) {
+        galleryContainer.removeEventListener('paste', handleGalleryPaste);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const uploadImage = async (file: File): Promise<string> => {
     try {
@@ -151,11 +276,14 @@ export function MediaTab({ form }: MediaTabProps) {
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
-        <div className="space-y-4">
+        <div className="space-y-4" ref={mainImageContainerRef} tabIndex={-1}>
           <div>
             <FormLabel>{t("form.fields.mainImage")}</FormLabel>
             <FormDescription>
               {t("form.messages.maxImageSize")}
+            </FormDescription>
+            <FormDescription className="text-xs text-muted-foreground mt-1">
+              {t("form.messages.pasteHint")}
             </FormDescription>
           </div>
           
@@ -211,11 +339,14 @@ export function MediaTab({ form }: MediaTabProps) {
           )}
         </div>
 
-        <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-4 pt-4 border-t" ref={galleryContainerRef} tabIndex={-1}>
           <div>
             <FormLabel>{t("form.fields.gallery")}</FormLabel>
             <FormDescription>
               {t("form.messages.uploadFiles")}
+            </FormDescription>
+            <FormDescription className="text-xs text-muted-foreground mt-1">
+              {t("form.messages.pasteHint")}
             </FormDescription>
           </div>
           
