@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,11 +31,113 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
   const t = (key: string) => getTranslation(language, key);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const logoContainerRef = useRef<HTMLDivElement>(null);
+  const faviconContainerRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<BrandingSettingsType>({
     resolver: zodResolver(brandingSettingsSchema),
     defaultValues: settings,
   });
+
+  const getFileExtensionFromMimeType = (mimeType: string): string => {
+    const mimeMap: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+      'image/bmp': 'bmp',
+      'image/svg+xml': 'svg',
+      'image/x-icon': 'ico',
+    };
+    return mimeMap[mimeType] || 'jpg';
+  };
+
+  const blobToFile = (blob: Blob, mimeType: string): File => {
+    const extension = getFileExtensionFromMimeType(mimeType);
+    const fileName = `branding-${crypto.randomUUID()}-${Date.now()}.${extension}`;
+    return new File([blob], fileName, { type: mimeType });
+  };
+
+  const handlePasteEvent = async (e: ClipboardEvent, type: 'logo' | 'favicon') => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const blob = item.getAsFile();
+        if (blob) {
+          e.preventDefault();
+          
+          const file = blobToFile(blob, item.type);
+          
+          if (file.size > 5 * 1024 * 1024) {
+            toast({
+              title: t('messages.uploadTooLarge'),
+              variant: 'destructive',
+            });
+            return;
+          }
+
+          const setUploading = type === 'logo' ? setUploadingLogo : setUploadingFavicon;
+          setUploading(true);
+
+          try {
+            const url = await uploadBrandingAsset(file, type);
+            
+            if (url) {
+              const fieldName = type === 'logo' ? 'logo_url' : 'favicon_url';
+              form.setValue(fieldName, url);
+              
+              toast({
+                title: t('branding.imagePasted'),
+                variant: 'default',
+              });
+            } else {
+              toast({
+                title: t('branding.uploadError'),
+                variant: 'destructive',
+              });
+            }
+          } catch (error) {
+            toast({
+              title: t('branding.uploadError'),
+              variant: 'destructive',
+            });
+          } finally {
+            setUploading(false);
+          }
+          return;
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    const logoContainer = logoContainerRef.current;
+    const faviconContainer = faviconContainerRef.current;
+
+    const handleLogoPaste = (e: ClipboardEvent) => handlePasteEvent(e, 'logo');
+    const handleFaviconPaste = (e: ClipboardEvent) => handlePasteEvent(e, 'favicon');
+
+    if (logoContainer) {
+      logoContainer.addEventListener('paste', handleLogoPaste);
+    }
+    if (faviconContainer) {
+      faviconContainer.addEventListener('paste', handleFaviconPaste);
+    }
+
+    return () => {
+      if (logoContainer) {
+        logoContainer.removeEventListener('paste', handleLogoPaste);
+      }
+      if (faviconContainer) {
+        faviconContainer.removeEventListener('paste', handleFaviconPaste);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (data: BrandingSettingsType) => {
     const success = await updateSetting('branding', data);
@@ -137,7 +239,7 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
+              <div className="space-y-4" ref={logoContainerRef} tabIndex={-1}>
                 <FormField
                   control={form.control}
                   name="logo_url"
@@ -145,6 +247,9 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                     <FormItem>
                       <FormLabel>{t('branding.logo')}</FormLabel>
                       <FormDescription>{t('branding.logoDescription')}</FormDescription>
+                      <FormDescription className="text-xs text-muted-foreground">
+                        {t('branding.pasteHint')}
+                      </FormDescription>
                       
                       {field.value ? (
                         <div className="relative">
@@ -203,7 +308,7 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                 />
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4" ref={faviconContainerRef} tabIndex={-1}>
                 <FormField
                   control={form.control}
                   name="favicon_url"
@@ -211,6 +316,9 @@ export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) 
                     <FormItem>
                       <FormLabel>{t('branding.favicon')}</FormLabel>
                       <FormDescription>{t('branding.faviconDescription')}</FormDescription>
+                      <FormDescription className="text-xs text-muted-foreground">
+                        {t('branding.pasteHint')}
+                      </FormDescription>
                       
                       {field.value ? (
                         <div className="relative">

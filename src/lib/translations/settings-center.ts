@@ -56,6 +56,8 @@ export const settingsTranslations = {
       uploadError: "Failed to upload file",
       deleteSuccess: "File deleted successfully",
       deleteError: "Failed to delete file",
+      pasteHint: "You can also paste an image from clipboard (Ctrl+V)",
+      imagePasted: "Image pasted from clipboard",
     },
     
     payments: {
@@ -206,6 +208,8 @@ export const settingsTranslations = {
       uploadError: "Не удалось загрузить файл",
       deleteSuccess: "Файл успешно удален",
       deleteError: "Не удалось удалить файл",
+      pasteHint: "Можно вставить изображение из буфера памяти (Ctrl+V)",
+      imagePasted: "Изображение вставлено из буфера",
     },
     
     payments: {
