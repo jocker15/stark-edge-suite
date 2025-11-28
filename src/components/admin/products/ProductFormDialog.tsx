@@ -4,8 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { ProductFormValues, productFormSchema } from "@/lib/validations/product";
@@ -18,7 +19,7 @@ import { DigitalDeliveryTab } from "./tabs/DigitalDeliveryTab";
 import { MediaTab } from "./tabs/MediaTab";
 import { GeographyTab } from "./tabs/GeographyTab";
 import { StatusTab } from "./tabs/StatusTab";
-
+import { Alert, AlertDescription } from "@/components/ui/alert";
 type Product = Tables<"products">;
 
 interface ProductFormDialogProps {
@@ -157,57 +158,70 @@ export function ProductFormDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="general">{t("form.tabs.general")}</TabsTrigger>
-              <TabsTrigger value="pricing">{t("form.tabs.pricing")}</TabsTrigger>
-              <TabsTrigger value="categorization">{t("form.tabs.categorization")}</TabsTrigger>
-              <TabsTrigger value="digital">{t("form.tabs.digital")}</TabsTrigger>
-              <TabsTrigger value="media">{t("form.tabs.media")}</TabsTrigger>
-              <TabsTrigger value="geography">{t("form.tabs.geography")}</TabsTrigger>
-              <TabsTrigger value="status">{t("form.tabs.status")}</TabsTrigger>
-            </TabsList>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            {Object.keys(form.formState.errors).length > 0 && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {lang === 'ru' 
+                    ? 'Пожалуйста, заполните обязательные поля: название (EN), название (RU), slug'
+                    : 'Please fill in required fields: name (EN), name (RU), slug'}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className="grid w-full grid-cols-7">
+                <TabsTrigger value="general">{t("form.tabs.general")}</TabsTrigger>
+                <TabsTrigger value="pricing">{t("form.tabs.pricing")}</TabsTrigger>
+                <TabsTrigger value="categorization">{t("form.tabs.categorization")}</TabsTrigger>
+                <TabsTrigger value="digital">{t("form.tabs.digital")}</TabsTrigger>
+                <TabsTrigger value="media">{t("form.tabs.media")}</TabsTrigger>
+                <TabsTrigger value="geography">{t("form.tabs.geography")}</TabsTrigger>
+                <TabsTrigger value="status">{t("form.tabs.status")}</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="general">
-              <GeneralInfoTab form={form} />
-            </TabsContent>
+              <TabsContent value="general">
+                <GeneralInfoTab form={form} />
+              </TabsContent>
 
-            <TabsContent value="pricing">
-              <PricingTab form={form} />
-            </TabsContent>
+              <TabsContent value="pricing">
+                <PricingTab form={form} />
+              </TabsContent>
 
-            <TabsContent value="categorization">
-              <CategorizationTab form={form} />
-            </TabsContent>
+              <TabsContent value="categorization">
+                <CategorizationTab form={form} />
+              </TabsContent>
 
-            <TabsContent value="digital">
-              <DigitalDeliveryTab form={form} productId={product?.id} />
-            </TabsContent>
+              <TabsContent value="digital">
+                <DigitalDeliveryTab form={form} productId={product?.id} />
+              </TabsContent>
 
-            <TabsContent value="media">
-              <MediaTab form={form} />
-            </TabsContent>
+              <TabsContent value="media">
+                <MediaTab form={form} />
+              </TabsContent>
 
-            <TabsContent value="geography">
-              <GeographyTab form={form} />
-            </TabsContent>
+              <TabsContent value="geography">
+                <GeographyTab form={form} />
+              </TabsContent>
 
-            <TabsContent value="status">
-              <StatusTab form={form} />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="status">
+                <StatusTab form={form} />
+              </TabsContent>
+            </Tabs>
 
-          <div className="flex justify-end gap-2 mt-6">
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t("form.actions.cancel")}
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? t("form.actions.saving") : t("form.actions.save")}
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-2 mt-6">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t("form.actions.cancel")}
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading ? t("form.actions.saving") : t("form.actions.save")}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

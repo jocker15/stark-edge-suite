@@ -26,8 +26,7 @@ export function GeneralInfoTab({ form }: GeneralInfoTabProps) {
   };
 
   return (
-    <Form {...form}>
-      <div className="space-y-4 py-4">
+    <div className="space-y-4 py-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -177,7 +176,6 @@ export function GeneralInfoTab({ form }: GeneralInfoTabProps) {
             )}
           />
         </div>
-      </div>
-    </Form>
+    </div>
   );
 }

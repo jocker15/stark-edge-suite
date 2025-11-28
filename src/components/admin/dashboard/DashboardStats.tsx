@@ -36,6 +36,7 @@ interface DashboardStatsProps {
   } | null;
   loading: boolean;
   language: 'en' | 'ru';
+  onNavigate?: (target: 'orders' | 'reviews' | 'products' | 'users', filter?: string) => void;
 }
 
 interface StatCardProps {
@@ -48,9 +49,10 @@ interface StatCardProps {
   };
   variant?: 'default' | 'success' | 'warning' | 'danger';
   loading?: boolean;
+  onClick?: () => void;
 }
 
-function StatCard({ title, value, icon, trend, variant = 'default', loading }: StatCardProps) {
+function StatCard({ title, value, icon, trend, variant = 'default', loading, onClick }: StatCardProps) {
   const variants = {
     default: 'bg-primary/10 text-primary',
     success: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
@@ -74,7 +76,10 @@ function StatCard({ title, value, icon, trend, variant = 'default', loading }: S
   }
 
   return (
-    <Card>
+    <Card 
+      className={cn(onClick && "cursor-pointer hover:bg-accent/50 transition-colors")}
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <div className={cn("rounded-full p-2", variants[variant])}>
@@ -101,7 +106,7 @@ function StatCard({ title, value, icon, trend, variant = 'default', loading }: S
   );
 }
 
-export function DashboardStats({ stats, loading, language }: DashboardStatsProps) {
+export function DashboardStats({ stats, loading, language, onNavigate }: DashboardStatsProps) {
   const t = (key: string) => getTranslation(language, key);
 
   const formatCurrency = (value: number) => {
@@ -121,6 +126,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<ShoppingCart className="h-4 w-4" />}
         loading={loading}
         variant="default"
+        onClick={() => onNavigate?.('orders')}
       />
       
       <StatCard
@@ -129,6 +135,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<DollarSign className="h-4 w-4" />}
         loading={loading}
         variant="success"
+        onClick={() => onNavigate?.('orders')}
       />
       
       <StatCard
@@ -137,6 +144,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<ShoppingCart className="h-4 w-4" />}
         loading={loading}
         variant="default"
+        onClick={() => onNavigate?.('orders')}
       />
       
       <StatCard
@@ -145,6 +153,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<DollarSign className="h-4 w-4" />}
         loading={loading}
         variant="success"
+        onClick={() => onNavigate?.('orders')}
       />
       
       <StatCard
@@ -153,6 +162,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<ShoppingCart className="h-4 w-4" />}
         loading={loading}
         variant="default"
+        onClick={() => onNavigate?.('orders')}
       />
       
       <StatCard
@@ -161,6 +171,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<DollarSign className="h-4 w-4" />}
         loading={loading}
         variant="success"
+        onClick={() => onNavigate?.('orders')}
       />
       
       <StatCard
@@ -169,6 +180,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<Users className="h-4 w-4" />}
         loading={loading}
         variant="default"
+        onClick={() => onNavigate?.('users')}
       />
       
       <StatCard
@@ -177,6 +189,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<Users className="h-4 w-4" />}
         loading={loading}
         variant="default"
+        onClick={() => onNavigate?.('users')}
       />
       
       <StatCard
@@ -185,6 +198,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<Package className="h-4 w-4" />}
         loading={loading}
         variant="default"
+        onClick={() => onNavigate?.('products')}
       />
       
       <StatCard
@@ -193,6 +207,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<Star className="h-4 w-4" />}
         loading={loading}
         variant="warning"
+        onClick={() => onNavigate?.('reviews', 'pending')}
       />
       
       <StatCard
@@ -201,6 +216,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<Star className="h-4 w-4" />}
         loading={loading}
         variant="warning"
+        onClick={() => onNavigate?.('reviews', 'unread')}
       />
       
       <StatCard
@@ -209,6 +225,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<AlertCircle className="h-4 w-4" />}
         loading={loading}
         variant="warning"
+        onClick={() => onNavigate?.('orders', 'pending')}
       />
       
       <StatCard
@@ -217,6 +234,7 @@ export function DashboardStats({ stats, loading, language }: DashboardStatsProps
         icon={<XCircle className="h-4 w-4" />}
         loading={loading}
         variant="danger"
+        onClick={() => onNavigate?.('orders', 'failed')}
       />
     </div>
   );
