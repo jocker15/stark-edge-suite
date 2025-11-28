@@ -234,12 +234,12 @@ export function CSVImporter({ onClose }: CSVImporterProps) {
             // Type conversion
             const field = PRODUCT_FIELDS.find(f => f.key === m.productField);
             if (field?.type === 'number') {
-              value = parseFloat(String(value || '0')) || 0;
+              (productData as Record<string, unknown>)[m.productField] = parseFloat(String(value || '0')) || 0;
             } else if (field?.key === 'is_digital') {
-              value = value === 'true' || value === '1' || value === 'yes';
+              (productData as Record<string, unknown>)[m.productField] = value === 'true' || value === '1' || value === 'yes';
+            } else {
+              (productData as Record<string, unknown>)[m.productField] = value;
             }
-            
-            productData[m.productField] = value;
           }
         });
 

@@ -197,7 +197,7 @@ export function ProductsDataTable({
       cell: ({ row }) => row.original.stock,
     },
     {
-      accessorKey: "updated_at",
+      accessorKey: "created_at",
       header: ({ column }) => {
         return (
           <Button
@@ -216,7 +216,7 @@ export function ProductsDataTable({
         );
       },
       cell: ({ row }) => {
-        const date = row.original.updated_at;
+        const date = row.original.created_at;
         return date ? formatDistanceToNow(new Date(date), { addSuffix: true }) : "—";
       },
     },

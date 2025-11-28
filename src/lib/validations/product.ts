@@ -31,7 +31,6 @@ export const productFormSchema = z.object({
   meta_description: z.string().max(160, "Meta description should not exceed 160 characters").optional(),
   
   image_urls: z.array(z.string()).default([]),
-  gallery_urls: z.array(z.string()).default([]),
   preview_link: z.string().url("Invalid URL").optional().nullable().or(z.literal("")),
 });
 

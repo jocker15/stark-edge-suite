@@ -65,7 +65,6 @@ export function ProductFormDialog({
       meta_title: "",
       meta_description: "",
       image_urls: [],
-      gallery_urls: [],
       preview_link: null,
     },
   });
@@ -96,7 +95,6 @@ export function ProductFormDialog({
         meta_title: product.meta_title || "",
         meta_description: product.meta_description || "",
         image_urls: (product.image_urls as string[]) || [],
-        gallery_urls: (product.gallery_urls as string[]) || [],
         preview_link: product.preview_link,
       });
     } else {
@@ -110,7 +108,6 @@ export function ProductFormDialog({
       const productData = {
         ...values,
         image_urls: values.image_urls,
-        gallery_urls: values.gallery_urls,
         tags: values.tags,
       };
 

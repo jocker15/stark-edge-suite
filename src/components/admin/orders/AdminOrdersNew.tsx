@@ -13,8 +13,8 @@ import { getColumns, OrderRow } from "./columns";
 import { PaginationState } from "@tanstack/react-table";
 
 export function AdminOrdersNew() {
-  const { language } = useLanguage();
-  const t = orderManagerTranslations[language];
+  const { lang } = useLanguage();
+  const t = orderManagerTranslations[lang];
   const { toast } = useToast();
 
   const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -42,32 +42,61 @@ export function AdminOrdersNew() {
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("get_filtered_orders", {
-        search_param: filters.search || null,
-        status_filter: filters.orderStatus === "all" ? null : filters.orderStatus,
-        payment_status_filter: filters.paymentStatus === "all" ? null : filters.paymentStatus,
-        delivery_status_filter: filters.deliveryStatus === "all" ? null : filters.deliveryStatus,
-        date_from: filters.dateFrom ? new Date(filters.dateFrom).toISOString() : null,
-        date_to: filters.dateTo ? new Date(filters.dateTo).toISOString() : null,
-        min_amount: filters.minAmount ? parseFloat(filters.minAmount) : null,
-        max_amount: filters.maxAmount ? parseFloat(filters.maxAmount) : null,
-        limit_param: pagination.pageSize,
-        offset_param: pagination.pageIndex * pagination.pageSize,
-      });
+      // Build query directly instead of using RPC
+      let query = supabase
+        .from("orders")
+        .select("*, profiles(email, username)", { count: "exact" });
+
+      // Apply filters
+      if (filters.orderStatus !== "all") {
+        query = query.eq("status", filters.orderStatus);
+      }
+
+      if (filters.dateFrom) {
+        query = query.gte("created_at", new Date(filters.dateFrom).toISOString());
+      }
+
+      if (filters.dateTo) {
+        query = query.lte("created_at", new Date(filters.dateTo).toISOString());
+      }
+
+      if (filters.minAmount) {
+        query = query.gte("amount", parseFloat(filters.minAmount));
+      }
+
+      if (filters.maxAmount) {
+        query = query.lte("amount", parseFloat(filters.maxAmount));
+      }
+
+      // Apply pagination
+      const from = pagination.pageIndex * pagination.pageSize;
+      const to = from + pagination.pageSize - 1;
+      query = query.range(from, to).order("created_at", { ascending: false });
+
+      const { data, error, count } = await query;
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        setOrders(data);
-        setTotalCount(data[0].total_count || 0);
-      } else {
-        setOrders([]);
-        setTotalCount(0);
-      }
+      // Transform data to match OrderRow type
+      const transformedOrders: OrderRow[] = (data || []).map((order) => ({
+        id: order.id,
+        user_id: order.user_id,
+        amount: order.amount,
+        status: order.status,
+        created_at: order.created_at,
+        updated_at: order.created_at, // Use created_at as fallback
+        customer_email: (order.profiles as { email?: string } | null)?.email || null,
+        customer_username: (order.profiles as { username?: string } | null)?.username || null,
+        payment_status: (order.payment_details as { status?: string } | null)?.status || null,
+        delivery_status: (order.order_details as { delivery_status?: string } | null)?.delivery_status || null,
+      }));
+
+      setOrders(transformedOrders);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error("Error loading orders:", error);
       toast({
-        title: language === "ru" ? "Ошибка" : "Error",
+        title: lang === "ru" ? "Ошибка" : "Error",
         description: t.error,
         variant: "destructive",
       });
@@ -76,7 +105,7 @@ export function AdminOrdersNew() {
     } finally {
       setLoading(false);
     }
-  }, [filters, pagination, language, toast, t.error]);
+  }, [filters, pagination, lang, toast, t.error]);
 
   useEffect(() => {
     loadOrders();
@@ -119,12 +148,12 @@ export function AdminOrdersNew() {
     window.URL.revokeObjectURL(url);
 
     toast({
-      title: language === "ru" ? "Успешно" : "Success",
-      description: language === "ru" ? "CSV файл экспортирован" : "CSV file exported",
+      title: lang === "ru" ? "Успешно" : "Success",
+      description: lang === "ru" ? "CSV файл экспортирован" : "CSV file exported",
     });
   };
 
-  const columns = getColumns(language, handleViewDetails);
+  const columns = getColumns(lang, handleViewDetails);
 
   return (
     <>
@@ -161,7 +190,7 @@ export function AdminOrdersNew() {
           <OrderFilters
             filters={filters}
             onFiltersChange={handleFiltersChange}
-            lang={language}
+            lang={lang}
           />
 
           <OrdersDataTable
@@ -170,7 +199,7 @@ export function AdminOrdersNew() {
             totalCount={totalCount}
             pagination={pagination}
             onPaginationChange={setPagination}
-            lang={language}
+            lang={lang}
             loading={loading}
           />
         </CardContent>
@@ -180,7 +209,7 @@ export function AdminOrdersNew() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         order={selectedOrder}
-        lang={language}
+        lang={lang}
         onOrderUpdate={loadOrders}
       />
     </>

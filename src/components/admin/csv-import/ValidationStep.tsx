@@ -105,7 +105,7 @@ export function ValidationStep({ products, onValidate, isValidating }: Validatio
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => exportFailedRows(invalidProducts, lang)}
+                onClick={() => exportFailedRows(invalidProducts as unknown as { row: number; data: Record<string, unknown>; errors: { field: string; message: string }[] }[], lang)}
               >
                 <Download className="mr-2 h-4 w-4" />
                 {t.exportFailed}
