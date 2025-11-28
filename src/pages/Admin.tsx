@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRoles } from "@/hooks/useRoles";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,8 +19,21 @@ export default function Admin() {
   const { user, loading: authLoading } = useAuth();
   const { permissions, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
+  
+  // Get tab from navigation state
+  const locationState = location.state as { tab?: string; filter?: string; orderId?: number } | null;
+  const initialTab = locationState?.tab || (permissions.canManageProducts ? "products" : permissions.canModerateReviews ? "reviews" : "dashboard");
+  const [activeTab, setActiveTab] = useState(initialTab);
+  
+  // Update active tab when location state changes
+  useEffect(() => {
+    if (locationState?.tab) {
+      setActiveTab(locationState.tab);
+    }
+  }, [locationState?.tab]);
 
   useEffect(() => {
     async function checkAdminRole() {
@@ -71,7 +84,7 @@ export default function Admin() {
           </CardHeader>
         </Card>
 
-        <Tabs defaultValue={permissions.canManageProducts ? "products" : permissions.canModerateReviews ? "reviews" : "dashboard"} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${[
             permissions.canAccessDashboard,
             permissions.canManageProducts,
