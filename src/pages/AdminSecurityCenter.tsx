@@ -7,10 +7,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { securityCenterTranslations } from "@/lib/translations/security-center";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { LoginActivityTable, AuditLogsTable, RoleManagement } from "@/components/admin/security";
-import { Loader2, Shield } from "lucide-react";
+import { Loader2, Shield, ArrowLeft } from "lucide-react";
 
 export default function AdminSecurityCenter() {
   const { user, loading: authLoading } = useAuth();
@@ -62,6 +63,17 @@ export default function AdminSecurityCenter() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/admin')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {lang === 'ru' ? 'Назад в админ-панель' : 'Back to Admin Panel'}
+          </Button>
+        </div>
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-3xl flex items-center gap-3">

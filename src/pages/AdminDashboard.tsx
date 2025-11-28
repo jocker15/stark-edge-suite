@@ -338,6 +338,10 @@ export default function AdminDashboard() {
     navigate('/admin', { state: { tab: 'orders', orderId } });
   };
 
+  const handleStatsNavigation = (target: 'orders' | 'reviews' | 'products' | 'users', filter?: string) => {
+    navigate('/admin', { state: { tab: target, filter } });
+  };
+
   if (authLoading || checkingRole) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -430,6 +434,7 @@ export default function AdminDashboard() {
             stats={data.stats}
             loading={loading}
             language={lang}
+            onNavigate={handleStatsNavigation}
           />
 
           <div className="grid gap-6 lg:grid-cols-2">
