@@ -385,6 +385,39 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          branding: Json
+          email: Json
+          general: Json
+          id: string
+          language: Json
+          payments: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          branding?: Json
+          email?: Json
+          general?: Json
+          id?: string
+          language?: Json
+          payments?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          branding?: Json
+          email?: Json
+          general?: Json
+          id?: string
+          language?: Json
+          payments?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -490,6 +523,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_public_settings: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
