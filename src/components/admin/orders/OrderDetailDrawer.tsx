@@ -64,10 +64,10 @@ export function OrderDetailDrawer({
 
     setLoading(true);
     try {
-      // Load order with profile
+      // Load order
       const { data: orderData } = await supabase
         .from("orders")
-        .select("*, profiles(email, username)")
+        .select("*")
         .eq("id", order.id)
         .single();
 
@@ -91,8 +91,8 @@ export function OrderDetailDrawer({
       const products = orderDetails?.items || [];
 
       setDetails({
-        order: orderData,
-        profile: orderData?.profiles as Record<string, unknown> | null,
+        order: orderData as Record<string, unknown> | null,
+        profile: null,
         payment_transactions: transactions || [],
         products,
         audit_logs: logs || [],
@@ -398,7 +398,7 @@ export function OrderDetailDrawer({
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground text-center">
-                        {t.drawer.timeline.noEvents}
+                        {t.drawer.timeline.noTimeline}
                       </p>
                     )}
                   </CardContent>
@@ -409,7 +409,6 @@ export function OrderDetailDrawer({
                 <Card>
                   <CardHeader>
                     <CardTitle>{t.drawer.actions.title}</CardTitle>
-                    <CardDescription>{t.drawer.actions.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -419,7 +418,7 @@ export function OrderDetailDrawer({
                         onClick={() => setEmailDialogOpen(true)}
                       >
                         <Mail className="mr-2 h-4 w-4" />
-                        {t.drawer.actions.sendEmail}
+                        {t.drawer.actions.email}
                       </Button>
                       <Button
                         variant="outline"
@@ -427,7 +426,7 @@ export function OrderDetailDrawer({
                         onClick={() => setResendDialogOpen(true)}
                       >
                         <RefreshCw className="mr-2 h-4 w-4" />
-                        {t.drawer.actions.resendDigital}
+                        {t.drawer.actions.resend}
                       </Button>
                       <Button
                         variant="outline"
@@ -451,7 +450,7 @@ export function OrderDetailDrawer({
                         onClick={() => setFailedDialogOpen(true)}
                       >
                         <AlertCircle className="mr-2 h-4 w-4" />
-                        {t.drawer.actions.markFailed}
+                        {t.drawer.actions.failed}
                       </Button>
                     </div>
                   </CardContent>
@@ -465,14 +464,17 @@ export function OrderDetailDrawer({
       <SendOrderEmailDialog
         open={emailDialogOpen}
         onOpenChange={setEmailDialogOpen}
-        order={order}
+        orderId={order.id}
+        customerEmail={order.customer_email}
         lang={lang}
+        onSuccess={handleActionSuccess}
       />
 
       <ResendDigitalGoodsDialog
         open={resendDialogOpen}
         onOpenChange={setResendDialogOpen}
-        order={order}
+        orderId={order.id}
+        customerEmail={order.customer_email}
         lang={lang}
         onSuccess={handleActionSuccess}
       />
@@ -480,7 +482,7 @@ export function OrderDetailDrawer({
       <CancelOrderDialog
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}
-        order={order}
+        orderId={order.id}
         lang={lang}
         onSuccess={handleActionSuccess}
       />
@@ -488,7 +490,8 @@ export function OrderDetailDrawer({
       <RefundOrderDialog
         open={refundDialogOpen}
         onOpenChange={setRefundDialogOpen}
-        order={order}
+        orderId={order.id}
+        orderAmount={order.amount || 0}
         lang={lang}
         onSuccess={handleActionSuccess}
       />
@@ -496,7 +499,7 @@ export function OrderDetailDrawer({
       <MarkFailedDialog
         open={failedDialogOpen}
         onOpenChange={setFailedDialogOpen}
-        order={order}
+        orderId={order.id}
         lang={lang}
         onSuccess={handleActionSuccess}
       />

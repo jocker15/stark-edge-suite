@@ -27,8 +27,8 @@ interface BrandingSettingsProps {
 
 export function BrandingSettings({ settings, onUpdate }: BrandingSettingsProps) {
   const { toast } = useToast();
-  const { language } = useLanguage();
-  const t = (key: string) => getTranslation(language, key);
+  const { lang } = useLanguage();
+  const t = (key: string) => getTranslation(lang, key);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const logoContainerRef = useRef<HTMLDivElement>(null);

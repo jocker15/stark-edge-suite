@@ -160,7 +160,7 @@ export function RoleManagement() {
           .from("user_roles")
           .delete()
           .eq("user_id", selectedUser.user_id)
-          .eq("role", role);
+          .eq("role", role as "admin" | "moderator" | "user");
 
         if (error) throw error;
       }
@@ -168,10 +168,10 @@ export function RoleManagement() {
       for (const role of rolesToAdd) {
         const { error } = await supabase
           .from("user_roles")
-          .insert({
+          .insert([{
             user_id: selectedUser.user_id,
-            role: role
-          });
+            role: role as "admin" | "moderator" | "user"
+          }]);
 
         if (error) throw error;
       }

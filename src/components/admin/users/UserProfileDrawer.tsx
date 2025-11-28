@@ -100,21 +100,81 @@ export function UserProfileDrawer({ user, open, onClose, onUserUpdated }: UserPr
     setLoading(true);
 
     try {
-      const [ordersRes, wishlistRes, reviewsRes, chatRes] = await Promise.all([
-        supabase.rpc("get_user_orders_summary", { target_user_id: user.user_id }),
-        supabase.rpc("get_user_wishlist", { target_user_id: user.user_id }),
-        supabase.rpc("get_user_reviews", { target_user_id: user.user_id }),
-        supabase
-          .from("chat_sessions")
-          .select("*")
-          .or(`visitor_email.eq.${user.email},visitor_name.eq.${user.username}`)
-          .order("created_at", { ascending: false }),
-      ]);
+      // Load orders directly
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("id, amount, status, created_at, order_details, payment_details")
+        .eq("user_id", user.user_id)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-      if (ordersRes.data) setOrders(ordersRes.data);
-      if (wishlistRes.data) setWishlist(wishlistRes.data);
-      if (reviewsRes.data) setReviews(reviewsRes.data);
-      if (chatRes.data) setChatSessions(chatRes.data);
+      // Load wishlist with products
+      const { data: wishlistData } = await supabase
+        .from("wishlist")
+        .select("id, product_id, created_at, products(name_en, name_ru, price, image_urls)")
+        .eq("user_id", user.user_id)
+        .order("created_at", { ascending: false });
+
+      // Load reviews with products
+      const { data: reviewsData } = await supabase
+        .from("reviews")
+        .select("id, product_id, rating, comment, status, created_at, products(name_en, name_ru)")
+        .eq("user_id", user.user_id)
+        .order("created_at", { ascending: false });
+
+      // Load chat sessions
+      const { data: chatData } = await supabase
+        .from("chat_sessions")
+        .select("*")
+        .or(`visitor_email.eq.${user.email},visitor_name.eq.${user.username}`)
+        .order("created_at", { ascending: false });
+
+      // Transform orders
+      if (ordersData) {
+        setOrders(ordersData.map(o => ({
+          order_id: o.id,
+          amount: o.amount || 0,
+          status: o.status,
+          created_at: o.created_at,
+          order_details: o.order_details as Record<string, unknown>,
+          payment_details: o.payment_details as Record<string, unknown>,
+        })));
+      }
+
+      // Transform wishlist
+      if (wishlistData) {
+        setWishlist(wishlistData.map(w => {
+          const product = w.products as { name_en?: string; name_ru?: string; price?: number; image_urls?: string[] } | null;
+          return {
+            wishlist_id: w.id,
+            product_id: w.product_id,
+            product_name_en: product?.name_en || "",
+            product_name_ru: product?.name_ru || "",
+            price: product?.price || 0,
+            image_urls: (product?.image_urls as string[]) || [],
+            created_at: w.created_at,
+          };
+        }));
+      }
+
+      // Transform reviews
+      if (reviewsData) {
+        setReviews(reviewsData.map(r => {
+          const product = r.products as { name_en?: string; name_ru?: string } | null;
+          return {
+            review_id: r.id,
+            product_id: r.product_id,
+            product_name_en: product?.name_en || "",
+            product_name_ru: product?.name_ru || "",
+            rating: r.rating,
+            comment: r.comment || "",
+            status: r.status || "pending",
+            created_at: r.created_at,
+          };
+        }));
+      }
+
+      if (chatData) setChatSessions(chatData);
     } catch (error) {
       console.error("Error loading user data:", error);
       toast({

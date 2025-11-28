@@ -23,10 +23,10 @@ import { useToast } from "@/hooks/use-toast";
 export default function AdminSettings() {
   const { user, loading: authLoading } = useAuth();
   const { isSuperAdmin, loading: rolesLoading } = useRoles();
-  const { language } = useLanguage();
+  const { lang } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const t = (key: string) => getTranslation(language, key);
+  const t = (key: string) => getTranslation(lang, key);
   
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);

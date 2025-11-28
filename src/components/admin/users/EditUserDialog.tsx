@@ -90,13 +90,13 @@ export function EditUserDialog({ user, open, onClose, onSuccess }: EditUserDialo
           .from("user_roles")
           .delete()
           .eq("user_id", user.user_id)
-          .eq("role", role);
+          .eq("role", role as "admin" | "moderator" | "user");
       }
 
       for (const role of rolesToAdd) {
         await supabase
           .from("user_roles")
-          .insert({ user_id: user.user_id, role });
+          .insert([{ user_id: user.user_id, role: role as "admin" | "moderator" | "user" }]);
       }
 
       await supabase.from("audit_logs").insert({

@@ -30,8 +30,8 @@ const AVAILABLE_LOCALES = [
 
 export function LanguageSettings({ settings, onUpdate }: LanguageSettingsProps) {
   const { toast } = useToast();
-  const { language } = useLanguage();
-  const t = (key: string) => getTranslation(language, key);
+  const { lang } = useLanguage();
+  const t = (key: string) => getTranslation(lang, key);
 
   const form = useForm<LanguageSettingsType>({
     resolver: zodResolver(languageSettingsSchema),

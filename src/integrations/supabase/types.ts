@@ -87,28 +87,46 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string
+          customer_email: string | null
+          customer_username: string | null
+          delivery_status: string | null
           id: number
+          invoice_id: string | null
           order_details: Json | null
           payment_details: Json | null
+          payment_status: string | null
           status: string
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
           amount?: number | null
           created_at?: string
+          customer_email?: string | null
+          customer_username?: string | null
+          delivery_status?: string | null
           id?: number
+          invoice_id?: string | null
           order_details?: Json | null
           payment_details?: Json | null
+          payment_status?: string | null
           status?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           amount?: number | null
           created_at?: string
+          customer_email?: string | null
+          customer_username?: string | null
+          delivery_status?: string | null
           id?: number
+          invoice_id?: string | null
           order_details?: Json | null
           payment_details?: Json | null
+          payment_status?: string | null
           status?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -249,6 +267,8 @@ export type Database = {
           email: string | null
           id: number
           is_blocked: boolean | null
+          last_login: string | null
+          phone: string | null
           purchases: Json | null
           role: string
           user_id: string
@@ -260,6 +280,8 @@ export type Database = {
           email?: string | null
           id?: number
           is_blocked?: boolean | null
+          last_login?: string | null
+          phone?: string | null
           purchases?: Json | null
           role?: string
           user_id?: string
@@ -271,6 +293,8 @@ export type Database = {
           email?: string | null
           id?: number
           is_blocked?: boolean | null
+          last_login?: string | null
+          phone?: string | null
           purchases?: Json | null
           role?: string
           user_id?: string
@@ -310,8 +334,13 @@ export type Database = {
           comment: string | null
           created_at: string
           id: string
+          is_unread: boolean | null
+          moderated_by: string | null
           product_id: number
           rating: number
+          rejection_reason: string | null
+          reply_at: string | null
+          reply_text: string | null
           status: string | null
           updated_at: string
           user_id: string
@@ -320,8 +349,13 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          is_unread?: boolean | null
+          moderated_by?: string | null
           product_id: number
           rating: number
+          rejection_reason?: string | null
+          reply_at?: string | null
+          reply_text?: string | null
           status?: string | null
           updated_at?: string
           user_id: string
@@ -330,8 +364,13 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          is_unread?: boolean | null
+          moderated_by?: string | null
           product_id?: number
           rating?: number
+          rejection_reason?: string | null
+          reply_at?: string | null
+          reply_text?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string
@@ -398,7 +437,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_stats: {
+        Row: {
+          app_role: Database["public"]["Enums"]["app_role"] | null
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          is_blocked: boolean | null
+          last_login: string | null
+          order_count: number | null
+          phone: string | null
+          profile_id: number | null
+          review_count: number | null
+          role: string | null
+          total_spent: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          app_role?: never
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          is_blocked?: boolean | null
+          last_login?: string | null
+          order_count?: never
+          phone?: string | null
+          profile_id?: number | null
+          review_count?: never
+          role?: string | null
+          total_spent?: never
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          app_role?: never
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          is_blocked?: boolean | null
+          last_login?: string | null
+          order_count?: never
+          phone?: string | null
+          profile_id?: number | null
+          review_count?: never
+          role?: string | null
+          total_spent?: never
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

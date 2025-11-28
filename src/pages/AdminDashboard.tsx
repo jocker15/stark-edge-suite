@@ -115,7 +115,7 @@ const getDefaultDashboardData = (): DashboardData => ({
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { language } = useLanguage();
+  const { lang } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData>(() => getDefaultDashboardData());
   const [dataErrors, setDataErrors] = useState<DashboardSection[]>([]);
 
-  const t = useCallback((key: string) => getTranslation(language, key), [language]);
+  const t = useCallback((key: string) => getTranslation(lang, key), [lang]);
 
   useEffect(() => {
     async function checkAdminRole() {
@@ -203,42 +203,81 @@ export default function AdminDashboard() {
     };
 
     try {
-      const [
-        statsResult,
-        salesResult,
-        productsResult,
-        geographyResult,
-        ordersResult,
-      ] = await Promise.allSettled([
-        supabase.rpc<DashboardStats>('get_dashboard_stats'),
-        supabase.rpc<SalesData[]>('get_sales_by_day', { days_count: salesPeriod }),
-        supabase.rpc<TopProductData[]>('get_top_products', { limit_count: 5, days_count: 30 }),
-        supabase.rpc<GeographyData[]>('get_orders_by_geography', { days_count: 30 }),
-        supabase.rpc<OrderData[]>('get_orders_requiring_attention', { limit_count: 10 }),
-      ]) as [
-        RpcResult<DashboardStats>,
-        RpcResult<SalesData[]>,
-        RpcResult<TopProductData[]>,
-        RpcResult<GeographyData[]>,
-        RpcResult<OrderData[]>
-      ];
+      // Use direct queries instead of RPC functions that don't exist
+      // Get basic stats from direct queries
+      const [ordersRes, usersRes, productsRes, reviewsRes] = await Promise.all([
+        supabase.from("orders").select("id, amount, status, created_at", { count: "exact" }),
+        supabase.from("profiles").select("id, created_at", { count: "exact" }),
+        supabase.from("products").select("id, status", { count: "exact" }).eq("status", "active"),
+        supabase.from("reviews").select("id, status", { count: "exact" }).eq("status", "pending"),
+      ]);
 
-      const statsData = {
+      const orders = ordersRes.data || [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const monthAgo = new Date(today);
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+      const ordersToday = orders.filter(o => new Date(o.created_at) >= today);
+      const ordersWeek = orders.filter(o => new Date(o.created_at) >= weekAgo);
+      const ordersMonth = orders.filter(o => new Date(o.created_at) >= monthAgo);
+
+      const statsData: DashboardStats = {
         ...defaultStats,
-        ...handleSettledResult(statsResult, "stats", defaultStats),
+        sales_today: ordersToday.length,
+        sales_week: ordersWeek.length,
+        sales_month: ordersMonth.length,
+        revenue_today: ordersToday.reduce((sum, o) => sum + (o.amount || 0), 0),
+        revenue_week: ordersWeek.reduce((sum, o) => sum + (o.amount || 0), 0),
+        revenue_month: ordersMonth.reduce((sum, o) => sum + (o.amount || 0), 0),
+        total_orders: ordersRes.count || 0,
+        total_users: usersRes.count || 0,
+        active_products: productsRes.count || 0,
+        pending_reviews: reviewsRes.count || 0,
+        total_revenue: orders.reduce((sum, o) => sum + (o.amount || 0), 0),
+        pending_orders: orders.filter(o => o.status === "pending").length,
+        failed_orders: orders.filter(o => o.status === "failed").length,
       };
 
-      const salesData = handleSettledResult(salesResult, "sales", [] as SalesData[]);
-      const topProductsData = handleSettledResult(productsResult, "topProducts", [] as TopProductData[]);
-      const geographyData = handleSettledResult(geographyResult, "geography", [] as GeographyData[]);
-      const ordersData = handleSettledResult(ordersResult, "recentOrders", [] as OrderData[]);
+      // Get sales by day for chart
+      const salesByDay: SalesData[] = [];
+      for (let i = salesPeriod - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split("T")[0];
+        const dayOrders = orders.filter(o => o.created_at.startsWith(dateStr));
+        salesByDay.push({
+          date: dateStr,
+          sales_count: dayOrders.length,
+          revenue: dayOrders.reduce((sum, o) => sum + (o.amount || 0), 0),
+        });
+      }
+
+      // Get recent orders
+      const { data: recentOrdersData } = await supabase
+        .from("orders")
+        .select("id, amount, status, created_at, customer_email")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const recentOrders: OrderData[] = (recentOrdersData || []).map(o => ({
+        id: o.id,
+        user_id: "",
+        amount: o.amount || 0,
+        status: o.status,
+        created_at: o.created_at,
+        user_email: o.customer_email || null,
+        user_name: null,
+      }));
 
       setData({
         stats: statsData,
-        salesByDay: salesData,
-        topProducts: topProductsData,
-        geography: geographyData,
-        recentOrders: ordersData,
+        salesByDay,
+        topProducts: [],
+        geography: [],
+        recentOrders,
       });
 
       setDataErrors(sectionsWithErrors);
@@ -378,11 +417,11 @@ export default function AdminDashboard() {
 
         <Tabs value="dashboard" className="mb-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="dashboard">{language === 'ru' ? 'Панель' : 'Dashboard'}</TabsTrigger>
-            <TabsTrigger value="products" onClick={() => navigate('/admin')}>{language === 'ru' ? 'Товары' : 'Products'}</TabsTrigger>
-            <TabsTrigger value="reviews" onClick={() => navigate('/admin')}>{language === 'ru' ? 'Отзывы' : 'Reviews'}</TabsTrigger>
-            <TabsTrigger value="orders" onClick={() => navigate('/admin')}>{language === 'ru' ? 'Заказы' : 'Orders'}</TabsTrigger>
-            <TabsTrigger value="users" onClick={() => navigate('/admin')}>{language === 'ru' ? 'Пользователи' : 'Users'}</TabsTrigger>
+            <TabsTrigger value="dashboard">{lang === 'ru' ? 'Панель' : 'Dashboard'}</TabsTrigger>
+            <TabsTrigger value="products" onClick={() => navigate('/admin')}>{lang === 'ru' ? 'Товары' : 'Products'}</TabsTrigger>
+            <TabsTrigger value="reviews" onClick={() => navigate('/admin')}>{lang === 'ru' ? 'Отзывы' : 'Reviews'}</TabsTrigger>
+            <TabsTrigger value="orders" onClick={() => navigate('/admin')}>{lang === 'ru' ? 'Заказы' : 'Orders'}</TabsTrigger>
+            <TabsTrigger value="users" onClick={() => navigate('/admin')}>{lang === 'ru' ? 'Пользователи' : 'Users'}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -390,34 +429,34 @@ export default function AdminDashboard() {
           <DashboardStats
             stats={data.stats}
             loading={loading}
-            language={language}
+            language={lang}
           />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <SalesChart
               data={data.salesByDay}
               loading={loading}
-              language={language}
+              language={lang}
               onPeriodChange={handleSalesPeriodChange}
             />
             
             <TopProductsChart
               data={data.topProducts}
               loading={loading}
-              language={language}
+              language={lang}
             />
           </div>
 
           <GeographyChart
             data={data.geography}
             loading={loading}
-            language={language}
+            language={lang}
           />
 
           <RecentOrders
             data={data.recentOrders}
             loading={loading}
-            language={language}
+            language={lang}
             onViewDetails={handleViewOrderDetails}
           />
         </div>

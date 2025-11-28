@@ -18,15 +18,15 @@ export async function logAuditEvent(params: AuditLogParams): Promise<void> {
 
     const { error } = await supabase
       .from("audit_logs")
-      .insert({
+      .insert([{
         user_id: user.id,
         action_type: params.actionType,
         entity_type: params.entityType,
         entity_id: params.entityId,
-        details: params.details || {},
+        details: JSON.parse(JSON.stringify(params.details || {})),
         ip_address: null,
         user_agent: navigator.userAgent
-      });
+      }]);
 
     if (error) {
       console.error("Failed to log audit event:", error);
