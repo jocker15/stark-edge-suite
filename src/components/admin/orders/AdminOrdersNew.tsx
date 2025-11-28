@@ -42,14 +42,26 @@ export function AdminOrdersNew() {
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      // Build query directly instead of using RPC
+      // Build query directly - no join since there's no FK relationship
       let query = supabase
         .from("orders")
-        .select("*, profiles(email, username)", { count: "exact" });
+        .select("*", { count: "exact" });
 
       // Apply filters
       if (filters.orderStatus !== "all") {
         query = query.eq("status", filters.orderStatus);
+      }
+
+      if (filters.paymentStatus !== "all") {
+        query = query.eq("payment_status", filters.paymentStatus);
+      }
+
+      if (filters.deliveryStatus !== "all") {
+        query = query.eq("delivery_status", filters.deliveryStatus);
+      }
+
+      if (filters.search) {
+        query = query.or(`customer_email.ilike.%${filters.search}%,invoice_id.ilike.%${filters.search}%`);
       }
 
       if (filters.dateFrom) {
@@ -84,11 +96,11 @@ export function AdminOrdersNew() {
         amount: order.amount,
         status: order.status,
         created_at: order.created_at,
-        updated_at: order.created_at, // Use created_at as fallback
-        customer_email: (order.profiles as { email?: string } | null)?.email || order.customer_email || null,
-        customer_username: (order.profiles as { username?: string } | null)?.username || order.customer_username || null,
-        payment_status: order.payment_status || (order.payment_details as { status?: string } | null)?.status || null,
-        delivery_status: order.delivery_status || (order.order_details as { delivery_status?: string } | null)?.delivery_status || null,
+        updated_at: order.updated_at || order.created_at,
+        customer_email: order.customer_email || null,
+        customer_username: order.customer_username || null,
+        payment_status: order.payment_status || null,
+        delivery_status: order.delivery_status || null,
         order_details: order.order_details as Record<string, unknown> | null,
         payment_details: order.payment_details as Record<string, unknown> | null,
         invoice_id: order.invoice_id || null,
