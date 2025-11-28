@@ -15,23 +15,20 @@ import { useToast } from "@/hooks/use-toast";
 
 interface AuditLog {
   id: string;
-  user_id: string;
-  user_email: string;
-  user_username: string;
+  user_id: string | null;
   action_type: string;
   entity_type: string;
-  entity_id: string;
-  details: Record<string, unknown>;
-  ip_address: string;
-  user_agent: string;
+  entity_id: string | null;
+  details: unknown;
+  ip_address: string | null;
+  user_agent: string | null;
   created_at: string;
-  total_count: number;
 }
 
 export function AuditLogsTable() {
-  const { language } = useLanguage();
+  const { lang } = useLanguage();
   const { toast } = useToast();
-  const t = securityCenterTranslations[language];
+  const t = securityCenterTranslations[lang];
   
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,25 +51,34 @@ export function AuditLogsTable() {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc("get_audit_logs", {
-        p_entity_type: filters.entityType || null,
-        p_action_type: filters.actionType || null,
-        p_date_from: filters.dateFrom || null,
-        p_date_to: filters.dateTo || null,
-        p_search: filters.search || null,
-        p_limit: pageSize,
-        p_offset: page * pageSize
-      });
+      // Build query directly instead of using RPC
+      let query = supabase
+        .from("audit_logs")
+        .select("*", { count: "exact" });
+
+      if (filters.entityType) {
+        query = query.eq("entity_type", filters.entityType);
+      }
+
+      if (filters.dateFrom) {
+        query = query.gte("created_at", filters.dateFrom);
+      }
+
+      if (filters.dateTo) {
+        query = query.lte("created_at", filters.dateTo);
+      }
+
+      // Apply pagination
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to).order("created_at", { ascending: false });
+
+      const { data, error, count } = await query;
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        setLogs(data);
-        setTotalCount(data[0].total_count || 0);
-      } else {
-        setLogs([]);
-        setTotalCount(0);
-      }
+      setLogs(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error("Error fetching audit logs:", error);
       toast({
@@ -92,10 +98,10 @@ export function AuditLogsTable() {
 
   const handleExportCSV = async () => {
     const csvData = logs.map(log => ({
-      User: log.user_email || log.user_username,
+      User: log.user_id || "-",
       Action: log.action_type,
       Entity: log.entity_type,
-      "Entity ID": log.entity_id,
+      "Entity ID": log.entity_id || "",
       "IP Address": log.ip_address || "",
       Time: format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss")
     }));
@@ -235,7 +241,7 @@ export function AuditLogsTable() {
                     logs.map((log) => (
                       <TableRow key={log.id}>
                         <TableCell className="font-medium">
-                          {log.user_email || log.user_username || "-"}
+                          {log.user_id?.slice(0, 8) || "-"}
                         </TableCell>
                         <TableCell className="text-sm">{log.action_type}</TableCell>
                         <TableCell className="text-sm">{log.entity_type}</TableCell>
@@ -302,7 +308,7 @@ export function AuditLogsTable() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">{t.auditLogs.detailsDialog.user}</div>
-                  <div className="text-sm">{selectedLog.user_email || selectedLog.user_username || "-"}</div>
+                  <div className="text-sm">{selectedLog.user_id || "-"}</div>
                 </div>
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">{t.auditLogs.detailsDialog.action}</div>

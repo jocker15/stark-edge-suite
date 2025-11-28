@@ -102,7 +102,8 @@ export function GeographyChart({ data, loading, language }: GeographyChartProps)
                 </TableHeader>
                 <TableBody>
                   {data.map((item, index) => {
-                    const percentage = parseFloat(getPercentage(item.order_count, totalOrders));
+                    const percentageStr = getPercentage(item.order_count, totalOrders);
+                    const percentage = parseFloat(String(percentageStr));
                     return (
                       <TableRow key={index}>
                         <TableCell className="font-medium">

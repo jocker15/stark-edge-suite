@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { orderManagerTranslations } from "@/lib/translations/order-manager";
 import { Loader2, Download, Mail, XCircle, RefreshCw, AlertCircle } from "lucide-react";
@@ -30,7 +29,7 @@ interface OrderDetailDrawerProps {
 }
 
 interface OrderDetails {
-  order: Record<string, unknown>;
+  order: Record<string, unknown> | null;
   profile: Record<string, unknown> | null;
   payment_transactions: Array<Record<string, unknown>>;
   products: Array<Record<string, unknown>>;
@@ -65,12 +64,39 @@ export function OrderDetailDrawer({
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("get_order_details", {
-        order_id_param: order.id,
-      });
+      // Load order with profile
+      const { data: orderData } = await supabase
+        .from("orders")
+        .select("*, profiles(email, username)")
+        .eq("id", order.id)
+        .single();
 
-      if (error) throw error;
-      setDetails(data);
+      // Load payment transactions
+      const { data: transactions } = await supabase
+        .from("payment_transactions")
+        .select("*")
+        .eq("order_id", order.id)
+        .order("created_at", { ascending: false });
+
+      // Load audit logs for this order
+      const { data: logs } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .eq("entity_type", "order")
+        .eq("entity_id", String(order.id))
+        .order("created_at", { ascending: false });
+
+      // Extract products from order_details
+      const orderDetails = orderData?.order_details as { items?: Array<Record<string, unknown>> } | null;
+      const products = orderDetails?.items || [];
+
+      setDetails({
+        order: orderData,
+        profile: orderData?.profiles as Record<string, unknown> | null,
+        payment_transactions: transactions || [],
+        products,
+        audit_logs: logs || [],
+      });
     } catch (error) {
       console.error("Error loading order details:", error);
     } finally {
@@ -172,12 +198,6 @@ export function OrderDetailDrawer({
                       <span className="text-muted-foreground">{t.drawer.overview.created}</span>
                       <span>{new Date(order.created_at).toLocaleString(lang === "ru" ? "ru-RU" : "en-US")}</span>
                     </div>
-                    {order.updated_at && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">{t.drawer.overview.updated}</span>
-                        <span>{new Date(order.updated_at).toLocaleString(lang === "ru" ? "ru-RU" : "en-US")}</span>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
 
@@ -198,10 +218,6 @@ export function OrderDetailDrawer({
                             <span>{order.customer_username}</span>
                           </div>
                         )}
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.overview.userId}</span>
-                          <span className="font-mono text-xs">{order.user_id?.slice(0, 16)}...</span>
-                        </div>
                       </>
                     ) : (
                       <p className="text-sm text-muted-foreground">{t.drawer.overview.noCustomerInfo}</p>
@@ -236,11 +252,6 @@ export function OrderDetailDrawer({
                             name_ru?: string; 
                             is_digital?: boolean; 
                             price?: number;
-                            files?: Array<{ 
-                              id: string; 
-                              file_name: string; 
-                              file_size?: number;
-                            }>;
                           };
                           
                           return (
@@ -262,22 +273,6 @@ export function OrderDetailDrawer({
                                   <p className="font-semibold">${productData.price?.toFixed(2)}</p>
                                 </div>
                               </div>
-                              
-                              {productData.files && productData.files.length > 0 && (
-                                <div className="mt-2">
-                                  <p className="text-sm font-medium mb-1">{t.drawer.products.files}:</p>
-                                  <div className="space-y-1">
-                                    {productData.files.map((file) => (
-                                      <div key={file.id} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
-                                        <span>{file.file_name}</span>
-                                        <span className="text-muted-foreground">
-                                          {file.file_size ? `${(file.file_size / 1024 / 1024).toFixed(2)} MB` : ""}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           );
                         })}
@@ -393,7 +388,7 @@ export function OrderDetailDrawer({
                                 </span>
                               </div>
                               {logData.details && (
-                                <pre className="text-xs bg-muted p-2 rounded mt-2 overflow-x-auto">
+                                <pre className="text-xs bg-muted p-2 rounded overflow-x-auto mt-2">
                                   {JSON.stringify(logData.details, null, 2)}
                                 </pre>
                               )}
@@ -403,7 +398,7 @@ export function OrderDetailDrawer({
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground text-center">
-                        {t.drawer.timeline.noTimeline}
+                        {t.drawer.timeline.noEvents}
                       </p>
                     )}
                   </CardContent>
@@ -414,79 +409,51 @@ export function OrderDetailDrawer({
                 <Card>
                   <CardHeader>
                     <CardTitle>{t.drawer.actions.title}</CardTitle>
+                    <CardDescription>{t.drawer.actions.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      onClick={() => setResendDialogOpen(true)}
-                    >
-                      <Mail className="mr-2 h-4 w-4" />
-                      <div className="text-left">
-                        <div>{t.drawer.actions.resend}</div>
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {t.drawer.actions.resendDesc}
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      onClick={() => setEmailDialogOpen(true)}
-                    >
-                      <Mail className="mr-2 h-4 w-4" />
-                      <div className="text-left">
-                        <div>{t.drawer.actions.email}</div>
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {t.drawer.actions.emailDesc}
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Separator />
-
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      onClick={() => setRefundDialogOpen(true)}
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      <div className="text-left">
-                        <div>{t.drawer.actions.refund}</div>
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {t.drawer.actions.refundDesc}
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      onClick={() => setFailedDialogOpen(true)}
-                    >
-                      <AlertCircle className="mr-2 h-4 w-4" />
-                      <div className="text-left">
-                        <div>{t.drawer.actions.failed}</div>
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {t.drawer.actions.failedDesc}
-                        </div>
-                      </div>
-                    </Button>
-
-                    <Button
-                      className="w-full justify-start"
-                      variant="destructive"
-                      onClick={() => setCancelDialogOpen(true)}
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      <div className="text-left">
-                        <div>{t.drawer.actions.cancel}</div>
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {t.drawer.actions.cancelDesc}
-                        </div>
-                      </div>
-                    </Button>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setEmailDialogOpen(true)}
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        {t.drawer.actions.sendEmail}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setResendDialogOpen(true)}
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        {t.drawer.actions.resendDigital}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                        onClick={() => setCancelDialogOpen(true)}
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        {t.drawer.actions.cancel}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full text-orange-600 border-orange-600 hover:bg-orange-50"
+                        onClick={() => setRefundDialogOpen(true)}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        {t.drawer.actions.refund}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="w-full col-span-2"
+                        onClick={() => setFailedDialogOpen(true)}
+                      >
+                        <AlertCircle className="mr-2 h-4 w-4" />
+                        {t.drawer.actions.markFailed}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -495,11 +462,17 @@ export function OrderDetailDrawer({
         </SheetContent>
       </Sheet>
 
+      <SendOrderEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        order={order}
+        lang={lang}
+      />
+
       <ResendDigitalGoodsDialog
         open={resendDialogOpen}
         onOpenChange={setResendDialogOpen}
-        orderId={order.id}
-        customerEmail={order.customer_email}
+        order={order}
         lang={lang}
         onSuccess={handleActionSuccess}
       />
@@ -507,7 +480,7 @@ export function OrderDetailDrawer({
       <CancelOrderDialog
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}
-        orderId={order.id}
+        order={order}
         lang={lang}
         onSuccess={handleActionSuccess}
       />
@@ -515,8 +488,7 @@ export function OrderDetailDrawer({
       <RefundOrderDialog
         open={refundDialogOpen}
         onOpenChange={setRefundDialogOpen}
-        orderId={order.id}
-        orderAmount={order.amount || 0}
+        order={order}
         lang={lang}
         onSuccess={handleActionSuccess}
       />
@@ -524,16 +496,7 @@ export function OrderDetailDrawer({
       <MarkFailedDialog
         open={failedDialogOpen}
         onOpenChange={setFailedDialogOpen}
-        orderId={order.id}
-        lang={lang}
-        onSuccess={handleActionSuccess}
-      />
-
-      <SendOrderEmailDialog
-        open={emailDialogOpen}
-        onOpenChange={setEmailDialogOpen}
-        orderId={order.id}
-        customerEmail={order.customer_email}
+        order={order}
         lang={lang}
         onSuccess={handleActionSuccess}
       />

@@ -30,9 +30,9 @@ interface RoleInfo {
 }
 
 export function RoleManagement() {
-  const { language } = useLanguage();
+  const { lang } = useLanguage();
   const { toast } = useToast();
-  const t = securityCenterTranslations[language];
+  const t = securityCenterTranslations[lang];
   
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);

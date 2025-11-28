@@ -21,9 +21,7 @@ export function MediaTab({ form }: MediaTabProps) {
   const t = (key: string) => getProductManagerTranslation(lang, key);
   const { toast } = useToast();
   const [uploadingMain, setUploadingMain] = useState(false);
-  const [uploadingGallery, setUploadingGallery] = useState(false);
   const mainImageContainerRef = useRef<HTMLDivElement>(null);
-  const galleryContainerRef = useRef<HTMLDivElement>(null);
 
   const getFileExtensionFromMimeType = (mimeType: string): string => {
     const mimeMap: Record<string, string> = {
@@ -44,7 +42,7 @@ export function MediaTab({ form }: MediaTabProps) {
     return new File([blob], fileName, { type: mimeType });
   };
 
-  const handlePasteEvent = async (e: ClipboardEvent, isGallery: boolean = false) => {
+  const handlePasteEvent = async (e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -77,72 +75,40 @@ export function MediaTab({ form }: MediaTabProps) {
 
     e.preventDefault();
 
-    if (isGallery) {
-      setUploadingGallery(true);
-      try {
-        const uploadPromises = imageItems.map(file => uploadImage(file));
-        const urls = await Promise.all(uploadPromises);
-        
-        const currentGallery = form.getValues("gallery_urls");
-        form.setValue("gallery_urls", [...currentGallery, ...urls]);
-        
-        toast({
-          title: t("form.messages.imagePasted"),
-        });
-      } catch (error) {
-        console.error("Error uploading pasted images:", error);
-        toast({
-          title: t("toasts.error"),
-          description: error instanceof Error ? error.message : t("errors.uploadFile"),
-          variant: "destructive",
-        });
-      } finally {
-        setUploadingGallery(false);
-      }
-    } else {
-      const file = imageItems[0];
-      setUploadingMain(true);
-      try {
-        const url = await uploadImage(file);
-        const currentImages = form.getValues("image_urls");
-        form.setValue("image_urls", [url, ...currentImages]);
-        
-        toast({
-          title: t("form.messages.imagePasted"),
-        });
-      } catch (error) {
-        console.error("Error uploading pasted image:", error);
-        toast({
-          title: t("toasts.error"),
-          description: error instanceof Error ? error.message : t("errors.uploadFile"),
-          variant: "destructive",
-        });
-      } finally {
-        setUploadingMain(false);
-      }
+    setUploadingMain(true);
+    try {
+      const uploadPromises = imageItems.map(file => uploadImage(file));
+      const urls = await Promise.all(uploadPromises);
+      
+      const currentImages = form.getValues("image_urls");
+      form.setValue("image_urls", [...currentImages, ...urls]);
+      
+      toast({
+        title: t("form.messages.imagePasted"),
+      });
+    } catch (error) {
+      console.error("Error uploading pasted images:", error);
+      toast({
+        title: t("toasts.error"),
+        description: error instanceof Error ? error.message : t("errors.uploadFile"),
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingMain(false);
     }
   };
 
   useEffect(() => {
     const mainContainer = mainImageContainerRef.current;
-    const galleryContainer = galleryContainerRef.current;
-
-    const handleMainPaste = (e: ClipboardEvent) => handlePasteEvent(e, false);
-    const handleGalleryPaste = (e: ClipboardEvent) => handlePasteEvent(e, true);
+    const handleMainPaste = (e: ClipboardEvent) => handlePasteEvent(e);
 
     if (mainContainer) {
       mainContainer.addEventListener('paste', handleMainPaste);
-    }
-    if (galleryContainer) {
-      galleryContainer.addEventListener('paste', handleGalleryPaste);
     }
 
     return () => {
       if (mainContainer) {
         mainContainer.removeEventListener('paste', handleMainPaste);
-      }
-      if (galleryContainer) {
-        galleryContainer.removeEventListener('paste', handleGalleryPaste);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,23 +156,27 @@ export function MediaTab({ form }: MediaTabProps) {
   };
 
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: t("toasts.error"),
-        description: "Image size must be less than 5MB",
-        variant: "destructive",
-      });
-      return;
+    for (const file of Array.from(files)) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: t("toasts.error"),
+          description: `${file.name} is larger than 5MB`,
+          variant: "destructive",
+        });
+        continue;
+      }
     }
 
     setUploadingMain(true);
     try {
-      const url = await uploadImage(file);
+      const uploadPromises = Array.from(files).map(file => uploadImage(file));
+      const urls = await Promise.all(uploadPromises);
+      
       const currentImages = form.getValues("image_urls");
-      form.setValue("image_urls", [url, ...currentImages]);
+      form.setValue("image_urls", [...currentImages, ...urls]);
       
       toast({
         title: t("toasts.uploadSuccess"),
@@ -224,53 +194,9 @@ export function MediaTab({ form }: MediaTabProps) {
     }
   };
 
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    for (const file of Array.from(files)) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: t("toasts.error"),
-          description: `${file.name} is larger than 5MB`,
-          variant: "destructive",
-        });
-        continue;
-      }
-    }
-
-    setUploadingGallery(true);
-    try {
-      const uploadPromises = Array.from(files).map(file => uploadImage(file));
-      const urls = await Promise.all(uploadPromises);
-      
-      const currentGallery = form.getValues("gallery_urls");
-      form.setValue("gallery_urls", [...currentGallery, ...urls]);
-      
-      toast({
-        title: t("toasts.uploadSuccess"),
-      });
-      e.target.value = "";
-    } catch (error) {
-      console.error("Error uploading images:", error);
-      toast({
-        title: t("toasts.error"),
-        description: error instanceof Error ? error.message : t("errors.uploadFile"),
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingGallery(false);
-    }
-  };
-
-  const removeMainImage = (url: string) => {
+  const removeImage = (url: string) => {
     const currentImages = form.getValues("image_urls");
     form.setValue("image_urls", currentImages.filter((img) => img !== url));
-  };
-
-  const removeGalleryImage = (url: string) => {
-    const currentGallery = form.getValues("gallery_urls");
-    form.setValue("gallery_urls", currentGallery.filter((img) => img !== url));
   };
 
   return (
@@ -305,6 +231,7 @@ export function MediaTab({ form }: MediaTabProps) {
               id="main-image-upload"
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={handleMainImageUpload}
             />
@@ -324,7 +251,7 @@ export function MediaTab({ form }: MediaTabProps) {
                     variant="destructive"
                     size="icon"
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => removeMainImage(url)}
+                    onClick={() => removeImage(url)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -333,65 +260,6 @@ export function MediaTab({ form }: MediaTabProps) {
                       Primary
                     </div>
                   )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4 pt-4 border-t" ref={galleryContainerRef} tabIndex={-1}>
-          <div>
-            <FormLabel>{t("form.fields.gallery")}</FormLabel>
-            <FormDescription>
-              {t("form.messages.uploadFiles")}
-            </FormDescription>
-            <FormDescription className="text-xs text-muted-foreground mt-1">
-              {t("form.messages.pasteHint")}
-            </FormDescription>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={uploadingGallery}
-              onClick={() => document.getElementById("gallery-upload")?.click()}
-            >
-              {uploadingGallery ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {uploadingGallery ? "Uploading..." : t("form.actions.upload")}
-            </Button>
-            <input
-              id="gallery-upload"
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleGalleryUpload}
-            />
-          </div>
-
-          {form.watch("gallery_urls").length > 0 && (
-            <div className="grid grid-cols-4 gap-4">
-              {form.watch("gallery_urls").map((url) => (
-                <div key={url} className="relative group">
-                  <img
-                    src={url}
-                    alt="Gallery"
-                    className="w-full h-32 object-cover rounded border"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => removeGalleryImage(url)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               ))}
             </div>
