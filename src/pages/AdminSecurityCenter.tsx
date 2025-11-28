@@ -16,8 +16,8 @@ export default function AdminSecurityCenter() {
   const { user, loading: authLoading } = useAuth();
   const { permissions, isSuperAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
-  const { language } = useLanguage();
-  const t = securityCenterTranslations[language];
+  const { lang } = useLanguage();
+  const t = securityCenterTranslations[lang];
   
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);

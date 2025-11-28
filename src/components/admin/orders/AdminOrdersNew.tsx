@@ -85,10 +85,14 @@ export function AdminOrdersNew() {
         status: order.status,
         created_at: order.created_at,
         updated_at: order.created_at, // Use created_at as fallback
-        customer_email: (order.profiles as { email?: string } | null)?.email || null,
-        customer_username: (order.profiles as { username?: string } | null)?.username || null,
-        payment_status: (order.payment_details as { status?: string } | null)?.status || null,
-        delivery_status: (order.order_details as { delivery_status?: string } | null)?.delivery_status || null,
+        customer_email: (order.profiles as { email?: string } | null)?.email || order.customer_email || null,
+        customer_username: (order.profiles as { username?: string } | null)?.username || order.customer_username || null,
+        payment_status: order.payment_status || (order.payment_details as { status?: string } | null)?.status || null,
+        delivery_status: order.delivery_status || (order.order_details as { delivery_status?: string } | null)?.delivery_status || null,
+        order_details: order.order_details as Record<string, unknown> | null,
+        payment_details: order.payment_details as Record<string, unknown> | null,
+        invoice_id: order.invoice_id || null,
+        total_count: count || 0,
       }));
 
       setOrders(transformedOrders);

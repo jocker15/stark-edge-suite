@@ -33,8 +33,8 @@ interface GeneralSettingsProps {
 
 export function GeneralSettings({ settings, onUpdate }: GeneralSettingsProps) {
   const { toast } = useToast();
-  const { language } = useLanguage();
-  const t = (key: string) => getTranslation(language, key);
+  const { lang } = useLanguage();
+  const t = (key: string) => getTranslation(lang, key);
 
   const form = useForm<GeneralSettingsType>({
     resolver: zodResolver(generalSettingsSchema),

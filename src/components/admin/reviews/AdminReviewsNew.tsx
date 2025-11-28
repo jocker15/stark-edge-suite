@@ -101,7 +101,12 @@ export function AdminReviewsNew() {
         product_name_ru: (review.products as { name_ru?: string } | null)?.name_ru || "",
         user_email: (review.profiles as { email?: string } | null)?.email || "",
         user_username: (review.profiles as { username?: string } | null)?.username || "",
-        total_count: count || 0,
+        reply_text: review.reply_text || null,
+        reply_at: review.reply_at || null,
+        moderated_by: review.moderated_by || null,
+        is_unread: review.is_unread ?? true,
+        rejection_reason: review.rejection_reason || null,
+        moderator_email: null,
       }));
 
       setReviews(transformedReviews);

@@ -31,8 +31,8 @@ interface PaymentSettingsProps {
 
 export function PaymentSettings({ settings, onUpdate }: PaymentSettingsProps) {
   const { toast } = useToast();
-  const { language } = useLanguage();
-  const t = (key: string) => getTranslation(language, key);
+  const { lang } = useLanguage();
+  const t = (key: string) => getTranslation(lang, key);
   const [showApiKey, setShowApiKey] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message?: string } | null>(null);
