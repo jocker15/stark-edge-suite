@@ -71,6 +71,17 @@ export function OrderDetailDrawer({
         .eq("id", order.id)
         .single();
 
+      // Load profile if user_id exists
+      let profileData = null;
+      if (orderData?.user_id) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", orderData.user_id)
+          .maybeSingle();
+        profileData = profile;
+      }
+
       // Load payment transactions
       const { data: transactions } = await supabase
         .from("payment_transactions")
@@ -86,13 +97,19 @@ export function OrderDetailDrawer({
         .eq("entity_id", String(order.id))
         .order("created_at", { ascending: false });
 
-      // Extract products from order_details
-      const orderDetails = orderData?.order_details as { items?: Array<Record<string, unknown>> } | null;
-      const products = orderDetails?.items || [];
+      // Extract products from order_details - can be array directly or object with items
+      const orderDetails = orderData?.order_details;
+      let products: Array<Record<string, unknown>> = [];
+      if (Array.isArray(orderDetails)) {
+        products = orderDetails as Array<Record<string, unknown>>;
+      } else if (orderDetails && typeof orderDetails === 'object') {
+        const detailsObj = orderDetails as { items?: Array<Record<string, unknown>> };
+        products = detailsObj.items || [];
+      }
 
       setDetails({
         order: orderData as Record<string, unknown> | null,
-        profile: null,
+        profile: profileData as Record<string, unknown> | null,
         payment_transactions: transactions || [],
         products,
         audit_logs: logs || [],
@@ -206,22 +223,45 @@ export function OrderDetailDrawer({
                     <CardTitle>{t.drawer.overview.customerInfo}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {order.customer_email ? (
-                      <>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t.drawer.overview.email}</span>
-                          <span>{order.customer_email}</span>
-                        </div>
-                        {order.customer_username && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">{t.drawer.overview.username}</span>
-                            <span>{order.customer_username}</span>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">{t.drawer.overview.noCustomerInfo}</p>
-                    )}
+                    {(() => {
+                      const profile = details?.profile as { email?: string; username?: string; phone?: string; user_id?: string } | null;
+                      const email = order.customer_email || profile?.email;
+                      const username = order.customer_username || profile?.username;
+                      const phone = profile?.phone;
+                      const userId = (details?.order as { user_id?: string } | null)?.user_id;
+                      
+                      if (email || username || userId) {
+                        return (
+                          <>
+                            {email && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">{t.drawer.overview.email}</span>
+                                <span>{email}</span>
+                              </div>
+                            )}
+                            {username && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">{t.drawer.overview.username}</span>
+                                <span>{username}</span>
+                              </div>
+                            )}
+                            {phone && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">{t.drawer.overview.phone}</span>
+                                <span>{phone}</span>
+                              </div>
+                            )}
+                            {userId && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">{t.drawer.overview.userId}</span>
+                                <span className="font-mono text-xs">{userId}</span>
+                              </div>
+                            )}
+                          </>
+                        );
+                      }
+                      return <p className="text-sm text-muted-foreground">{t.drawer.overview.noCustomerInfo}</p>;
+                    })()}
                   </CardContent>
                 </Card>
 
