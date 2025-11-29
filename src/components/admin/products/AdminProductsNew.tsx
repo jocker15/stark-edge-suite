@@ -34,20 +34,31 @@ export function AdminProductsNew() {
 
   async function loadProducts() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("updated_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
+      if (error) {
+        console.error("Error loading products:", error);
+        toast({
+          title: t("errors.loadProducts"),
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        setProducts(data || []);
+      }
+    } catch (err) {
+      console.error("Exception loading products:", err);
       toast({
         title: t("errors.loadProducts"),
         variant: "destructive",
       });
-    } else {
-      setProducts(data || []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function handleDelete(id: number) {
