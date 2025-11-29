@@ -61,10 +61,10 @@ export function AdminReviewsNew() {
   async function loadReviews() {
     setLoading(true);
     try {
-      // Build query directly instead of using RPC
+      // Build query - load reviews first, then fetch related data separately
       let query = supabase
         .from("reviews")
-        .select("*, products(name_en, name_ru), profiles(email, username)", { count: "exact" });
+        .select("*, products(name_en, name_ru)", { count: "exact" });
 
       if (filters.status !== "all") {
         query = query.eq("status", filters.status);
@@ -87,6 +87,24 @@ export function AdminReviewsNew() {
 
       if (error) throw error;
 
+      // Fetch user profiles separately for each unique user_id
+      const userIds = [...new Set((data || []).map(r => r.user_id))];
+      let profilesMap: Record<string, { email?: string; username?: string }> = {};
+      
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, email, username")
+          .in("user_id", userIds);
+        
+        if (profilesData) {
+          profilesMap = profilesData.reduce((acc, p) => {
+            acc[p.user_id] = { email: p.email || undefined, username: p.username || undefined };
+            return acc;
+          }, {} as Record<string, { email?: string; username?: string }>);
+        }
+      }
+
       // Transform data to match ReviewData type
       const transformedReviews: ReviewData[] = (data || []).map((review) => ({
         id: review.id,
@@ -99,8 +117,8 @@ export function AdminReviewsNew() {
         updated_at: review.updated_at,
         product_name_en: (review.products as { name_en?: string } | null)?.name_en || "",
         product_name_ru: (review.products as { name_ru?: string } | null)?.name_ru || "",
-        user_email: (review.profiles as { email?: string } | null)?.email || "",
-        user_username: (review.profiles as { username?: string } | null)?.username || "",
+        user_email: profilesMap[review.user_id]?.email || "",
+        user_username: profilesMap[review.user_id]?.username || "",
         reply_text: review.reply_text || null,
         reply_at: review.reply_at || null,
         moderated_by: review.moderated_by || null,
@@ -114,7 +132,7 @@ export function AdminReviewsNew() {
     } catch (error) {
       console.error("Error loading reviews:", error);
       toast({
-        title: t("approve.error"),
+        title: t("errors.loadReviews") || "Error loading reviews",
         description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
@@ -135,19 +153,33 @@ export function AdminReviewsNew() {
 
   async function confirmApprove(reviewId: string) {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from("reviews")
-        .update({ status: "approved" })
+        .update({ 
+          status: "approved",
+          moderated_by: user?.id || null,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", reviewId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error approving review:", error);
+        throw error;
+      }
 
-      await auditLogger.review.approved(reviewId);
+      try {
+        await auditLogger.review.approved(reviewId);
+      } catch (auditErr) {
+        console.error("Audit log error (non-critical):", auditErr);
+      }
 
       toast({
         title: t("approve.success"),
       });
 
+      setApproveDialogOpen(false);
       loadReviews();
     } catch (error) {
       console.error("Error approving review:", error);
