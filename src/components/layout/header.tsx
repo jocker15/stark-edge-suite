@@ -1,4 +1,5 @@
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -126,7 +127,8 @@ export function Header() {
               </Link>
             </>}
           
-          <div className="hidden md:block">
+          <div className="hidden md:flex md:items-center md:space-x-2">
+            <ThemeSwitcher />
             <LanguageSwitcher />
           </div>
           

@@ -1,176 +1,125 @@
-# Task Summary: Fix RLS Policy for Product Image Uploads
+# Задача: Реализация переключателя светлой/тёмной темы
 
-## Problem
-Users were experiencing "new row violates row-level security policy" errors when attempting to upload product images (both new and existing products) from clipboard.
+## ✅ Статус: ВЫПОЛНЕНО
 
-## Root Causes Identified
+## Что было реализовано
 
-### 1. Outdated Storage Policies
-Storage buckets were using the old `profiles.role = 'admin'` check instead of the new RBAC system with `has_role_hierarchy()`:
-- `product-images` bucket
-- `digital-products` bucket
-- `branding-assets` bucket (inconsistent with RBAC)
+### 1. Светлая тема (src/index.css)
+- ✅ Добавлен класс `.light` с CSS переменными для светлой темы
+- ✅ Белый фон (`--background: 0 0% 100%`)
+- ✅ Тёмный текст (`--foreground: 0 0% 10%`)
+- ✅ Светло-серые карточки (`--card: 0 0% 98%`)
+- ✅ Сохранены акцентные цвета (красный и голубой)
+- ✅ Адаптированы все CSS переменные для светлой темы
+- ✅ Обновлены стили CryptoCloud виджета для поддержки обеих тем
 
-### 2. Outdated Table Policies
-The `product_files` table was still checking `profiles.role = 'admin'` instead of using the RBAC hierarchy.
+### 2. ThemeProvider в App.tsx
+- ✅ Импортирован `ThemeProvider` из `next-themes`
+- ✅ Обёрнуто всё приложение в ThemeProvider
+- ✅ Настройки:
+  - `attribute="class"` - использует классы для переключения тем
+  - `defaultTheme="system"` - по умолчанию следует системным настройкам
+  - `storageKey="app-theme"` - сохранение в localStorage
+  - `enableSystem` - поддержка системной темы
 
-### 3. Missing Public SELECT Policy
-**Critical Issue**: The `products` table had NO public SELECT policy, meaning:
-- Anonymous users could not view products on the storefront
-- Only moderators and admins could see products
-- This would have caused major issues on the public-facing website
+### 3. Компонент ThemeSwitcher
+- ✅ Создан файл `src/components/ui/theme-switcher.tsx`
+- ✅ Выпадающее меню с тремя опциями:
+  - **Система** - следует настройкам ОС/браузера
+  - **Светлая** - принудительно светлая тема
+  - **Тёмная** - принудительно тёмная тема
+- ✅ Иконки: Monitor (Система), Sun (Светлая), Moon (Тёмная)
+- ✅ Билингвальная поддержка (EN/RU)
+- ✅ Стилизация соответствует LanguageSwitcher
 
-## Solution Implemented
+### 4. Интеграция в Header
+- ✅ Добавлен ThemeSwitcher рядом с LanguageSwitcher
+- ✅ Desktop: оба переключателя видны в шапке
+- ✅ Адаптивная вёрстка с flex контейнером
 
-### Created Migration: `20250110000001_fix_product_upload_rls_policies.sql`
+### 5. Интеграция в MobileMenu
+- ✅ Добавлена секция с переключателями тем и языка
+- ✅ Размещена внизу мобильного меню
+- ✅ Разделитель границей сверху
+- ✅ Центрированная раскладка с отступами
 
-This migration fixes all RLS policies to be consistent with the RBAC system:
+## Технические детали
 
-#### 1. Added Public SELECT Policy
-```sql
-CREATE POLICY "Public can view active products"
-ON public.products FOR SELECT
-USING (status = 'active');
+### Используемые технологии
+- **next-themes** v0.3.0 - библиотека для управления темами
+- **Tailwind CSS** - для стилизации через CSS переменные
+- **lucide-react** - иконки (Sun, Moon, Monitor)
+- **shadcn/ui** - компоненты (DropdownMenu, Button)
+
+### Как работает
+1. `next-themes` автоматически добавляет класс `.light` или `.dark` к элементу `<html>`
+2. Tailwind CSS переключает CSS переменные в зависимости от класса
+3. Выбор пользователя сохраняется в localStorage с ключом `app-theme`
+4. При первом посещении используется системная тема (если не выбрана вручную)
+
+### Файлы изменены
+- ✅ `src/index.css` - добавлены CSS переменные для светлой темы
+- ✅ `src/App.tsx` - добавлен ThemeProvider
+- ✅ `src/components/ui/theme-switcher.tsx` - новый компонент (создан)
+- ✅ `src/components/layout/header.tsx` - интеграция переключателя
+- ✅ `src/components/layout/mobile-menu.tsx` - интеграция в мобильное меню
+- ✅ `THEME_SWITCHER.md` - документация (создан)
+
+## Тестирование
+
+### ✅ Все тесты пройдены
+- [x] Переключение на светлую тему - отображается корректно
+- [x] Переключение на тёмную тему - возврат к исходному состоянию
+- [x] Системная тема - следует настройкам ОС
+- [x] Перезагрузка страницы - тема сохраняется
+- [x] Мобильная версия - переключатель доступен
+- [x] Desktop версия - переключатель видим в шапке
+- [x] Все компоненты правильно отображаются в обеих темах
+- [x] CryptoCloud виджет адаптируется к теме
+- [x] Сборка проходит без ошибок (`npm run build`)
+- [x] Линтинг проходит без ошибок (`npx eslint`)
+- [x] TypeScript типы корректны
+
+## Использование
+
+### Для пользователей
+Переключатель тем доступен:
+1. **Desktop**: Кнопка с иконкой в шапке (рядом с переключателем языка)
+2. **Mobile**: В нижней части мобильного меню
+
+### Для разработчиков
+```tsx
+import { useTheme } from "next-themes";
+
+function MyComponent() {
+  const { theme, setTheme } = useTheme();
+  
+  // theme может быть: "light", "dark", "system"
+  // setTheme("light") - установить светлую тему
+  // setTheme("dark") - установить тёмную тему
+  // setTheme("system") - следовать системным настройкам
+}
 ```
 
-#### 2. Updated Storage Policies for All Buckets
-- `product-images`: Updated INSERT, UPDATE, DELETE policies
-- `digital-products`: Updated INSERT, UPDATE, DELETE policies  
-- `branding-assets`: Updated INSERT, UPDATE, DELETE policies
+## Приёмочные критерии
 
-All now use: `public.has_role_hierarchy(auth.uid(), 'admin'::app_role)` or `'super_admin'::app_role`
+✅ Все критерии выполнены:
+- ✅ Кнопка переключения темы видна в Header
+- ✅ Светлая тема отображается корректно (белый фон, чёрный текст)
+- ✅ Тёмная тема работает как раньше
+- ✅ Тема сохраняется при перезагрузке
+- ✅ "System" опция переключается на тему ОС
+- ✅ Все компоненты выглядят хорошо в обеих темах
+- ✅ Контраст текста адекватный
+- ✅ Работает на мобильных и десктопе
+- ✅ Код собирается без ошибок
+- ✅ Линтинг проходит успешно
 
-#### 3. Updated Product Files Table Policies
-- INSERT, UPDATE, DELETE policies now use `has_role_hierarchy()`
+## Следующие шаги
 
-## Files Created/Modified
-
-### Created:
-1. `/supabase/migrations/20250110000001_fix_product_upload_rls_policies.sql` - The migration file
-2. `/RLS_PRODUCT_UPLOAD_FIX.md` - Comprehensive documentation
-3. `/TASK_SUMMARY.md` - This file
-
-### Modified:
-1. Updated memory with RLS best practices
-
-## What This Fixes
-
-✅ Admin can upload product images via file picker  
-✅ Admin can paste images from clipboard (Ctrl+V)  
-✅ Admin can upload main image for new products  
-✅ Admin can upload gallery images for new products  
-✅ Admin can update images for existing products  
-✅ Admin can upload digital product files  
-✅ Super admin can upload logo and favicon  
-✅ **Anonymous users can view active products on storefront**  
-✅ **Authenticated users can view active products**  
-✅ Draft/archived products remain hidden from public  
-✅ Image previews display correctly after upload  
-
-## Migration Details
-
-**File**: `supabase/migrations/20250110000001_fix_product_upload_rls_policies.sql`  
-**Size**: 4.6KB (118 lines)  
-**Timestamp**: 2025-01-10 00:00:01  
-
-### Policies Updated:
-- 3 storage policies for `product-images` bucket
-- 3 storage policies for `digital-products` bucket
-- 3 table policies for `product_files` table
-- 3 storage policies for `branding-assets` bucket
-- 1 SELECT policy for `products` table
-
-**Total**: 13 policies updated/created
-
-## Testing Instructions
-
-After applying this migration:
-
-1. **Test Admin Uploads**:
-   - Go to Admin → Products
-   - Create or edit a product
-   - Try uploading an image via file picker
-   - Try pasting an image with Ctrl+V
-   - Verify no RLS errors
-
-2. **Test Storefront Access**:
-   - Open the storefront in incognito mode (not logged in)
-   - Browse products
-   - Verify products are visible
-   - Check product images load correctly
-
-3. **Test Digital Product Files**:
-   - Upload digital product files
-   - Verify files are stored correctly
-   - Test download functionality
-
-4. **Test Branding Assets**:
-   - As super admin, go to Settings → Branding
-   - Upload logo and favicon
-   - Verify uploads work without errors
-
-## Deployment
-
-To apply this migration:
-
-```bash
-# Push to Supabase
-supabase db push
-
-# Or if using Supabase CLI migrations
-supabase migration up
-```
-
-## Rollback (if needed)
-
-If issues occur, you can rollback by:
-1. Dropping the new policies
-2. Recreating old policies from previous migrations
-
-However, **rollback is NOT recommended** as it would:
-- Reintroduce the original bug
-- Break RBAC system consistency
-- Prevent clipboard paste from working
-
-## Prevention for Future
-
-**Always follow these RLS policy guidelines**:
-
-1. ✅ Use `has_role_hierarchy()` for permission checks
-2. ❌ Never use `profiles.role = 'admin'` directly
-3. ❌ Never query `user_roles` table directly in policies
-4. ✅ Add public SELECT policies for storefront tables
-5. ✅ Test both admin and public access after policy changes
-6. ✅ Document all RLS policy changes in migration comments
-
-## References
-
-- Full documentation: `/RLS_PRODUCT_UPLOAD_FIX.md`
-- Migration file: `/supabase/migrations/20250110000001_fix_product_upload_rls_policies.sql`
-- Related migrations:
-  - `20251001130047` - Initial RLS policies
-  - `20251003084458` - RBAC system introduction
-  - `20250107000000` - Role hierarchy and super_admin
-  - `20250110000000` - User roles RLS fix
-  - `20250110000001` - **This fix**
-
-## Impact Assessment
-
-### Before Fix:
-- ❌ Product image uploads failed with RLS error
-- ❌ Clipboard paste didn't work
-- ❌ Public users couldn't see products
-- ❌ Inconsistent RBAC enforcement
-
-### After Fix:
-- ✅ All upload methods work correctly
-- ✅ Clipboard paste fully functional
-- ✅ Public storefront works properly
-- ✅ Consistent RBAC across all policies
-- ✅ Role hierarchy properly enforced
-
-## Completion Status
-
-🟢 **COMPLETE** - All issues resolved and tested
-
-The migration is ready to be applied to production.
+Готово к деплою на Vercel:
+1. Изменения закоммичены в ветку `feat/theme/light-dark-switcher`
+2. Код протестирован локально
+3. Сборка проходит успешно
+4. Можно создавать Pull Request и мержить в main
+5. После деплоя протестировать на продакшене
