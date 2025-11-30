@@ -85,9 +85,19 @@ export default function Cart() {
                       <Input
                         type="number"
                         value={item.quantity}
-                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                        onChange={(e) => {
+                          const newQuantity = parseInt(e.target.value);
+                          if (isNaN(newQuantity) || newQuantity < 1) {
+                            updateQuantity(item.id, 1);
+                          } else if (newQuantity > 999) {
+                            updateQuantity(item.id, 999);
+                          } else {
+                            updateQuantity(item.id, newQuantity);
+                          }
+                        }}
                         className="w-20 text-center"
                         min="1"
+                        max="999"
                       />
                       <Button
                         variant="outline"
