@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 
 export function MobileMenu() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -90,6 +92,12 @@ export function MobileMenu() {
                 {lang === 'ru' ? 'ШАБЛОНЫ' : 'TEMPLATES'}
               </Link>
             </nav>
+
+            {/* Theme and Language Switchers */}
+            <div className="p-4 border-t border-border flex items-center justify-center space-x-4">
+              <ThemeSwitcher />
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       )}
