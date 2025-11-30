@@ -64,32 +64,32 @@
 
 @layer utilities {
   .light {
-    --background: 0 0% 100%; /* White */
-    --foreground: 0 0% 5%; /* Almost black */
+    --background: 0 0% 98%; /* Very light gray - comfortable for eyes */
+    --foreground: 0 0% 3%; /* Almost black text */
     
-    --card: 0 0% 98%; /* Very light gray */
+    --card: 0 0% 100%; /* White cards */
     --card-foreground: 0 0% 10%; /* Dark gray text */
     
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 0 0% 5%; /* Almost black */
+    --popover-foreground: 0 0% 3%; /* Almost black */
     
     --primary: 0 65% 51%; /* Stark Red - preserved */
     --primary-foreground: 0 0% 100%; /* White */
     
     --secondary: 0 0% 95%; /* Light gray */
-    --secondary-foreground: 0 0% 5%; /* Almost black */
+    --secondary-foreground: 0 0% 3%; /* Almost black */
     
-    --muted: 0 0% 92%; /* Light gray */
-    --muted-foreground: 0 0% 38%; /* Medium gray */
+    --muted: 0 0% 93%; /* Muted background */
+    --muted-foreground: 0 0% 40%; /* Gray text */
     
     --accent: 180 100% 50%; /* Arc Reactor Blue - preserved */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent-foreground: 0 0% 3%; /* Dark text on accent */
     
     --destructive: 0 65% 51%; /* Stark Red */
     --destructive-foreground: 0 0% 100%; /* White */
     
-    --border: 0 0% 88%; /* Light gray border */
-    --input: 0 0% 95%; /* Light gray input */
+    --border: 0 0% 90%; /* Light borders */
+    --input: 0 0% 100%; /* White input */
     --ring: 180 100% 50%; /* Arc Reactor Blue */
     
     --radius: 0.75rem;
@@ -104,7 +104,7 @@
     /* Gradients and Effects for light theme */
     --gradient-primary: linear-gradient(135deg, hsl(0 65% 51%), hsl(0 75% 61%));
     --gradient-accent: linear-gradient(135deg, hsl(180 100% 50%), hsl(190 100% 60%));
-    --gradient-bg: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-bg: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 96%));
     --glow-accent: 0 0 20px hsl(180 100% 50% / 0.2);
     --glow-primary: 0 0 20px hsl(0 65% 51% / 0.2);
   }
