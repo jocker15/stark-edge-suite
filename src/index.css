@@ -60,6 +60,51 @@
     --glow-accent: 0 0 20px hsl(180 100% 50% / 0.3);
     --glow-primary: 0 0 20px hsl(0 65% 51% / 0.3);
   }
+
+  .light {
+    /* Digital Edge Light Theme Colors */
+    --background: 0 0% 100%; /* White background */
+    --foreground: 0 0% 10%; /* Dark text */
+
+    --card: 0 0% 98%; /* Very light gray cards */
+    --card-foreground: 0 0% 20%; /* Dark gray text on cards */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 0 65% 51%; /* #D32F2F - Stark Red (maintained) */
+    --primary-foreground: 0 0% 100%; /* White text on red */
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 38%;
+
+    --accent: 180 100% 50%; /* #00EFFF - Arc Reactor Blue (maintained) */
+    --accent-foreground: 0 0% 10%; /* Dark text on blue */
+
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 180 100% 50%;
+
+    /* Chart Colors - same as dark theme */
+    --chart-1: 0 65% 51%; /* Primary Red */
+    --chart-2: 180 100% 50%; /* Accent Blue */
+    --chart-3: 142 76% 36%; /* Green */
+    --chart-4: 262 83% 58%; /* Purple */
+    --chart-5: 346 77% 50%; /* Pink */
+
+    /* Gradients and Effects - adapted for light theme */
+    --gradient-primary: linear-gradient(135deg, hsl(0 65% 51%), hsl(0 75% 61%));
+    --gradient-accent: linear-gradient(135deg, hsl(180 100% 50%), hsl(190 100% 60%));
+    --gradient-bg: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --glow-accent: 0 0 20px hsl(180 100% 50% / 0.2);
+    --glow-primary: 0 0 20px hsl(0 65% 51% / 0.2);
+  }
 }
 
 @layer utilities {
@@ -117,14 +162,14 @@
 }
 
 @layer utilities {
-  /* CryptoCloud Widget Styling - Dark Theme Integration */
+  /* CryptoCloud Widget Styling - Theme Integration */
   [ref="widgetRef"] vue-widget,
   .cc-widget,
   .cryptocloud-widget,
   #app[data-v-ae763972],
   #app[data-v-b4d511a8] {
     @apply bg-card text-foreground;
-    color: hsl(var(--foreground));
+    color: hsl(var(--foreground)) !important;
     background-color: hsl(var(--card)) !important;
     border: 2px solid hsl(var(--border)) !important;
     border-radius: 15px !important;
