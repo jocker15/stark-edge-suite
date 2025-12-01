@@ -46,6 +46,7 @@ export function FileUploadStep({ onFileSelect, selectedFile }: FileUploadStepPro
       req3: 'Price must be a positive number',
       req4: 'URLs must be valid (http:// or https://)',
       req5: 'SKU must be unique if provided',
+      req6: 'SEO fields (meta_title, meta_description) are auto-generated from name/description if not provided',
     },
     ru: {
       title: 'Загрузка CSV файла',
@@ -61,6 +62,7 @@ export function FileUploadStep({ onFileSelect, selectedFile }: FileUploadStepPro
       req3: 'Цена должна быть положительным числом',
       req4: 'URL должны быть валидными (http:// или https://)',
       req5: 'Артикул (SKU) должен быть уникальным, если указан',
+      req6: 'SEO поля (meta_title, meta_description) автоматически генерируются из названия/описания, если не указаны',
     },
   };
 
@@ -148,6 +150,7 @@ export function FileUploadStep({ onFileSelect, selectedFile }: FileUploadStepPro
             <li>{t.req3}</li>
             <li>{t.req4}</li>
             <li>{t.req5}</li>
+            <li>{t.req6}</li>
           </ul>
         </div>
       </div>
