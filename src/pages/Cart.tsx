@@ -40,7 +40,7 @@ export default function Cart() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <main className="flex-1 py-8 px-4 md:px-8 flex items-center justify-center">
+        <main id="main-content" className="flex-1 py-8 px-4 md:px-8 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Your cart is empty</h2>
             <Button onClick={() => navigate('/game-accounts')}>
@@ -56,7 +56,7 @@ export default function Cart() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1 py-8 px-4 md:px-8">
+      <main id="main-content" className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">
           <h1 className="text-3xl font-bold text-foreground mb-8">Shopping Cart</h1>
           <div className="space-y-6">

@@ -334,9 +334,11 @@ export function UsersDataTable({
           <Input
             placeholder={t("filters.search")}
             value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("email")?.setFilterValue(event.target.value)
-            }
+            onChange={(event) => {
+              // Sanitize input: escape SQL special characters to prevent injection
+              const sanitizedValue = event.target.value.replace(/[%_\\]/g, '\\$&');
+              table.getColumn("email")?.setFilterValue(sanitizedValue);
+            }}
             className="max-w-sm"
           />
           

@@ -10,12 +10,12 @@ export default function Verifications() {
   return (
     <div className="min-h-screen flex flex-col">
       <DefaultSEO 
-        title="Verification Services - Professional Document Verification | Digital Edge"
-        description="Professional verification services for documents and accounts. Fast, secure, and reliable verification process. Contact us for details."
-        url="https://yoursite.lovable.app/verifications"
+        title="Professional Verification Services | STARK INC."
+        description="Professional verification services for documents and accounts. Fast, secure, and reliable verification process. Cryptocurrency payments accepted."
+        url="https://stark-edge-suite.lovable.app/verifications"
       />
       <Header />
-      <main className="flex-1 container mx-auto py-8">
+      <main id="main-content" className="flex-1 container mx-auto py-8">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
             <CardTitle>Professional Verification Services</CardTitle>
