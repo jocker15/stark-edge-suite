@@ -44,7 +44,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" storageKey="app-theme" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" storageKey="app-theme" enableSystem={false}>
       <AuthProvider>
         <CartProvider>
           <LanguageProvider>
