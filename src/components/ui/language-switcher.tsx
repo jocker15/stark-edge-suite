@@ -10,6 +10,7 @@ export function LanguageSwitcher() {
       size="sm"
       onClick={toggleLang}
       className="text-accent hover:text-accent hover:bg-accent/10 font-heading tracking-wider border border-accent/20 hover:border-accent/40 transition-all duration-300"
+      aria-label={lang === 'ru' ? 'Switch to English' : 'Переключить на русский'}
     >
       {lang.toUpperCase()}
     </Button>

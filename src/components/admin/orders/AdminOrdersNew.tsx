@@ -73,11 +73,17 @@ export function AdminOrdersNew() {
       }
 
       if (filters.minAmount) {
-        query = query.gte("amount", parseFloat(filters.minAmount));
+        const minVal = parseFloat(filters.minAmount);
+        if (!isNaN(minVal)) {
+          query = query.gte("amount", minVal);
+        }
       }
 
       if (filters.maxAmount) {
-        query = query.lte("amount", parseFloat(filters.maxAmount));
+        const maxVal = parseFloat(filters.maxAmount);
+        if (!isNaN(maxVal)) {
+          query = query.lte("amount", maxVal);
+        }
       }
 
       // Apply pagination

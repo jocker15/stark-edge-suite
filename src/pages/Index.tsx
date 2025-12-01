@@ -13,7 +13,7 @@ const Index = () => {
       <DefaultSEO />
       <OrganizationSchema />
       <Header />
-      <main>
+      <main id="main-content">
         <HeroSection />
         <Suspense fallback={<div className="h-96" />}>
           <ServicesGrid />

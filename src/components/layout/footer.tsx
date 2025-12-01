@@ -44,13 +44,13 @@ export function Footer() {
               {lang === 'ru' ? 'ПОДДЕРЖКА' : 'SUPPORT'}
             </h3>
             <div className="space-y-2">
-              <a href="/contact" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
+              <a href="/contact-us" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
                 {lang === 'ru' ? 'Связаться с нами' : 'Contact Us'}
               </a>
               <a href="/faq" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
                 {lang === 'ru' ? 'Часто задаваемые вопросы' : 'FAQ'}
               </a>
-              <a href="/help" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
+              <a href="/help-center" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
                 {lang === 'ru' ? 'Центр помощи' : 'Help Center'}
               </a>
             </div>
@@ -62,10 +62,10 @@ export function Footer() {
               {lang === 'ru' ? 'ПРАВОВАЯ ИНФОРМАЦИЯ' : 'LEGAL'}
             </h3>
             <div className="space-y-2">
-              <a href="/privacy" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
+              <a href="/privacy-policy" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
                 {lang === 'ru' ? 'Политика конфиденциальности' : 'Privacy Policy'}
               </a>
-              <a href="/terms" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
+              <a href="/terms-of-service" className="block text-sm text-muted-foreground hover:text-accent transition-colors">
                 {lang === 'ru' ? 'Условия использования' : 'Terms of Service'}
               </a>
               <a href="/security" className="block text-sm text-muted-foreground hover:text-accent transition-colors">

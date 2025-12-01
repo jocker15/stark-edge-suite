@@ -41,6 +41,7 @@ export default function Checkout() {
   const [guestEmail, setGuestEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [guestUserId, setGuestUserId] = useState<string | null>(null)
+  const [paymentError, setPaymentError] = useState(false)
 
   // Handle guest checkout email submission
   const handleGuestCheckout = async (e: React.FormEvent) => {
@@ -197,7 +198,7 @@ export default function Checkout() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <main className="flex-1 py-8 px-4 md:px-8 flex items-center justify-center">
+        <main id="main-content" className="flex-1 py-8 px-4 md:px-8 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">No items in cart</h2>
             <Button onClick={() => navigate('/game-accounts')}>
@@ -213,7 +214,7 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1 py-8 px-4 md:px-8">
+      <main id="main-content" className="flex-1 py-8 px-4 md:px-8">
         <div className="container mx-auto">
           <h1 className="text-3xl font-bold text-foreground mb-8">Checkout</h1>
           <div className="grid md:grid-cols-2 gap-8">
@@ -309,11 +310,39 @@ export default function Checkout() {
                     <p className="text-sm font-medium mb-2">
                       {lang === 'ru' ? '✅ Платеж создан' : '✅ Payment created'}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mb-3">
                       {lang === 'ru' 
                         ? 'Перенаправление на страницу оплаты...' 
                         : 'Redirecting to payment page...'}
                     </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.location.href = paymentUrl}
+                    >
+                      {lang === 'ru' ? 'Перейти к оплате' : 'Go to Payment'}
+                    </Button>
+                  </div>
+                )}
+                {!loading && !paymentUrl && (user || emailSubmitted) && !orderReady && (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {lang === 'ru' 
+                        ? 'Не удалось создать платеж. Попробуйте снова.' 
+                        : 'Failed to create payment. Please try again.'}
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        setOrderId(null);
+                        setPaymentUrl(null);
+                        setOrderReady(false);
+                        if (!user) {
+                          setEmailSubmitted(false);
+                        }
+                      }}
+                    >
+                      {lang === 'ru' ? 'Попробовать снова' : 'Try Again'}
+                    </Button>
                   </div>
                 )}
               </CardContent>

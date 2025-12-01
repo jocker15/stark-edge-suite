@@ -1,23 +1,48 @@
 import * as React from "react";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, ShoppingCart, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export function MobileMenu() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const { getItemCount } = useCart();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setIsOpen(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: lang === 'ru' ? "Вы вышли" : "Signed out",
+        description: lang === 'ru' ? "Вы успешно вышли из системы" : "You have been successfully signed out"
+      });
+      navigate("/");
+      setIsOpen(false);
+    } catch {
+      toast({
+        title: lang === 'ru' ? "Ошибка" : "Error",
+        description: lang === 'ru' ? "Не удалось выйти" : "Failed to sign out",
+        variant: "destructive"
+      });
     }
   };
 
@@ -69,11 +94,12 @@ export function MobileMenu() {
             </div>
 
             {/* Navigation Links */}
-            <nav className="p-4 space-y-2">
+            <nav className="p-4 space-y-2" role="menu">
               <Link
                 to="/verifications"
                 onClick={closeMenu}
                 className="block py-3 px-4 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all font-heading tracking-wide"
+                role="menuitem"
               >
                 {lang === 'ru' ? 'ВЕРИФИКАЦИЯ' : 'VERIFICATIONS'}
               </Link>
@@ -81,6 +107,7 @@ export function MobileMenu() {
                 to="/game-accounts"
                 onClick={closeMenu}
                 className="block py-3 px-4 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all font-heading tracking-wide"
+                role="menuitem"
               >
                 {lang === 'ru' ? 'ИГРОВЫЕ АККАУНТЫ' : 'GAME ACCOUNTS'}
               </Link>
@@ -88,10 +115,65 @@ export function MobileMenu() {
                 to="/digital-templates"
                 onClick={closeMenu}
                 className="block py-3 px-4 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all font-heading tracking-wide"
+                role="menuitem"
               >
                 {lang === 'ru' ? 'ШАБЛОНЫ' : 'TEMPLATES'}
               </Link>
+              
+              {/* Cart Link */}
+              <Link
+                to="/cart"
+                onClick={closeMenu}
+                className="flex items-center justify-between py-3 px-4 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all font-heading tracking-wide"
+                role="menuitem"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  {lang === 'ru' ? 'КОРЗИНА' : 'CART'}
+                </span>
+                {getItemCount() > 0 && (
+                  <Badge variant="destructive" className="h-5 min-w-5 px-1 rounded-full text-xs flex items-center justify-center">
+                    {getItemCount() > 99 ? '99+' : getItemCount()}
+                  </Badge>
+                )}
+              </Link>
             </nav>
+
+            {/* Auth Section */}
+            <div className="p-4 border-t border-border space-y-2">
+              {user ? (
+                <>
+                  <Link
+                    to="/account"
+                    onClick={closeMenu}
+                    className="flex items-center gap-2 py-3 px-4 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all"
+                  >
+                    <User className="h-5 w-5" />
+                    {lang === 'ru' ? 'Мой аккаунт' : 'My Account'}
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 py-3 px-4 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all w-full text-left"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    {lang === 'ru' ? 'Выйти' : 'Sign Out'}
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-2">
+                  <Link to="/signin" onClick={closeMenu} className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      {lang === 'ru' ? 'Войти' : 'Sign In'}
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={closeMenu} className="flex-1">
+                    <Button className="w-full bg-gradient-primary">
+                      {lang === 'ru' ? 'Регистрация' : 'Sign Up'}
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
 
             {/* Theme and Language Switchers */}
             <div className="p-4 border-t border-border flex items-center justify-center space-x-4">

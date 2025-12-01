@@ -49,6 +49,14 @@ export function Header() {
     }
   };
   return <>
+      {/* Skip Link for Accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
+      >
+        {lang === 'ru' ? 'Перейти к основному содержимому' : 'Skip to main content'}
+      </a>
+      
       {/* Scroll Progress Bar */}
       <ScrollProgress />
       
@@ -101,8 +109,8 @@ export function Header() {
           <Link to="/cart" className="hidden sm:block">
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent hover:scale-110 transition-transform relative">
               <ShoppingCart className="h-5 w-5" />
-              {getItemCount() > 0 && <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full text-xs flex items-center justify-center animate-scale-in">
-                  {getItemCount()}
+              {getItemCount() > 0 && <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full text-xs flex items-center justify-center animate-scale-in">
+                  {getItemCount() > 99 ? '99+' : getItemCount()}
                 </Badge>}
             </Button>
           </Link>
