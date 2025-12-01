@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
           // Log successful batch
           console.log(`Batch ${Math.floor(i / batchSize) + 1}: Inserted ${batch.length} products`);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
           retries++;
           console.error(`Batch ${Math.floor(i / batchSize) + 1} attempt ${retries} failed:`, error);
 
@@ -234,11 +234,11 @@ Deno.serve(async (req) => {
                 } else {
                   result.inserted++;
                 }
-              } catch (singleError: any) {
+              } catch (singleError: unknown) {
                 result.failed++;
                 result.errors.push({
                   product,
-                  error: singleError.message,
+                  error: singleError instanceof Error ? singleError.message : 'Unknown error',
                 });
               }
             }
@@ -261,11 +261,11 @@ Deno.serve(async (req) => {
       }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Import error:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error',
+        error: error instanceof Error ? error.message : 'Internal server error',
         success: false 
       }),
       { 
