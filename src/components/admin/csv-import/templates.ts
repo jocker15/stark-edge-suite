@@ -42,9 +42,9 @@ export function generateCSVTemplate(lang: 'en' | 'ru'): string {
       case 'is_digital':
         return 'true';
       case 'meta_title':
-        return 'Product Meta Title';
+        return '';
       case 'meta_description':
-        return 'Product meta description for SEO';
+        return '';
       default:
         return '';
     }

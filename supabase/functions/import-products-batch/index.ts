@@ -41,6 +41,55 @@ interface ImportResult {
   }>;
 }
 
+/**
+ * Generates SEO fields from product data
+ */
+function generateSeoFields(product: ProductImport): {
+  meta_title: string;
+  meta_description: string;
+} {
+  const truncate = (text: string, maxLength: number): string => {
+    if (!text || text.length <= maxLength) {
+      return text || '';
+    }
+    let truncated = text.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxLength * 0.8) {
+      truncated = truncated.substring(0, lastSpace);
+    }
+    truncated = truncated.replace(/[.,;:!?-]\s*$/, '');
+    return truncated.trim() + (truncated.length < text.length ? '...' : '');
+  };
+
+  let meta_title = '';
+  if (product.meta_title) {
+    meta_title = product.meta_title;
+  } else if (product.name_en) {
+    meta_title = truncate(product.name_en, 60);
+  } else if (product.name_ru) {
+    meta_title = truncate(product.name_ru, 60);
+  } else if (product.description_en) {
+    meta_title = truncate(product.description_en, 60);
+  } else if (product.description_ru) {
+    meta_title = truncate(product.description_ru, 60);
+  }
+
+  let meta_description = '';
+  if (product.meta_description) {
+    meta_description = product.meta_description;
+  } else if (product.description_en) {
+    meta_description = truncate(product.description_en, 160);
+  } else if (product.description_ru) {
+    meta_description = truncate(product.description_ru, 160);
+  } else if (product.name_en) {
+    meta_description = truncate(product.name_en, 160);
+  } else if (product.name_ru) {
+    meta_description = truncate(product.name_ru, 160);
+  }
+
+  return { meta_title, meta_description };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -129,11 +178,21 @@ Deno.serve(async (req) => {
       !p.sku || !result.errors.some(e => e.product.sku === p.sku)
     );
 
+    // Apply SEO auto-generation for all products
+    const productsWithSeo = validProducts.map(product => {
+      const seo = generateSeoFields(product);
+      return {
+        ...product,
+        meta_title: product.meta_title || seo.meta_title,
+        meta_description: product.meta_description || seo.meta_description,
+      };
+    });
+
     const batchSize = 50;
     const maxRetries = 3;
 
-    for (let i = 0; i < validProducts.length; i += batchSize) {
-      const batch = validProducts.slice(i, i + batchSize);
+    for (let i = 0; i < productsWithSeo.length; i += batchSize) {
+      const batch = productsWithSeo.slice(i, i + batchSize);
       let retries = 0;
       let success = false;
 
