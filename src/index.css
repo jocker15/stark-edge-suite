@@ -59,6 +59,11 @@
     --gradient-bg: linear-gradient(180deg, hsl(218 38% 8%), hsl(218 30% 6%));
     --glow-accent: 0 0 20px hsl(180 100% 50% / 0.3);
     --glow-primary: 0 0 20px hsl(0 65% 51% / 0.3);
+    
+    /* Glassmorphism */
+    --glass-bg: hsl(218 24% 12% / 0.6);
+    --glass-border: hsl(180 100% 50% / 0.15);
+    --glass-blur: 12px;
   }
 }
 
@@ -107,6 +112,11 @@
     --gradient-bg: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 96%));
     --glow-accent: 0 0 20px hsl(180 100% 50% / 0.2);
     --glow-primary: 0 0 20px hsl(0 65% 51% / 0.2);
+    
+    /* Glassmorphism for light theme */
+    --glass-bg: hsl(0 0% 100% / 0.7);
+    --glass-border: hsl(0 0% 0% / 0.1);
+    --glass-blur: 12px;
   }
 
   .text-gradient-primary {
@@ -142,6 +152,98 @@
   .bg-gradient-bg {
     background: var(--gradient-bg);
   }
+  
+  /* Glassmorphism Card Effect */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .glass-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 
+      0 20px 40px hsl(0 0% 0% / 0.3),
+      0 0 30px hsl(180 100% 50% / 0.15);
+    border-color: hsl(180 100% 50% / 0.3);
+    background: hsl(218 24% 14% / 0.8);
+  }
+  
+  /* Button Glow Effect */
+  .btn-glow {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: var(--gradient-primary);
+    opacity: 0;
+    z-index: -1;
+    filter: blur(12px);
+    transition: opacity 0.3s ease;
+  }
+  
+  .btn-glow:hover::before {
+    opacity: 0.6;
+  }
+  
+  .btn-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px hsl(0 65% 51% / 0.4);
+  }
+  
+  /* Scroll Reveal Animation */
+  .scroll-reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .scroll-reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* Staggered reveal for multiple cards */
+  .scroll-reveal:nth-child(1) { transition-delay: 0ms; }
+  .scroll-reveal:nth-child(2) { transition-delay: 100ms; }
+  .scroll-reveal:nth-child(3) { transition-delay: 200ms; }
+  .scroll-reveal:nth-child(4) { transition-delay: 300ms; }
+  .scroll-reveal:nth-child(5) { transition-delay: 400ms; }
+  .scroll-reveal:nth-child(6) { transition-delay: 500ms; }
+  
+  /* Crypto Icon Animations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% { 
+      opacity: 0.7;
+      filter: drop-shadow(0 0 3px hsl(180 100% 50% / 0.3));
+    }
+    50% { 
+      opacity: 1;
+      filter: drop-shadow(0 0 8px hsl(180 100% 50% / 0.6));
+    }
+  }
+  
+  .crypto-icon {
+    animation: float 3s ease-in-out infinite, pulse-glow 2s ease-in-out infinite;
+  }
+  
+  .crypto-icon:nth-child(1) { animation-delay: 0s; }
+  .crypto-icon:nth-child(2) { animation-delay: 0.3s; }
+  .crypto-icon:nth-child(3) { animation-delay: 0.6s; }
+  .crypto-icon:nth-child(4) { animation-delay: 0.9s; }
+  .crypto-icon:nth-child(5) { animation-delay: 1.2s; }
 }
 
 @layer base {

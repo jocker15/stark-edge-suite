@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -24,13 +24,36 @@ interface Product {
 interface ProductCardProps {
   product: Product
   lang?: 'en' | 'ru'
+  index?: number
 }
 
-export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
+export function ProductCard({ product, lang = 'en', index = 0 }: ProductCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [isRevealed, setIsRevealed] = useState(false)
   const location = useLocation()
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  
+  useEffect(() => {
+    const element = cardRef.current
+    if (!element) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Stagger the reveal based on index
+          setTimeout(() => setIsRevealed(true), index * 100)
+          observer.unobserve(element)
+        }
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    )
+
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [index])
+  
   const getName = () => {
     if (lang === 'ru' && product.name_ru) return product.name_ru
     return product.name_en || 'Unnamed Product'
@@ -47,8 +70,13 @@ export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
 
   return (
     <>
+      <div 
+        ref={cardRef}
+        className={`transition-all duration-700 ${isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+        style={{ transitionDelay: `${index * 50}ms` }}
+      >
       <Link to={productLink} className="block no-underline">
-        <Card className="w-full max-w-sm overflow-hidden transition-all hover:shadow-glow-accent border-border/50">
+        <Card className="w-full max-w-sm overflow-hidden border-border/50 hover:!transform-none">
           <CardHeader className="p-0 relative">
             <OptimizedImage
               src={imageUrl}
@@ -109,6 +137,7 @@ export function ProductCard({ product, lang = 'en' }: ProductCardProps) {
           </CardContent>
         </Card>
       </Link>
+      </div>
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
