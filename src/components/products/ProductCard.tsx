@@ -76,7 +76,7 @@ export function ProductCard({ product, lang = 'en', index = 0 }: ProductCardProp
         style={{ transitionDelay: `${index * 50}ms` }}
       >
       <Link to={productLink} className="block no-underline">
-        <Card className="w-full max-w-sm overflow-hidden border-border/50 hover:!transform-none">
+        <Card className="w-full max-w-sm overflow-hidden border-border/50">
           <CardHeader className="p-0 relative">
             <OptimizedImage
               src={imageUrl}

@@ -66,8 +66,8 @@ export function RecommendedProducts({ currentProductId, category }: Omit<Recomme
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} lang={lang} />
+          {products.map((product, index) => (
+            <ProductCard key={product.id} product={product} lang={lang} index={index} />
           ))}
         </div>
       </CardContent>
