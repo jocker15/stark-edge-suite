@@ -73,8 +73,30 @@ export function Header() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity flex-shrink-0 group">
-          <div className="w-8 h-8 bg-gradient-primary rounded glow-primary"></div>
-          <span className="text-xl font-heading text-gradient-primary logo-shine">STARK INC.</span>
+          <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
+            <svg 
+              viewBox="0 0 32 32" 
+              className="w-6 h-6"
+              fill="none"
+            >
+              {/* Main triangle shape */}
+              <path 
+                d="M16 2 L28 26 L16 20 L4 26 Z" 
+                fill="hsl(var(--accent))"
+              />
+              {/* Inner cut for S-like effect */}
+              <path 
+                d="M16 8 L22 20 L16 17 L10 20 Z" 
+                fill="hsl(var(--primary))"
+              />
+              {/* Arrow accent */}
+              <path 
+                d="M20 14 L26 22 L22 22 L18 16 Z" 
+                fill="hsl(var(--accent))"
+              />
+            </svg>
+          </div>
+          <span className="text-xl font-heading text-accent logo-shine">STARK <span className="text-muted-foreground">INC.</span></span>
         </Link>
 
         {/* Navigation */}
