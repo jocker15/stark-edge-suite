@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -26,12 +26,45 @@ export function ReviewsList({ productId }: ReviewsListProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [averageRating, setAverageRating] = useState(0)
+  const [revealedCards, setRevealedCards] = useState<boolean[]>([])
   const { lang } = useLanguage()
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
     loadReviews()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId])
+
+  useEffect(() => {
+    const observers = cardRefs.current.map((card, index) => {
+      if (!card) return null
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              setRevealedCards((prev) => {
+                const newRevealed = [...prev]
+                newRevealed[index] = true
+                return newRevealed
+              })
+            }, index * 100)
+            observer.unobserve(card)
+          }
+        },
+        { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+      )
+
+      observer.observe(card)
+      return observer
+    })
+
+    return () => {
+      observers.forEach((observer) => {
+        if (observer) observer.disconnect()
+      })
+    }
+  }, [reviews])
 
   async function loadReviews() {
     const { data, error } = await supabase
@@ -87,59 +120,68 @@ export function ReviewsList({ productId }: ReviewsListProps) {
           </CardContent>
         </Card>
       ) : (
-        reviews.map((review) => (
-          <Card key={review.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-4 w-4 ${
-                            star <= review.rating
-                              ? 'fill-primary text-primary'
-                              : 'text-muted-foreground'
-                          }`}
-                        />
-                      ))}
+        reviews.map((review, index) => (
+          <div
+            key={review.id}
+            ref={(el) => (cardRefs.current[index] = el)}
+            className={`transition-all duration-700 ${
+              revealedCards[index] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ transitionDelay: `${index * 50}ms` }}
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${
+                              star <= review.rating
+                                ? 'fill-primary text-primary'
+                                : 'text-muted-foreground'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDistanceToNow(new Date(review.created_at), {
+                          addSuffix: true,
+                          locale: lang === 'ru' ? ru : enUS,
+                        })}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(new Date(review.created_at), {
-                        addSuffix: true,
-                        locale: lang === 'ru' ? ru : enUS,
-                      })}
-                    </p>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {review.comment && (
-                <p className="text-foreground">{review.comment}</p>
-              )}
-              {review.reply_text && (
-                <div className="mt-4 pl-4 border-l-2 border-primary/50 bg-muted/50 p-3 rounded">
-                  <p className="text-sm font-semibold text-primary mb-1">
-                    {lang === 'ru' ? 'Ответ магазина' : 'Store Reply'}
-                  </p>
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{review.reply_text}</p>
-                  {review.reply_at && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {formatDistanceToNow(new Date(review.reply_at), {
-                        addSuffix: true,
-                        locale: lang === 'ru' ? ru : enUS,
-                      })}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {review.comment && (
+                  <p className="text-foreground">{review.comment}</p>
+                )}
+                {review.reply_text && (
+                  <div className="mt-4 pl-4 border-l-2 border-primary/50 bg-muted/50 p-3 rounded">
+                    <p className="text-sm font-semibold text-primary mb-1">
+                      {lang === 'ru' ? 'Ответ магазина' : 'Store Reply'}
                     </p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{review.reply_text}</p>
+                    {review.reply_at && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {formatDistanceToNow(new Date(review.reply_at), {
+                          addSuffix: true,
+                          locale: lang === 'ru' ? ru : enUS,
+                        })}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         ))
       )}
     </div>
