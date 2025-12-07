@@ -2,14 +2,20 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useState, useEffect } from "react";
 
 export function HeroSection() {
   const { lang } = useLanguage();
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+  
+  useEffect(() => {
+    setShouldAnimate(true);
+  }, []);
   
   return (
     <section className="relative py-24 px-4 overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5"></div>
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#1e3a8a] via-[#581c87] to-[#0a1628] bg-[length:400%_400%] animate-gradient"></div>
       <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
       
@@ -22,7 +28,9 @@ export function HeroSection() {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-heading mb-6 leading-tight animate-slide-up [animation-delay:200ms] opacity-0 [animation-fill-mode:forwards]">
-          <span className="text-gradient-primary">{lang === 'ru' ? 'STARK' : 'STARK'}</span>
+          <span className={`text-gradient-primary ${shouldAnimate ? 'animate-glitch-once' : ''}`}>
+            {lang === 'ru' ? 'STARK' : 'STARK'}
+          </span>
           <br />
           <span className="text-gradient-accent">{lang === 'ru' ? 'INCORP.' : 'INCORP.'}</span>
         </h1>

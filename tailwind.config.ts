@@ -142,6 +142,56 @@ export default {
             opacity: "1"
           }
         },
+        "gradient-shift": {
+          "0%, 100%": {
+            backgroundPosition: "0% 50%"
+          },
+          "50%": {
+            backgroundPosition: "100% 50%"
+          }
+        },
+        "glitch": {
+          "0%, 100%": {
+            transform: "translate(0)",
+            textShadow: "none"
+          },
+          "10%": {
+            transform: "translate(-2px, 2px)",
+            textShadow: "2px 0 #ef4444, -2px 0 #06b6d4"
+          },
+          "20%": {
+            transform: "translate(2px, -2px)",
+            textShadow: "-2px 0 #ef4444, 2px 0 #06b6d4"
+          },
+          "30%": {
+            transform: "translate(-2px, -2px)",
+            textShadow: "2px 0 #ef4444, -2px 0 #06b6d4"
+          },
+          "40%": {
+            transform: "translate(2px, 2px)",
+            textShadow: "-2px 0 #ef4444, 2px 0 #06b6d4"
+          },
+          "50%": {
+            transform: "translate(-2px, 2px)",
+            textShadow: "2px 0 #ef4444, -2px 0 #06b6d4"
+          },
+          "60%": {
+            transform: "translate(2px, -2px)",
+            textShadow: "-2px 0 #ef4444, 2px 0 #06b6d4"
+          },
+          "70%": {
+            transform: "translate(-2px, -2px)",
+            textShadow: "2px 0 #ef4444, -2px 0 #06b6d4"
+          },
+          "80%": {
+            transform: "translate(2px, 2px)",
+            textShadow: "-2px 0 #ef4444, 2px 0 #06b6d4"
+          },
+          "90%": {
+            transform: "translate(-2px, 2px)",
+            textShadow: "2px 0 #ef4444, -2px 0 #06b6d4"
+          }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -152,6 +202,8 @@ export default {
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "rotate-icon": "rotate-icon 0.5s ease-in-out",
         "slide-in-from-top": "slide-in-from-top 0.3s ease-out",
+        "gradient": "gradient-shift 20s ease infinite",
+        "glitch-once": "glitch 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s",
       },
     },
   },
