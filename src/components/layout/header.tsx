@@ -72,9 +72,9 @@ export function Header() {
       <header className="bg-card/50 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity flex-shrink-0">
+        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity flex-shrink-0 group">
           <div className="w-8 h-8 bg-gradient-primary rounded glow-primary"></div>
-          <span className="text-xl font-heading text-gradient-primary">STARK INC.</span>
+          <span className="text-xl font-heading text-gradient-primary logo-shine">STARK INC.</span>
         </Link>
 
         {/* Navigation */}
