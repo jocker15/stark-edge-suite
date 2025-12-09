@@ -28,11 +28,21 @@ const secretKey = process.env.CRYPTOCLOUD_SECRET!;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Get site URL from settings or env
+async function getSiteUrl(): Promise<string> {
+  const { data } = await supabase
+    .from('site_settings')
+    .select('general')
+    .single();
+  
+  const general = data?.general as { site_url?: string } | null;
+  return general?.site_url || process.env.SITE_URL || 'https://starkedge.store';
+}
+
 async function getSettings() {
   const { data, error } = await supabase.from('site_settings').select('key, value');
   
   if (error) {
-    console.error('Error fetching settings:', error);
     return null;
   }
 
@@ -52,7 +62,6 @@ async function getSetting(key: string) {
     .single();
   
   if (error) {
-    console.error(`Error fetching setting ${key}:`, error);
     return null;
   }
 
@@ -91,7 +100,6 @@ async function generateSignedUrl(filePath: string): Promise<string> {
     .createSignedUrl(filePath, 604800);
   
   if (error) {
-    console.error('Error generating signed URL:', error);
     throw error;
   }
   
@@ -101,12 +109,12 @@ async function generateSignedUrl(filePath: string): Promise<string> {
 app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
   try {
     const orderId = parseInt(req.params.orderId);
+    const siteUrl = await getSiteUrl();
     
     const { data: orderDetails, error: detailsError } = await supabase
       .rpc('get_order_details', { order_id_param: orderId });
     
     if (detailsError || !orderDetails) {
-      console.error('Error fetching order details:', detailsError);
       return res.status(404).json({ error: 'Order not found' });
     }
 
@@ -148,7 +156,6 @@ app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
           const signedUrl = await generateSignedUrl(file.file_path);
           emailHtml += `<li><a href="${signedUrl}">${file.file_name}</a> (${file.file_size ? (file.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'Size unknown'})</li>`;
         } catch (error) {
-          console.error('Error generating signed URL for file:', file.file_name, error);
           emailHtml += `<li>${file.file_name} - Error generating download link</li>`;
         }
       }
@@ -159,6 +166,7 @@ app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
     emailHtml += `
       <p>Download links are valid for 7 days.</p>
       <p>If you have any questions, please contact our support team.</p>
+      <p><a href="${siteUrl}">Visit our store</a></p>
     `;
 
     const { error: emailError } = await sendEmailWithSettings(
@@ -168,7 +176,6 @@ app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
     );
 
     if (emailError) {
-      console.error('Failed to send email:', emailError);
       return res.status(500).json({ error: 'Failed to send email' });
     }
 
@@ -187,10 +194,8 @@ app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
       },
     });
 
-    console.log('Digital goods email sent successfully to:', profile.email);
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Error resending digital goods:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -199,6 +204,7 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
   try {
     const orderId = parseInt(req.params.orderId);
     const { email, subject, message } = req.body;
+    const siteUrl = await getSiteUrl();
 
     if (!email || !subject || !message) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -210,7 +216,7 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
       <hr>
       <p style="color: #666; font-size: 12px;">
         This email is regarding order #${orderId}<br>
-        Stark Edge Store
+        <a href="${siteUrl}">Stark Edge Store</a>
       </p>
     `;
 
@@ -221,7 +227,6 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
     );
 
     if (emailError) {
-      console.error('Failed to send email:', emailError);
       return res.status(500).json({ error: 'Failed to send email' });
     }
 
@@ -235,48 +240,37 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
       },
     });
 
-    console.log('Custom email sent successfully to:', email);
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Error sending custom email:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.post('/api/payment-webhook', async (req, res) => {
   try {
-    console.log('Webhook received');
-    console.log('Headers:', req.headers);
-    console.log('RawBody length:', req.rawBody ? req.rawBody.length : 'no rawBody');
     const signature = req.headers['x-cryptocloud-signature'] as string || req.headers['x-crypto-cloud-signature'] as string;
     if (!signature) {
-      console.log('No signature found');
       return res.status(401).json({ error: 'Missing signature' });
     }
-    console.log('Signature:', signature);
 
     const computedSignature = crypto
       .createHmac('sha256', secretKey)
       .update(req.rawBody)
       .digest('hex');
 
-    console.log('Computed signature:', computedSignature);
     if (signature !== computedSignature) {
-      console.error('Invalid signature');
       return res.status(401).json({ error: 'Invalid signature' });
     }
 
     let body;
     try {
       body = JSON.parse(req.rawBody.toString());
-      console.log('Webhook received:', body);
     } catch (e) {
-      console.error('Invalid JSON:', e);
       return res.status(400).json({ error: 'Invalid JSON' });
     }
 
     const { event, data } = body;
-    console.log('Customer email:', data.customer_email);
+    const siteUrl = await getSiteUrl();
 
     if (event === 'invoice_status_changed' && data.status === 'paid') {
       const orderId = data.custom?.order_id;
@@ -293,11 +287,8 @@ app.post('/api/payment-webhook', async (req, res) => {
           .single();
     
         if (updateError) {
-          console.error('Failed to update order:', updateError);
           return res.status(500).json({ error: 'Failed to update order' });
         }
-
-        console.log(data);
 
         // Handle new user creation if no user_id
         if (!order.user_id && data.customer_email) {
@@ -308,7 +299,6 @@ app.post('/api/payment-webhook', async (req, res) => {
           });
 
           if (createError || !newUser?.user) {
-            console.error('Failed to create user:', createError);
             return res.status(500).json({ error: 'Failed to create user' });
           }
 
@@ -321,12 +311,10 @@ app.post('/api/payment-webhook', async (req, res) => {
             .eq('id', orderId);
 
           if (orderUpdateError) {
-            console.error('Failed to update order with user_id:', orderUpdateError);
             return res.status(500).json({ error: 'Failed to update order' });
           }
 
           // Insert profile for new user
-          const tempPassword = crypto.randomBytes(16).toString('hex'); // Secure random password
           const orderDetails = Array.isArray(order.order_details) ? order.order_details : [];
           const { error: profileError } = await supabase
             .from('profiles')
@@ -336,19 +324,11 @@ app.post('/api/payment-webhook', async (req, res) => {
               purchases: [orderDetails]
             });
 
-          if (profileError) {
-            console.error('Failed to insert profile:', profileError);
-          }
-
           // Send password reset link instead of temp password
-          const { error: resetError } = await supabase.auth.admin.generateLink({
+          await supabase.auth.admin.generateLink({
             type: 'recovery',
             email: data.customer_email
           });
-
-          if (resetError) {
-            console.error('Failed to generate reset link:', resetError);
-          }
 
           // Send confirmation email with products and login info
           interface OrderItem {
@@ -368,19 +348,14 @@ app.post('/api/payment-webhook', async (req, res) => {
             <p>Email: ${data.customer_email}</p>
             <p>Для установки пароля используйте ссылку для восстановления пароля, которая была отправлена на ваш email.</p>
             <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
+            <p><a href="${siteUrl}">Перейти в магазин</a></p>
           `;
 
-          const { error: emailError } = await sendEmailWithSettings(
+          await sendEmailWithSettings(
             data.customer_email,
             'Order Confirmed - Stark Edge Store',
             emailHtml
           );
-
-          if (emailError) {
-            console.error('Failed to send email:', emailError);
-          } else {
-            console.log('Email sent successfully to new user');
-          }
         }
     
         if (order && order.user_id) {
@@ -390,23 +365,17 @@ app.post('/api/payment-webhook', async (req, res) => {
             .eq('user_id', order.user_id)
             .single();
     
-          if (profileError || !profile) {
-            console.error('Profile not found:', profileError);
-          } else if (profile.email) {
+          if (!profileError && profile && profile.email) {
             // Update purchases
             const currentPurchases = Array.isArray(profile.purchases) ? profile.purchases : [];
             const orderDetails = Array.isArray(order.order_details) ? order.order_details : [];
             const newPurchases = [...currentPurchases, orderDetails];
-            const { error: profileUpdateError } = await supabase
+            await supabase
               .from('profiles')
               .update({
                 purchases: newPurchases
               })
               .eq('user_id', order.user_id);
-    
-            if (profileUpdateError) {
-              console.error('Failed to update profile:', profileUpdateError);
-            }
     
             // Send confirmation email
             interface EmailOrderItem {
@@ -424,33 +393,25 @@ app.post('/api/payment-webhook', async (req, res) => {
               </ul>
               <p>Итого: ${(order.amount || 0).toFixed(2)}</p>
               <p>Если у вас есть вопросы, свяжитесь со службой поддержки.</p>
+              <p><a href="${siteUrl}">Перейти в магазин</a></p>
             `;
     
-            const { error: emailError } = await sendEmailWithSettings(
+            await sendEmailWithSettings(
               profile.email,
               'Заказ Подтвержден - Stark Edge Store',
               emailHtml
             );
-    
-            if (emailError) {
-              console.error('Failed to send email:', emailError);
-            } else {
-              console.log('Email sent successfully');
-            }
           }
         }
-    
-        console.log('Order processed successfully');
       }
     }
 
     res.status(200).send('OK');
   } catch (error) {
-    console.error('Webhook error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Webhook server running on port ${port}`);
+  // Server started
 });

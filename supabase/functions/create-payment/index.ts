@@ -56,7 +56,11 @@ serve(async (req) => {
     }
 
     // Get the origin from request for redirect URLs
-    const origin = req.headers.get('origin') || 'https://yourdomain.com';
+    const siteUrl = Deno.env.get('SITE_URL') || req.headers.get('origin') || '';
+    if (!siteUrl) {
+      throw new Error('SITE_URL not configured and no origin header present');
+    }
+    const origin = siteUrl;
 
     // Create invoice via CryptoCloud API
     const invoiceData = {
