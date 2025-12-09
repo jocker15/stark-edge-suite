@@ -130,7 +130,6 @@ export default function Checkout() {
               .single()
 
             if (error) {
-              console.error('Error creating order:', error)
               toast({
                 title: lang === 'ru' ? "Ошибка" : "Error",
                 description: lang === 'ru' ? "Не удалось создать заказ. Попробуйте снова." : "Failed to create order. Please try again.",
@@ -174,7 +173,6 @@ export default function Checkout() {
             }
           }
         } catch (error) {
-          console.error('Error:', error)
           toast({
             title: lang === 'ru' ? "Ошибка" : "Error",
             description: error instanceof Error ? error.message : (lang === 'ru' ? "Ошибка создания платежа" : "Failed to create payment"),
