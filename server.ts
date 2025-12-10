@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from './src/integrations/supabase/types';
 import crypto from 'crypto';
 import { Resend } from 'resend';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
 dotenv.config();
 
@@ -22,11 +24,117 @@ const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
 });
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
-
 const secretKey = process.env.CRYPTOCLOUD_SECRET!;
 
-app.use(cors());
+// Trusted domains for CORS
+const allowedOrigins = [
+  'https://starkedge.store',
+  'https://www.starkedge.store',
+  process.env.SITE_URL,
+].filter(Boolean) as string[];
+
+// CORS configuration - restrict to trusted domains
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
+}));
+
+// Security headers with Helmet
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://embed.tawk.to", "https://cdn.tailwindcss.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://*.supabase.co", "https://api.cryptocloud.plus", "wss://"],
+      frameSrc: ["'self'", "https://cryptocloud.plus"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
+
+// Rate limiting - general API limit
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter rate limiting for payment endpoints
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 payment requests per windowMs
+  message: { error: 'Too many payment requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply general rate limiting to all routes
+app.use(generalLimiter);
+
 app.use(bodyParser.json());
+
+// CSRF token generation and validation
+const csrfTokens = new Map<string, { token: string; expires: number }>();
+
+app.get('/api/csrf-token', (req, res) => {
+  const token = crypto.randomBytes(32).toString('hex');
+  const sessionId = req.headers['x-session-id'] as string || crypto.randomBytes(16).toString('hex');
+  
+  csrfTokens.set(sessionId, {
+    token,
+    expires: Date.now() + 3600000 // 1 hour
+  });
+  
+  // Clean up expired tokens
+  for (const [key, value] of csrfTokens.entries()) {
+    if (value.expires < Date.now()) {
+      csrfTokens.delete(key);
+    }
+  }
+  
+  res.json({ token, sessionId });
+});
+
+// CSRF validation middleware for POST/PUT/DELETE
+const validateCsrf = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // Skip CSRF for webhook endpoints (they use signature verification)
+  if (req.path.includes('webhook')) {
+    return next();
+  }
+  
+  const csrfToken = req.headers['x-csrf-token'] as string;
+  const sessionId = req.headers['x-session-id'] as string;
+  
+  if (!csrfToken || !sessionId) {
+    return res.status(403).json({ error: 'CSRF token required' });
+  }
+  
+  const storedData = csrfTokens.get(sessionId);
+  if (!storedData || storedData.token !== csrfToken || storedData.expires < Date.now()) {
+    return res.status(403).json({ error: 'Invalid or expired CSRF token' });
+  }
+  
+  next();
+};
 
 // Get site URL from settings or env
 async function getSiteUrl(): Promise<string> {
@@ -106,9 +214,25 @@ async function generateSignedUrl(filePath: string): Promise<string> {
   return data.signedUrl;
 }
 
-app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
+// Input validation helper
+function sanitizeString(input: string, maxLength: number = 1000): string {
+  if (typeof input !== 'string') return '';
+  return input.trim().slice(0, maxLength);
+}
+
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
+app.post('/api/orders/:orderId/resend-digital-goods', validateCsrf, async (req, res) => {
   try {
     const orderId = parseInt(req.params.orderId);
+    
+    if (isNaN(orderId) || orderId <= 0) {
+      return res.status(400).json({ error: 'Invalid order ID' });
+    }
+    
     const siteUrl = await getSiteUrl();
     
     const { data: orderDetails, error: detailsError } = await supabase
@@ -200,19 +324,36 @@ app.post('/api/orders/:orderId/resend-digital-goods', async (req, res) => {
   }
 });
 
-app.post('/api/orders/:orderId/send-email', async (req, res) => {
+app.post('/api/orders/:orderId/send-email', validateCsrf, async (req, res) => {
   try {
     const orderId = parseInt(req.params.orderId);
+    
+    if (isNaN(orderId) || orderId <= 0) {
+      return res.status(400).json({ error: 'Invalid order ID' });
+    }
+    
     const { email, subject, message } = req.body;
     const siteUrl = await getSiteUrl();
 
-    if (!email || !subject || !message) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // Validate inputs
+    if (!email || !validateEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+    
+    if (!subject || typeof subject !== 'string' || subject.trim().length === 0) {
+      return res.status(400).json({ error: 'Subject is required' });
+    }
+    
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Message is required' });
     }
 
+    const sanitizedSubject = sanitizeString(subject, 200);
+    const sanitizedMessage = sanitizeString(message, 5000);
+
     const emailHtml = `
-      <h1>${subject}</h1>
-      <p>${message.replace(/\n/g, '<br>')}</p>
+      <h1>${sanitizedSubject}</h1>
+      <p>${sanitizedMessage.replace(/\n/g, '<br>').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
       <hr>
       <p style="color: #666; font-size: 12px;">
         This email is regarding order #${orderId}<br>
@@ -222,7 +363,7 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
 
     const { error: emailError } = await sendEmailWithSettings(
       email,
-      subject,
+      sanitizedSubject,
       emailHtml
     );
 
@@ -236,7 +377,7 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
       action_type: 'send_custom_email',
       details: {
         email,
-        subject,
+        subject: sanitizedSubject,
       },
     });
 
@@ -246,7 +387,7 @@ app.post('/api/orders/:orderId/send-email', async (req, res) => {
   }
 });
 
-app.post('/api/payment-webhook', async (req, res) => {
+app.post('/api/payment-webhook', paymentLimiter, async (req, res) => {
   try {
     const signature = req.headers['x-cryptocloud-signature'] as string || req.headers['x-crypto-cloud-signature'] as string;
     if (!signature) {
@@ -410,6 +551,14 @@ app.post('/api/payment-webhook', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// Error handling middleware
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: 'CORS not allowed' });
+  }
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(port, () => {
