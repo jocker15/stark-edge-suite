@@ -553,6 +553,37 @@ app.post('/api/payment-webhook', paymentLimiter, async (req, res) => {
   }
 });
 
+// Logging endpoint for client-side errors
+app.post('/api/logs', async (req, res) => {
+  try {
+    const logEntry = req.body;
+
+    if (!logEntry || !logEntry.level || !logEntry.message) {
+      return res.status(400).json({ error: 'Invalid log entry' });
+    }
+
+    const { error } = await supabase
+      .from('error_logs')
+      .insert([{
+        level: logEntry.level,
+        message: logEntry.message,
+        context: logEntry.context || {},
+        user_agent: logEntry.userAgent || 'unknown',
+        url: logEntry.url || 'unknown',
+        created_at: logEntry.timestamp || new Date().toISOString(),
+      }]);
+
+    if (error) {
+      console.error('Failed to log error', error);
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Logging endpoint error', error);
+    res.status(500).json({ error: 'Logging failed' });
+  }
+});
+
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (err.message === 'Not allowed by CORS') {
