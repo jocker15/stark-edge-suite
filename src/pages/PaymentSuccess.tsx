@@ -54,17 +54,15 @@ const PaymentSuccess: React.FC = () => {
               password: 'temppass123' // This will fail, but we'll handle it
             });
             
-            if (signInError) {
-              console.log('Auto-login failed, user needs to check email');
-            }
+            // Auto-login may fail if user hasn't set password yet
           }
           
           // Fetch the order
           await fetchOrder(orderData.orderId.toString());
           localStorage.removeItem('pendingGuestOrder');
           return;
-        } catch (err) {
-          console.error('Auto-login error:', err);
+        } catch {
+          // Auto-login failed silently
         }
       }
       
@@ -113,7 +111,6 @@ const PaymentSuccess: React.FC = () => {
       .maybeSingle();
 
     if (fetchError) {
-      console.error(fetchError);
       setError('Failed to fetch order');
     } else if (data) {
       const orderDetails = (data.order_details as unknown as OrderDetail[]) || [];
@@ -136,7 +133,6 @@ const PaymentSuccess: React.FC = () => {
       .maybeSingle();
 
     if (fetchError) {
-      console.error(fetchError);
       setError('Failed to fetch order');
     } else if (data) {
       const orderDetails = (data.order_details as unknown as OrderDetail[]) || [];
