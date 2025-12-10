@@ -15,8 +15,6 @@ serve(async (req) => {
   try {
     const { email, cart, total } = await req.json();
 
-    console.log('Creating guest order for email:', email);
-
     // Validate input
     if (!email || !cart || !total) {
       throw new Error('Missing required fields: email, cart, or total');
@@ -42,7 +40,6 @@ serve(async (req) => {
 
     if (existingUser) {
       userId = existingUser.id;
-      console.log('User already exists:', userId);
     } else {
       // Generate random password
       const tempPassword = crypto.randomUUID();
@@ -58,7 +55,6 @@ serve(async (req) => {
       });
 
       if (createUserError) {
-        console.error('Error creating user:', createUserError);
         throw new Error(`Failed to create user: ${createUserError.message}`);
       }
 
@@ -67,19 +63,12 @@ serve(async (req) => {
       }
 
       userId = newUser.user.id;
-      console.log('New user created:', userId);
 
       // Generate magic link for auto-login
       const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
         type: 'magiclink',
         email: email,
       });
-
-      if (magicLinkError) {
-        console.error('Error generating magic link:', magicLinkError);
-      } else {
-        console.log('Magic link generated for:', email);
-      }
     }
 
     // Create order with the user_id
@@ -95,11 +84,8 @@ serve(async (req) => {
       .single();
 
     if (orderError) {
-      console.error('Error creating order:', orderError);
       throw new Error(`Failed to create order: ${orderError.message}`);
     }
-
-    console.log('Order created:', orderData.id);
 
     // Create payment via CryptoCloud
     const cryptoCloudApiKey = Deno.env.get('CRYPTOCLOUD_API_KEY');
@@ -125,7 +111,6 @@ serve(async (req) => {
     });
 
     const paymentData = await paymentResponse.json();
-    console.log('Payment response:', paymentData);
 
     if (!paymentData.status || paymentData.status !== 'success') {
       throw new Error(paymentData.message || 'Failed to create payment');
@@ -149,7 +134,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in create-guest-order function:', error);
     return new Response(
       JSON.stringify({
         success: false,
