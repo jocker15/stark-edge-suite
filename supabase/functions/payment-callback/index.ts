@@ -13,37 +13,41 @@ interface CryptoCloudCallback {
   order_id: string;
   status: string;
   token: string;
-  [key: string]: any;
+  payment_method?: string;
+  [key: string]: unknown;
+}
+
+interface OrderItem {
+  name_en?: string;
+  name_ru?: string;
+  quantity?: number;
+  preview_link?: string;
 }
 
 // Audit logging helper
 async function logAuditEvent(
-  supabaseClient: any,
+  supabaseClient: ReturnType<typeof createClient>,
   actionType: string,
   entityType: string,
   entityId: string,
-  details: any,
+  details: Record<string, unknown>,
   ipAddress?: string,
   userAgent?: string
 ) {
   try {
     const { error } = await supabaseClient
-      .from('audit_logs')
-      .insert({
-        action_type: actionType,
-        entity_type: entityType,
-        entity_id: entityId,
-        details: details,
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      });
-    
-    if (error) {
-      console.error('Failed to log audit event:', error);
+    .from('audit_logs')
+    .insert({
+      action_type: actionType,
+      entity_type: entityType,
+      entity_id: entityId,
+      details: details,
+      ip_address: ipAddress,
+      user_agent: userAgent,
+    });
+    } catch (err) {
+    // Silently fail audit logging - don't block payment processing
     }
-  } catch (err) {
-    console.error('Error logging audit event:', err);
-  }
 }
 
 serve(async (req) => {
@@ -64,7 +68,6 @@ serve(async (req) => {
     
     if (contentType.includes('application/x-www-form-urlencoded')) {
       const text = await req.text();
-      console.log('Raw payload:', text);
       const params = new URLSearchParams(text);
       payload = Object.fromEntries(params.entries()) as CryptoCloudCallback;
     } else {
@@ -76,8 +79,6 @@ serve(async (req) => {
                      req.headers.get('x-real-ip') || 
                      'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
-    
-    console.log('Received payment callback:', payload);
 
     // Log incoming payment callback
     await logAuditEvent(
@@ -94,10 +95,6 @@ serve(async (req) => {
       ipAddress,
       userAgent
     );
-
-    // CryptoCloud sends JWT tokens - we'll verify by checking if payment exists
-    // For production, implement proper JWT verification with their public key
-    console.log('Processing payment callback for invoice:', payload.invoice_id);
 
     // Update order status based on payment status
     const orderStatus = payload.status === 'success' || payload.status === 'paid' 
@@ -119,11 +116,6 @@ serve(async (req) => {
         raw_callback_data: payload,
         ip_address: ipAddress
       });
-
-    if (transactionError) {
-      console.error('Error storing payment transaction:', transactionError);
-      // Continue anyway - order update is more critical for user experience
-    }
 
     // Create sanitized payment details for orders table (user-accessible)
     // Trigger will further sanitize this data
@@ -147,8 +139,6 @@ serve(async (req) => {
       .single();
 
     if (updateError) {
-      console.error('Error updating order:', updateError);
-      
       // Log order update failure
       await logAuditEvent(
         supabase,
@@ -191,30 +181,31 @@ serve(async (req) => {
         const { data: userData } = await supabase.auth.admin.getUserById(order.user_id);
         
         if (userData?.user?.email) {
-          console.log('Order completed for user:', userData.user.email);
+          // Get site URL from environment
+          const siteUrl = Deno.env.get('SITE_URL') || 'https://starkedge.store';
           
           // Generate magic link for user to login
           const { data: magicLinkData, error: magicLinkError } = await supabase.auth.admin.generateLink({
             type: 'magiclink',
             email: userData.user.email,
             options: {
-              redirectTo: 'https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account'
+              redirectTo: `${siteUrl}/account`
             }
           });
           
           const loginLink = magicLinkError ? '' : magicLinkData.properties.action_link;
           
           // Get product details from order
-          const orderDetails = order.order_details as any;
+          const orderDetails = order.order_details as unknown;
           let productListHTML = '';
           let productListText = '';
           
           if (Array.isArray(orderDetails)) {
-            productListHTML = orderDetails.map((item: any) => {
-              const downloadLink = item.preview_link || `https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account`;
+            productListHTML = orderDetails.map((item: OrderItem) => {
+              const downloadLink = item.preview_link || `${siteUrl}/account`;
               return `<li style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 8px;">
                 <strong style="font-size: 16px; color: #333;">${item.name_en || item.name_ru || 'Product'}</strong><br>
-                <span style="color: #666; font-size: 14px;">Quantity: ${item.quantity}</span><br>
+                <span style="color: #666; font-size: 14px;">Quantity: ${item.quantity || 1}</span><br>
                 <a href="${downloadLink}" 
                    style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
                   📥 Download Now
@@ -222,9 +213,9 @@ serve(async (req) => {
               </li>`;
             }).join('');
             
-            productListText = orderDetails.map((item: any) => {
-              const downloadLink = item.preview_link || `https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account`;
-              return `- ${item.name_en || item.name_ru || 'Product'} (Qty: ${item.quantity})\n  Download: ${downloadLink}`;
+            productListText = orderDetails.map((item: OrderItem) => {
+              const downloadLink = item.preview_link || `${siteUrl}/account`;
+              return `- ${item.name_en || item.name_ru || 'Product'} (Qty: ${item.quantity || 1})\n  Download: ${downloadLink}`;
             }).join('\n\n');
           }
 
@@ -310,7 +301,7 @@ ${loginLink ? `Login Link: ${loginLink}\n(Link expires in 1 hour)` : ''}
 ${productListText}
 
 All your orders and downloads are available at:
-https://4f73c965-e24b-4e86-b94a-67c413d6fd78.lovableproject.com/account
+${siteUrl}/account
 
 Questions? Contact our support team.
 STARK INC. - Digital Products
@@ -319,19 +310,14 @@ STARK INC. - Digital Products
             });
 
             if (!emailResponse.ok) {
-              const errorData = await emailResponse.json();
-              console.error('Failed to send email:', errorData);
-            } else {
-              console.log('Purchase confirmation email sent to:', userData.user.email);
+              // Email sending failed - log silently, don't block payment processing
             }
           } catch (emailErr) {
-            console.error('Error sending email:', emailErr);
+            // Email sending error - log silently, don't block payment processing
           }
         }
       }
     }
-
-    console.log('Order updated successfully:', order);
 
     return new Response(
       JSON.stringify({ success: true, order }),
@@ -339,7 +325,6 @@ STARK INC. - Digital Products
     );
 
   } catch (error) {
-    console.error('Payment callback error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),

@@ -44,8 +44,6 @@ serve(async (req) => {
       throw new Error('Отсутствуют обязательные параметры: orderId, amount');
     }
 
-    console.log('Creating payment for order:', orderId, 'amount:', amount);
-
     // Get CryptoCloud credentials from environment
     const apiKey = Deno.env.get('CRYPTOCLOUD_API_KEY');
     const shopId = Deno.env.get('CRYPTOCLOUD_SHOP_ID');
@@ -72,8 +70,6 @@ serve(async (req) => {
       fail_url: `${origin}/payment-failed`,
     };
 
-    console.log('Sending request to CryptoCloud:', invoiceData);
-
     const response = await fetch('https://api.cryptocloud.plus/v2/invoice/create', {
       method: 'POST',
       headers: {
@@ -84,7 +80,6 @@ serve(async (req) => {
     });
 
     const result = await response.json();
-    console.log('CryptoCloud response:', result);
 
     if (!response.ok || result.status !== 'success') {
       throw new Error(result.message || 'Ошибка создания платежа');
@@ -104,7 +99,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error creating payment:', error);
     const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
     return new Response(
       JSON.stringify({
