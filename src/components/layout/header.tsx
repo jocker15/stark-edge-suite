@@ -72,8 +72,8 @@ export function Header() {
       <header className="bg-card/50 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity flex-shrink-0 group">
-          <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
+        <Link to="/" className="flex items-center space-x-2 hover:opacity-100 transition-all flex-shrink-0 group">
+          <div className="w-9 h-9 bg-primary rounded flex items-center justify-center logo-icon">
             <svg 
               viewBox="0 0 32 32" 
               className="w-6 h-6"
@@ -96,7 +96,7 @@ export function Header() {
               />
             </svg>
           </div>
-          <span className="text-xl font-heading text-accent logo-shine">STARK <span className="text-muted-foreground">INC.</span></span>
+          <span className="text-xl font-heading text-accent logo-shine text-glitch-hover">STARK <span className="text-muted-foreground">INC.</span></span>
         </Link>
 
         {/* Navigation */}
