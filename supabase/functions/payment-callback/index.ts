@@ -26,7 +26,7 @@ interface OrderItem {
 
 // Audit logging helper
 async function logAuditEvent(
-  supabaseClient: ReturnType<typeof createClient>,
+  supabaseClient: any,
   actionType: string,
   entityType: string,
   entityId: string,
