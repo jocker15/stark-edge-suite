@@ -15,10 +15,6 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { sanitizeEmail } from '@/lib/sanitize'
-import { logger } from '@/lib/logger'
-import { checkoutSchema } from '@/lib/validations/forms'
-import { z } from 'zod'
-import { useLanguage } from '@/contexts/LanguageContext'
 
 interface CartItem {
   id: string
@@ -28,6 +24,8 @@ interface CartItem {
   name_ru: string | null
   image_url: string
 }
+
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function Checkout() {
   const { cart, getTotalPrice } = useCart()
@@ -47,63 +45,24 @@ export default function Checkout() {
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [guestUserId, setGuestUserId] = useState<string | null>(null)
   const [paymentError, setPaymentError] = useState<string | null>(null)
-  const [csrfToken, setCsrfToken] = useState<string | null>(null)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  
-  const getCsrfToken = useCallback(async () => {
-    try {
-      const response = await fetch('/api/csrf-token', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      if (!response.ok) throw new Error('Failed to get CSRF token')
-      const data = await response.json()
-      setCsrfToken(data.token)
-      setSessionId(data.sessionId)
-      return data
-    } catch (error) {
-      logger.error('Failed to get CSRF token', { error: error instanceof Error ? error.message : 'Unknown' })
-      throw error
-    }
-  }, [])
 
-  // Handle guest checkout email submission with sanitization and validation
+  // Handle guest checkout email submission with sanitization
   const handleGuestCheckout = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setPaymentError(null)
     
-    try {
-      const sanitizedEmail = sanitizeEmail(guestEmail)
-      if (!sanitizedEmail) {
-        toast({
-          title: lang === 'ru' ? "Ошибка" : "Error",
-          description: lang === 'ru' ? "Введите корректный email" : "Please enter a valid email",
-          variant: "destructive"
-        })
-        return
-      }
-
-      const validated = checkoutSchema.parse({ email: sanitizedEmail })
-      setGuestEmail(validated.email)
-      setEmailSubmitted(true)
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        error.errors.forEach(err => {
-          toast({
-            title: lang === 'ru' ? "Ошибка валидации" : "Validation error",
-            description: err.message,
-            variant: "destructive"
-          })
-        })
-      } else {
-        logger.error('Checkout validation error', { error: error instanceof Error ? error.message : 'Unknown' })
-        toast({
-          title: lang === 'ru' ? "Ошибка" : "Error",
-          description: lang === 'ru' ? "Ошибка валидации" : "Validation error",
-          variant: "destructive"
-        })
-      }
+    const sanitizedEmail = sanitizeEmail(guestEmail)
+    if (!sanitizedEmail) {
+      toast({
+        title: lang === 'ru' ? "Ошибка" : "Error",
+        description: lang === 'ru' ? "Введите корректный email" : "Please enter a valid email",
+        variant: "destructive"
+      })
+      return
     }
+
+    setGuestEmail(sanitizedEmail)
+    setEmailSubmitted(true)
   }, [guestEmail, lang, toast])
 
   // Auto-redirect to payment URL
@@ -116,18 +75,10 @@ export default function Checkout() {
     }
   }, [paymentUrl]);
 
-  // Initialize CSRF token on component mount
-  useEffect(() => {
-    getCsrfToken().catch(() => {
-      logger.warn('Could not initialize CSRF token')
-    })
-  }, [getCsrfToken])
-
   // Create pending order and payment with error handling
   useEffect(() => {
     if (cart.length > 0 && !orderId && (user || emailSubmitted)) {
       const createOrderAndPayment = async () => {
-        let checkoutStarted = false
         try {
           setLoading(true)
           setPaymentError(null)
@@ -135,7 +86,6 @@ export default function Checkout() {
           // If user is not logged in but email was submitted - create guest order
           if (!user && emailSubmitted && guestEmail) {
             try {
-              checkoutStarted = true
               const response = await supabase.functions.invoke('create-guest-order', {
                 body: {
                   email: guestEmail,
@@ -161,11 +111,6 @@ export default function Checkout() {
                   email: guestEmail
                 }))
                 
-                logger.info('Guest order created successfully', {
-                  orderId: response.data.orderId,
-                  email: guestEmail
-                })
-                
                 toast({
                   title: lang === 'ru' ? "Аккаунт создан" : "Account Created",
                   description: lang === 'ru' 
@@ -177,11 +122,6 @@ export default function Checkout() {
               }
             } catch (err) {
               const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-              logger.error('Guest order creation failed', {
-                email: guestEmail,
-                error: errorMessage,
-                checkoutStarted
-              })
               setPaymentError(lang === 'ru' 
                 ? `Ошибка создания заказа: ${errorMessage}` 
                 : `Order creation error: ${errorMessage}`);
@@ -193,7 +133,6 @@ export default function Checkout() {
           // Regular logged-in user flow
           if (user) {
             try {
-              checkoutStarted = true
               // Create order
               const { data, error } = await supabase
                 .from('orders')
@@ -207,11 +146,6 @@ export default function Checkout() {
                 .single()
 
               if (error) {
-                logger.error('Order creation failed', {
-                  userId: user?.id,
-                  error: error.message,
-                  amount: total
-                })
                 setPaymentError(lang === 'ru' 
                   ? 'Не удалось создать заказ. Попробуйте снова.' 
                   : 'Failed to create order. Please try again.');
@@ -225,7 +159,6 @@ export default function Checkout() {
               const token = session.data.session?.access_token
 
               if (!token) {
-                logger.error('Authentication token missing', { userId: user?.id })
                 setPaymentError(lang === 'ru' ? 'Требуется авторизация' : 'Authentication required');
                 return
               }
@@ -245,21 +178,11 @@ export default function Checkout() {
               if (response.data?.success && response.data?.paymentUrl) {
                 setPaymentUrl(response.data.paymentUrl)
                 setOrderReady(true)
-                logger.info('Payment created successfully', {
-                  orderId: data.id,
-                  amount: total
-                })
               } else {
                 throw new Error(response.data?.error || 'Failed to create payment')
               }
             } catch (err) {
               const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-              logger.error('Payment creation failed', {
-                userId: user?.id,
-                orderId: orderId,
-                error: errorMessage,
-                checkoutStarted
-              })
               setPaymentError(lang === 'ru' 
                 ? `Ошибка платежа: ${errorMessage}` 
                 : `Payment error: ${errorMessage}`);
