@@ -50,6 +50,25 @@ async function logAuditEvent(
     }
 }
 
+// Helper function to verify CryptoCloud webhook signature
+async function verifySignature(payload: CryptoCloudCallback, secret: string): Promise<boolean> {
+  // CryptoCloud sends a token that should match the expected signature
+  // The token is typically an MD5 or HMAC hash of invoice_id + secret
+  if (!payload.token) {
+    return false;
+  }
+  
+  // Create expected signature: MD5(invoice_id + secret)
+  const encoder = new TextEncoder();
+  const data = encoder.encode(payload.invoice_id + secret);
+  const hashBuffer = await crypto.subtle.digest('MD5', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Compare tokens (case-insensitive)
+  return payload.token.toLowerCase() === expectedToken.toLowerCase();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -80,7 +99,32 @@ serve(async (req) => {
                      'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
-    // Log incoming payment callback
+    // SECURITY: Verify CryptoCloud webhook signature before processing
+    const isValidSignature = await verifySignature(payload, cryptoCloudSecret);
+    
+    if (!isValidSignature) {
+      // Log failed signature verification for security monitoring
+      await logAuditEvent(
+        supabase,
+        'payment_signature_invalid',
+        'payment',
+        payload.invoice_id || 'unknown',
+        { 
+          order_id: payload.order_id,
+          ip_address: ipAddress,
+          reason: 'Invalid or missing signature token'
+        },
+        ipAddress,
+        userAgent
+      );
+      
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Log incoming payment callback (signature verified)
     await logAuditEvent(
       supabase,
       'payment_callback_received',
@@ -90,7 +134,8 @@ serve(async (req) => {
         order_id: payload.order_id,
         status: payload.status,
         amount: payload.amount_crypto,
-        currency: payload.currency
+        currency: payload.currency,
+        signature_verified: true
       },
       ipAddress,
       userAgent
