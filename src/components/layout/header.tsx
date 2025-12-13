@@ -73,26 +73,31 @@ export function Header() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 hover:opacity-100 transition-all flex-shrink-0 group">
-          <div className="w-9 h-9 bg-primary rounded flex items-center justify-center logo-icon">
+          <div className="logo-icon">
             <svg 
-              viewBox="0 0 32 32" 
-              className="w-6 h-6"
+              viewBox="0 0 48 48" 
+              className="w-10 h-10"
               fill="none"
             >
-              {/* Main triangle shape */}
+              {/* Outer triangle pointing down */}
               <path 
-                d="M16 2 L28 26 L16 20 L4 26 Z" 
-                fill="hsl(var(--accent))"
-              />
-              {/* Inner cut for S-like effect */}
-              <path 
-                d="M16 8 L22 20 L16 17 L10 20 Z" 
+                d="M24 4 L44 40 L4 40 Z" 
                 fill="hsl(var(--primary))"
               />
-              {/* Arrow accent */}
+              {/* Inner arrow/S cutout - creates the stylized S shape */}
               <path 
-                d="M20 14 L26 22 L22 22 L18 16 Z" 
-                fill="hsl(var(--accent))"
+                d="M24 12 L16 28 L24 24 L32 28 Z" 
+                fill="hsl(var(--background))"
+              />
+              {/* Small accent triangle on right */}
+              <path 
+                d="M30 20 L38 34 L26 34 Z" 
+                fill="hsl(var(--primary))"
+              />
+              {/* Arrow tip accent */}
+              <path 
+                d="M24 18 L28 26 L24 24 L20 26 Z" 
+                fill="hsl(var(--primary))"
               />
             </svg>
           </div>

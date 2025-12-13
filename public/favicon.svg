@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Outer triangle pointing down - Red primary color -->
+  <path d="M24 4 L44 40 L4 40 Z" fill="#ea384c"/>
+  <!-- Inner arrow/S cutout - creates the stylized S shape -->
+  <path d="M24 12 L16 28 L24 24 L32 28 Z" fill="#0f0f0f"/>
+  <!-- Small accent triangle on right -->
+  <path d="M30 20 L38 34 L26 34 Z" fill="#ea384c"/>
+  <!-- Arrow tip accent -->
+  <path d="M24 18 L28 26 L24 24 L20 26 Z" fill="#ea384c"/>
+</svg>
