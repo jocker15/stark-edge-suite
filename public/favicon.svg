@@ -1,10 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <!-- Outer triangle pointing down - Red primary color -->
-  <path d="M24 4 L44 40 L4 40 Z" fill="#ea384c"/>
-  <!-- Inner arrow/S cutout - creates the stylized S shape -->
-  <path d="M24 12 L16 28 L24 24 L32 28 Z" fill="#0f0f0f"/>
-  <!-- Small accent triangle on right -->
-  <path d="M30 20 L38 34 L26 34 Z" fill="#ea384c"/>
-  <!-- Arrow tip accent -->
-  <path d="M24 18 L28 26 L24 24 L20 26 Z" fill="#ea384c"/>
+  <!-- Red background -->
+  <rect width="48" height="48" rx="4" fill="#ea384c"/>
+  
+  <!-- Inverted triangle outline - cyan color -->
+  <path 
+    d="M6 8 L42 8 L24 44 Z" 
+    fill="none"
+    stroke="#22d3ee"
+    stroke-width="2"
+  />
+  
+  <!-- Stylized S letter - futuristic style -->
+  <path 
+    d="M14 12 L34 12 L34 18 L22 18 L22 24 L34 24 L34 38 L14 38 L14 32 L26 32 L26 28 L14 28 Z" 
+    fill="#22d3ee"
+  />
+  
+  <!-- Black wedge cutout -->
+  <path 
+    d="M22 25 L26 25 L24 30 Z" 
+    fill="#ea384c"
+  />
 </svg>
