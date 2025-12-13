@@ -73,35 +73,45 @@ export function Header() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-8">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 hover:opacity-100 transition-all flex-shrink-0 group">
-          <div className="logo-icon">
+          {/* Logo container with red background */}
+          <div className="logo-icon relative flex items-center gap-1 bg-primary px-2 py-1 rounded">
+            {/* Triangle with S */}
             <svg 
-              viewBox="0 0 48 48" 
-              className="w-10 h-10"
+              viewBox="0 0 40 44" 
+              className="w-8 h-9"
               fill="none"
+              style={{ filter: 'drop-shadow(0 0 4px hsl(var(--accent)))' }}
             >
-              {/* Outer triangle pointing down */}
+              {/* Inverted triangle outline */}
               <path 
-                d="M24 4 L44 40 L4 40 Z" 
-                fill="hsl(var(--primary))"
+                d="M2 2 L38 2 L20 42 Z" 
+                fill="none"
+                stroke="hsl(var(--accent))"
+                strokeWidth="2"
               />
-              {/* Inner arrow/S cutout - creates the stylized S shape */}
+              {/* Stylized S letter - futuristic lightning style */}
               <path 
-                d="M24 12 L16 28 L24 24 L32 28 Z" 
-                fill="hsl(var(--background))"
+                d="M12 8 L28 8 L28 12 L18 12 L18 18 L28 18 L28 32 L12 32 L12 28 L22 28 L22 22 L12 22 Z" 
+                fill="hsl(var(--accent))"
+                style={{ filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.5))' }}
               />
-              {/* Small accent triangle on right */}
+              {/* Black wedge cutout in center of S */}
               <path 
-                d="M30 20 L38 34 L26 34 Z" 
-                fill="hsl(var(--primary))"
-              />
-              {/* Arrow tip accent */}
-              <path 
-                d="M24 18 L28 26 L24 24 L20 26 Z" 
+                d="M18 19 L22 19 L20 24 Z" 
                 fill="hsl(var(--primary))"
               />
             </svg>
+            {/* "stark" text below - italic style */}
+            <span 
+              className="text-accent font-bold text-sm italic tracking-wide"
+              style={{ 
+                textShadow: '0 0 6px hsl(var(--accent))',
+                fontFamily: 'system-ui, sans-serif'
+              }}
+            >
+              stark
+            </span>
           </div>
-          <span className="text-xl font-heading text-accent logo-shine text-glitch-hover">STARK <span className="text-muted-foreground">INC.</span></span>
         </Link>
 
         {/* Navigation */}
